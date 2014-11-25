@@ -1,11 +1,11 @@
-import tile
-import data
+import encoder
+import decoder
 
 # coordindates are scaled to this range within tile
 extents = 4096
 
 def decode(tile):
-    vector_tile = data.TileData(extents)
+    vector_tile = decoder.TileData(extents)
     message = vector_tile.getMessage(tile)
     return message
 
@@ -14,7 +14,7 @@ def encode(layers):
     
         get_tiles() retrieves data and performs basic integrity checks.
     '''
-    vector_tile = tile.VectorTile(extents)
+    vector_tile = encoder.VectorTile(extents)
     if (isinstance(layers, list)):
         for layer in layers:
             vector_tile.addFeatures(layer['features'], layer['name'])
