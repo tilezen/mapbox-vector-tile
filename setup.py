@@ -3,8 +3,10 @@ from setuptools import setup, find_packages
 
 
 # Get the long description from the relevant file
-with codecs_open('README.md', encoding='utf-8') as f:
-    long_description = f.read()
+# with codecs_open('README.md', encoding='utf-8') as f:
+#     long_description = f.read()
+with io.open("README.rst") as readme_file:
+    long_description = readme_file.read()
 
 
 setup(name='mapbox-vector-tile',
