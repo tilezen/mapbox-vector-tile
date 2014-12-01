@@ -1,3 +1,4 @@
+import io
 from codecs import open as codecs_open
 from setuptools import setup, find_packages
 
@@ -8,6 +9,16 @@ from setuptools import setup, find_packages
 with io.open("README.rst") as readme_file:
     long_description = readme_file.read()
 
+def test_suite():
+    import doctest
+    try:
+        import unittest2 as unittest
+    except:
+        import unittest
+
+    suite = unittest.TestLoader().discover("tests")
+    # suite.addTest(doctest.DocFileSuite("README.rst"))
+    return suite
 
 setup(name='mapbox-vector-tile',
       version='0.0.1',
@@ -22,5 +33,6 @@ setup(name='mapbox-vector-tile',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
+      test_suite="setup.test_suite",
       install_requires=["setuptools"]
       )

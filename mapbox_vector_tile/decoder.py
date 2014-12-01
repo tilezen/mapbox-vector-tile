@@ -20,7 +20,7 @@ class TileData:
 
     def getMessage(self, pbf_data):
         self.tile.ParseFromString(pbf_data)
-        print self.tile
+        
         features_by_layer = {}
         for layer in self.tile.layers:
             features_for_layer = features_by_layer.setdefault(layer.name, [])
