@@ -10,10 +10,6 @@ def decode(tile):
     return message
 
 def encode(layers):
-    ''' Retrieve a list of GeoJSON tile responses and merge them into one.
-    
-        get_tiles() retrieves data and performs basic integrity checks.
-    '''
     vector_tile = encoder.VectorTile(extents)
     if (isinstance(layers, list)):
         for layer in layers:
