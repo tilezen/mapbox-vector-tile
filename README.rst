@@ -19,8 +19,8 @@ Encoding
 Encode method expects an array of layers or atleast a single valid layer. A valid layer is a dictionary with the following keys:
   - name: layer name
   - features: an array of features. A feature is a dictionary with the following keys:
-    - geometry: representation of the feature geometry in WKT or WKB
-    - properties: a dictionary with a few keys and their corresponding values. 
+      - geometry: representation of the feature geometry in WKT or WKB
+      - properties: a dictionary with a few keys and their corresponding values. 
 
 .. code:: python
 
@@ -100,16 +100,16 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
   {
     layername: [
       {
-        geometry: list of points,
-        properties: dictionary of key/value pairs,
-        id: unique id for the given feature within the layer 
+        'geometry': 'list of points',
+        'properties': 'dictionary of key/value pairs',
+        'id': 'unique id for the given feature within the layer '
       },
       {
-        ...
+        # ...
       }
     ],
     layername2: [
-      ...
+      # ...
     ]
   }
 
