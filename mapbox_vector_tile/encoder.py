@@ -1,6 +1,7 @@
 import types
 from Mapbox import vector_tile_pb2
-from shapely.wkb import loads
+from shapely.wkb import loads as load_wkb
+from shapely.wkt import loads as load_wkt
 
 from math import floor, fabs
 from array import array
@@ -49,10 +50,19 @@ class VectorTile:
 
         # geometry
         if (feature.has_key("geometry")):
-            shape = loads(feature["geometry"])
-            f.type = self._get_feature_type(shape)
-            self._geo_encode(f, shape)
+            shape = {}
+            for load in [load_wkb, load_wkt]:
+                try:
+                    shape = load(feature["geometry"])
+                except:
+                    pass
 
+            if shape:
+                f.type = self._get_feature_type(shape)
+                self._geo_encode(f, shape)
+            else: 
+                raise NotImplementedError("Can't do geometries that are not wkt or wkb")
+                
     def _get_feature_type(self, shape):
         if shape.type == 'Point' or shape.type == 'MultiPoint':
             return self.tile.Point
