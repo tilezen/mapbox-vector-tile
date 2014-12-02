@@ -16,7 +16,8 @@ mapbox-vector-tile is compatible with Python 2.6, 2.7, 3.2, 3.3, and 3.4. It is 
 Encoding
 ~~~~~~~~
 
-Encode method expects an array of layers or atleast a single valid layer. A valid layer is a dictionary with the following keys:
+Encode method expects an array of layers or atleast a single valid layer. A valid layer is a dictionary with the following keys
+
   - name: layer name
   - features: an array of features. A feature is a dictionary with the following keys:
       - geometry: representation of the feature geometry in WKT or WKB
@@ -96,6 +97,7 @@ Decoding
 ~~~~~~~~
 
 Decode method takes in a valid google.protobuf.message Tile and returns decoded string in the following format
+
   .. code:: python
   {
     layername: [
