@@ -99,7 +99,7 @@ Decoding
 
 Decode method takes in a valid google.protobuf.message Tile and returns decoded string in the following format
 
-.. code:: python
+::
   {
     layername: [
       {
