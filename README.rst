@@ -7,9 +7,9 @@ Installation
 
 mapbox-vector-tile is compatible with Python 2.6, 2.7, 3.2, 3.3, and 3.4. It is listed on `PyPi as 'mapbox-vector-tile'`_. The recommended way to install is via pip_:
 
-.. code::
+.. code-block:: bash
 
-  pip install mapbox-vector-tile
+  $ pip install mapbox-vector-tile
 
 .. _PyPi as 'mapbox-vector-tile': https://pypi.python.org/pypi/mapbox-vector-tile/
 .. _pip: http://www.pip-installer.org
@@ -19,12 +19,12 @@ Encoding
 
 Encode method expects an array of layers or atleast a single valid layer. A valid layer is a dictionary with the following keys
 
-- **name**: layer name
-- **features**: an array of features. A feature is a dictionary with keys geometry and properties
-- **geometry**: representation of the feature geometry in WKT or WKB
-- **properties**: a dictionary with a few keys and their corresponding values. 
+* ``name``: layer name
+* ``features``: an array of features. A feature is a dictionary with keys geometry and properties
+  * ``geometry``: representation of the feature geometry in WKT or WKB
+  * ``properties``: a dictionary with a few keys and their corresponding values. 
 
-.. code:: python
+.. code-block:: python
 
   >>> import mapbox_vector_tile
 
@@ -97,9 +97,10 @@ Encode method expects an array of layers or atleast a single valid layer. A vali
 Decoding
 --------
 
-Decode method takes in a valid google.protobuf.message Tile and returns decoded string in the following format
+Decode method takes in a valid google.protobuf.message Tile and returns decoded string in the following format:
 
 ::
+
   {
     layername: [
       {
@@ -116,7 +117,7 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
     ]
   }
 
-.. code:: python
+.. code-block:: python
 
   >>> import mapbox_vector_tile
 
