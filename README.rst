@@ -20,7 +20,7 @@ Encoding
 Encode method expects an array of layers or atleast a single valid layer. A valid layer is a dictionary with the following keys
 
 - **name**: layer name
-- **features**: an array of features. A feature is a dictionary with keys namely - geometry and properties
+- **features**: an array of features. A feature is a dictionary with keys geometry and properties
 - **geometry**: representation of the feature geometry in WKT or WKB
 - **properties**: a dictionary with a few keys and their corresponding values. 
 
@@ -99,7 +99,7 @@ Decoding
 
 Decode method takes in a valid google.protobuf.message Tile and returns decoded string in the following format
 
-.. code::python
+.. code::js
   {
     layername: [
       {
