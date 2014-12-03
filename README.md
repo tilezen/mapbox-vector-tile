@@ -1,2 +1,0 @@
-mapbox-vector-tile
-==================
