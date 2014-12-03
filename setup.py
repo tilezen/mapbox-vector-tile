@@ -21,7 +21,7 @@ def test_suite():
     return suite
 
 setup(name='mapbox-vector-tile',
-      version='0.0.1',
+      version='0.0.2',
       description=u"Mapbox Vector Tile",
       long_description=long_description,
       classifiers=[],
@@ -34,5 +34,5 @@ setup(name='mapbox-vector-tile',
       include_package_data=True,
       zip_safe=False,
       test_suite="setup.test_suite",
-      install_requires=["setuptools"]
+      install_requires=["setuptools", "protobuf", "shapely"]
       )
