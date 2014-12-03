@@ -21,12 +21,45 @@ Encode method expects an array of layers or atleast a single valid layer. A vali
 
 * ``name``: layer name
 * ``features``: an array of features. A feature is a dictionary with the following keys:
-    * ``geometry``: representation of the feature geometry in WKT or WKB
-    * ``properties``: a dictionary with a few keys and their corresponding values. 
+  * ``geometry``: representation of the feature geometry in WKT or WKB
+  * ``properties``: a dictionary with a few keys and their corresponding values. 
 
 .. code-block:: python
 
   >>> import mapbox_vector_tile
+  
+  # Using WKT
+  >>> mapbox_vector_tile.encode([
+      {
+        "name": "water", 
+        "features": [
+          {
+            "geometry":"POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))", 
+            "properties":{
+              "uid":123, 
+              "foo":"bar", 
+              "cat":"flew"
+            }
+          }
+        ]
+      },
+      {
+        "name": "air", 
+        "features": [
+          {
+            "geometry":"LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)", 
+            "properties":{
+              "uid":1234, 
+              "foo":"bar", 
+              "cat":"flew"
+            }
+          }
+        ]
+      }
+    ]) 
+
+  '\x1aJ\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aW\n\x03air\x12\x1a\x08\x01\x12\x08\x00\x00\x01\x01\x02\x02\x03\x03\x18\x02"\n\t\x8d\x01\xaa?\x12\x00\x00\x00\x00\x1a\x03foo\x1a\x03uid\x1a\x05balls\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x05\n\x03foo"\x06\n\x04flew(\x80 x\x02'
+
 
   # Using WKB
   >>> mapbox_vector_tile.encode([
@@ -59,38 +92,6 @@ Encode method expects an array of layers or atleast a single valid layer. A vali
       ]) 
 
   '\x1aJ\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aY\n\x03air\x12\x1c\x08\x01\x12\x08\x00\x00\x01\x01\x02\x02\x03\x03\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x05balls\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x05\n\x03foo"\x06\n\x04flew(\x80 x\x02'
-
-  # Using WKT
-  >>> mapbox_vector_tile.encode([
-      {
-        "name": "water", 
-        "features": [
-          {
-            "geometry":"POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))", 
-            "properties":{
-              "uid":123, 
-              "foo":"bar", 
-              "cat":"flew"
-            }
-          }
-        ]
-      },
-      {
-        "name": "air", 
-        "features": [
-          {
-            "geometry":"LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)", 
-            "properties":{
-              "uid":1234, 
-              "foo":"bar", 
-              "cat":"flew"
-            }
-          }
-        ]
-      }
-    ]) 
-
-  '\x1aJ\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aW\n\x03air\x12\x1a\x08\x01\x12\x08\x00\x00\x01\x01\x02\x02\x03\x03\x18\x02"\n\t\x8d\x01\xaa?\x12\x00\x00\x00\x00\x1a\x03foo\x1a\x03uid\x1a\x05balls\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x05\n\x03foo"\x06\n\x04flew(\x80 x\x02'
 
   
 
