@@ -55,6 +55,7 @@ class VectorTile:
             for load in [load_wkb, load_wkt]:
                 try:
                     shape = load(feature["geometry"])
+                    break
                 except:
                     pass
 
@@ -206,7 +207,7 @@ class VectorTile:
         
         while (True):
             if it >= len(coordinates):
-                break;
+                break
             
             x,y,vtx_cmd = coordinates[it]['x'],coordinates[it]['y'],coordinates[it]['cmd']
             
