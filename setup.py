@@ -21,7 +21,7 @@ def test_suite():
     return suite
 
 setup(name='mapbox-vector-tile',
-      version='0.0.3',
+      version='0.0.4',
       description=u"Mapbox Vector Tile",
       long_description=long_description,
       classifiers=[],

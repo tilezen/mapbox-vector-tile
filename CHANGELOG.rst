@@ -1,6 +1,8 @@
+Version 0.0.4
+	* Bug fix - does not try to load wkt geom if wkb succeeds 
+
 Version 0.0.3
 	* Option to encode floats in little endian
-	* Bug fixes
 
 Version 0.0.2
 	* WKT Support
