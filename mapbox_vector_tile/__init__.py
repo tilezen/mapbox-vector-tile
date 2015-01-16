@@ -9,9 +9,8 @@ def decode(tile):
     message = vector_tile.getMessage(tile)
     return message
 
-def encode(layers, encode_floats_big_endian=True):
-    vector_tile = encoder.VectorTile(
-        extents, encode_floats_big_endian=encode_floats_big_endian)
+def encode(layers):
+    vector_tile = encoder.VectorTile(extents)
     if (isinstance(layers, list)):
         for layer in layers:
             vector_tile.addFeatures(layer['features'], layer['name'])

@@ -19,11 +19,10 @@ CMD_SEG_END = 7
 class VectorTile:
     """
     """
-    def __init__(self, extents, layer_name="", encode_floats_big_endian=True):
+    def __init__(self, extents, layer_name=""):
         self.tile          = vector_tile_pb2.tile()
         self.extents       = extents
-        self.encode_floats_big_endian = encode_floats_big_endian
-
+        
     def addFeatures(self, features, layer_name=""):
         self.layer         = self.tile.layers.add()
         self.layer.name    = layer_name
@@ -99,13 +98,7 @@ class VectorTile:
                         val.int_value = v
                     elif (isinstance(v,float)):
                         val = layer.values.add()
-                        if self.encode_floats_big_endian:
-                            d_arr = array('d', [v])
-                            # google pbf expects big endian by default
-                            d_arr.byteswap()
-                            val.double_value = d_arr[0]
-                        else:
-                            val.double_value = v
+                        val.double_value = v
                     # else:
                     #     # do nothing because we know kind is sometimes <type NoneType>
                     #     logging.info("Unknown value type: '%s' for key: '%s'", type(v), k)
