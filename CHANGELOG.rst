@@ -1,3 +1,7 @@
+Version 0.0.5
+	* Removing the option of encoding floats in big endian
+	* Updated tests
+
 Version 0.0.4
 	* Bug fix - does not try to load wkt geom if wkb succeeds 
 

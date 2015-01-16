@@ -150,3 +150,10 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
       }
     ]
   }
+
+Changelog
+---------
+
+Click here_ to see what changed over time in various versions.
+
+.. _here: https://github.com/mapzen/mapbox-vector-tile/blob/master/CHANGELOG.rst
