@@ -84,3 +84,17 @@ class TestDifferentGeomFormats(unittest.TestCase):
                     "properties": self.feature_properties
                 }]
             }]), expected_result)
+
+    def test_encode_feature_with_id(self):
+        geometry = 'POINT(1 1)'
+        expected_result = '\x1a(\n\x05water\x12\x0e\x08\x01\x12\x02\x00\x00\x18\x01"\x04\t\x02\xfe?\x1a\x03uid"\x05\n\x03foo(\x80 x\x02'
+        result = mapbox_vector_tile.encode([
+            dict(name='water',
+                 features=[dict(geometry=geometry, properties={}, id='foo')])])
+        self.assertEqual(expected_result, result)
+        decoded = mapbox_vector_tile.decode(result)
+        features = decoded['water']
+        self.assertEqual(1, len(features))
+        feature = features[0]
+        self.assertEqual(1, feature['id'])
+        self.assertEqual('foo', feature['properties']['uid'])

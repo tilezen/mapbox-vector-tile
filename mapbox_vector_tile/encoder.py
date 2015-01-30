@@ -40,13 +40,14 @@ class VectorTile:
         self.feature_count += 1
         f.id = self.feature_count
         
-        # osm_id or the hash can be passed in as a feature['id']
-        if feature.has_key("id"):
-            feature[1].update(uid=feature["id"])
-
         # properties
         if feature.has_key("properties"):
             self._handle_attr(self.layer, f, feature["properties"])
+
+        # osm_id or the hash can be passed in as a feature['id']
+        feature_id = feature.get('id')
+        if feature_id is not None:
+            self._handle_attr(self.layer, f, dict(uid=feature_id))
 
         # geometry
         if (feature.has_key("geometry")):
