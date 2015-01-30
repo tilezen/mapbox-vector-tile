@@ -98,3 +98,15 @@ class TestDifferentGeomFormats(unittest.TestCase):
         feature = features[0]
         self.assertEqual(1, feature['id'])
         self.assertEqual('foo', feature['properties']['uid'])
+
+    def test_encode_multipolygon(self):
+        geometry = 'MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))'
+        expected_result = '\x1a=\n\x05water\x12\x10\x08\x01\x18\x03"\n\tP\xb0?\x12\'\t2\x1e\x0f\x12\x1d\x08\x02\x18\x03"\x17\t(\xba?"\x13\n\x00((\n\x1e\x1d\x0f\t\x1d\x00\x12\x13\n\x00\x13\x0f(\x80 x\x02'
+        result = mapbox_vector_tile.encode([
+            dict(name='water',
+                 features=[dict(geometry=geometry, properties={})])])
+        self.assertEqual(expected_result, result)
+
+        decoded = mapbox_vector_tile.decode(result)
+        features = decoded['water']
+        self.assertEqual(2, len(features))
