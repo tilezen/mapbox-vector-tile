@@ -1,3 +1,9 @@
+Version 0.0.6
+	* Explode multipolygons into several features
+	* https://github.com/mapzen/mapbox-vector-tile/issues/4
+	* Resolve issue when id is passed in
+	* More tests
+
 Version 0.0.5
 	* Removing the option of encoding floats in big endian
 	* Updated tests
