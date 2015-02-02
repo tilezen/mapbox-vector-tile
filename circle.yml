@@ -1,0 +1,3 @@
+test:
+  override:
+    - python setup.py test
