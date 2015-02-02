@@ -33,37 +33,67 @@ class VectorTile:
         self.values = []
 
         for feature in features:
-            self.addFeature(feature)
 
-    def addFeature(self, feature):
+            # skip missing or empty geometries
+            wkb_or_wkt = feature.get('geometry')
+            if wkb_or_wkt is None:
+                continue
+            shape = self._load_geometry(wkb_or_wkt)
+            if shape is None:
+                raise NotImplementedError(
+                    'Can\'t do geometries that are not wkt or wkb')
+            if shape.is_empty:
+                continue
+            # if we are a multipolygon, we will create separate
+            # features for each polygon and duplicate properties
+            if shape.type == 'MultiPolygon':
+                exploded_features = self.explode_multipolygon_features(
+                    feature, shape)
+                for exploded_feature in exploded_features:
+                    self.addFeature(exploded_feature,
+                                    exploded_feature['geometry'])
+            else:
+                self.addFeature(feature, shape)
+
+    def explode_multipolygon_features(self, feature, shape):
+        assert shape.type == 'MultiPolygon'
+        exploded_features = []
+        properties = feature['properties']
+        feature_id = feature.get('id')
+        for geometry in shape.geoms:
+            new_feature = dict(properties=properties, geometry=geometry)
+            if feature_id is not None:
+                new_feature['id'] = feature_id
+            exploded_features.append(new_feature)
+        return exploded_features
+
+    def _load_geometry(self, wkb_or_wkt):
+        try:
+            return load_wkb(wkb_or_wkt)
+        except:
+            try:
+                return load_wkt(wkb_or_wkt)
+            except:
+                return None
+
+    def addFeature(self, feature, shape):
         f = self.layer.features.add()
         self.feature_count += 1
         f.id = self.feature_count
-        
-        # osm_id or the hash can be passed in as a feature['id']
-        if feature.has_key("id"):
-            feature[1].update(uid=feature["id"])
 
         # properties
-        if feature.has_key("properties"):
-            self._handle_attr(self.layer, f, feature["properties"])
+        properties = feature.get('properties')
+        if properties is not None:
+            self._handle_attr(self.layer, f, properties)
 
-        # geometry
-        if (feature.has_key("geometry")):
-            shape = {}
-            for load in [load_wkb, load_wkt]:
-                try:
-                    shape = load(feature["geometry"])
-                    break
-                except:
-                    pass
+        # osm_id or the hash can be passed in as a feature['id']
+        feature_id = feature.get('id')
+        if feature_id is not None:
+            self._handle_attr(self.layer, f, dict(uid=feature_id))
 
-            if shape:
-                f.type = self._get_feature_type(shape)
-                self._geo_encode(f, shape)
-            else: 
-                raise NotImplementedError("Can't do geometries that are not wkt or wkb")
-                
+        f.type = self._get_feature_type(shape)
+        self._geo_encode(f, shape)
+
     def _get_feature_type(self, shape):
         if shape.type == 'Point' or shape.type == 'MultiPoint':
             return self.tile.Point
