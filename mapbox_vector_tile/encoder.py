@@ -2,6 +2,7 @@ import types
 from Mapbox import vector_tile_pb2
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
+from numbers import Number
 
 from math import floor, fabs
 from array import array
@@ -28,7 +29,6 @@ class VectorTile:
         self.layer.name    = layer_name
         self.layer.version = 2
         self.layer.extent  = self.extents
-        self.feature_count = 0
         self.keys   = []
         self.values = []
 
@@ -78,18 +78,16 @@ class VectorTile:
 
     def addFeature(self, feature, shape):
         f = self.layer.features.add()
-        self.feature_count += 1
-        f.id = self.feature_count
+
+        fid = feature.get('id')
+        if fid is not None:
+            if isinstance(fid, Number) and fid >= 0:
+                f.id = fid
 
         # properties
         properties = feature.get('properties')
         if properties is not None:
             self._handle_attr(self.layer, f, properties)
-
-        # osm_id or the hash can be passed in as a feature['id']
-        feature_id = feature.get('id')
-        if feature_id is not None:
-            self._handle_attr(self.layer, f, dict(uid=feature_id))
 
         f.type = self._get_feature_type(shape)
         self._geo_encode(f, shape)
