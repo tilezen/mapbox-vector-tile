@@ -1,3 +1,6 @@
+Version 0.0.7
+	* Update id handling behavior
+
 Version 0.0.6
 	* Explode multipolygons into several features
 	* https://github.com/mapzen/mapbox-vector-tile/issues/4
