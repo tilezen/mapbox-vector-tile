@@ -118,9 +118,12 @@ class VectorTile:
                     if (isinstance(v,bool)):
                         val = layer.values.add()
                         val.bool_value = v
-                    elif (isinstance(v,str)) or (isinstance(v,unicode)):
+                    elif (isinstance(v,str)):
                         val = layer.values.add()
                         val.string_value = unicode(v,'utf8')
+                    elif (isinstance(v,unicode)):
+                        val = layer.values.add()
+                        val.string_value = v
                     elif (isinstance(v,int)) or (isinstance(v,long)):
                         val = layer.values.add()
                         val.int_value = v
