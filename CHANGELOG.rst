@@ -1,3 +1,6 @@
+Version 0.0.8
+    * Handle unicode properties
+
 Version 0.0.7
 	* Update id handling behavior
 
