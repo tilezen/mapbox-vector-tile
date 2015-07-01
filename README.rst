@@ -59,7 +59,7 @@ Encode method expects an array of layers or atleast a single valid layer. A vali
       }
     ]) 
 
-  '\x1aJ\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aW\n\x03air\x12\x1a\x08\x01\x12\x08\x00\x00\x01\x01\x02\x02\x03\x03\x18\x02"\n\t\x8d\x01\xaa?\x12\x00\x00\x00\x00\x1a\x03foo\x1a\x03uid\x1a\x05balls\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x05\n\x03foo"\x06\n\x04flew(\x80 x\x02'
+  '\x1aH\n\x05water\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aD\n\x03air\x12\x15\x12\x06\x00\x00\x01\x01\x02\x02\x18\x02"\t\t\xbe\x02\xb6\x03\n\x81\x1b\x00\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x06\n\x04flew(\x80 x\x02'
 
 
   # Using WKB
@@ -100,7 +100,10 @@ Coordinate transformations for encoding
 
 The encoder expects geometries in tile-relative coordinates, where the lower left corner is origin and values grow up and to the right, and the tile is 4096 pixels square. For example, `POINT(0 0)` is the lower left corner of the tile and `POINT(4095, 4095)` is the upper right corner of the tile. Per the specification, geometries are expected to be in spherical mercator projection before this transformations
 
-If you have geometries in longitude and latitude (EPSG:4326), you can convert to tile-based coordinates by first projecting to Spherical Mercator (EPSG:3857) and then computing the pixel location within the tile. This example code uses Django's included GEOS library to do the transformation for `LineString` objects::
+If you have geometries in longitude and latitude (EPSG:4326), you can convert to tile-based coordinates by first projecting to Spherical Mercator (EPSG:3857) and then computing the pixel location within the tile. This example code uses Django's included GEOS library to do the transformation for `LineString` objects:
+
+
+.. code-block:: python
 
   SRID_SPHERICAL_MERCATOR = 3857
 
@@ -125,14 +128,23 @@ If you have geometries in longitude and latitude (EPSG:4326), you can convert to
                   int((x_merc - x0) * MVT_EXTENT / x_span),
                   int((y_merc - y0) * MVT_EXTENT / y_span),
 
-The tile bounds can be found with `mercantile`, so a complete example might look like this::
+The tile bounds can be found with `mercantile`, so a complete usage example might look like this:
+
+.. code-block:: python
+
+  from django.contrib.gis.geos import LineString, Polygon
+  import mercantile
+  import mapbox_vector_tile
+
+  SRID_LNGLAT = 4326
+  SRID_SPHERICAL_MERCATOR = 3857
 
   tile_xyz = (2452, 3422, 18)
   tile_bounds = Polygon.from_bbox(mercantile.bounds(*tile_xyz))
-  tile_bounds.srid = 4326
-  tile_bounds.transform(3857)
+  tile_bounds.srid = SRID_LNGLAT
+  tile_bounds.transform(SRID_SPHERICAL_MERCATOR)
 
-  lnglat_line = LineString(((-122.1, 45.1), (-122.2, 45.2)), srid=4326)
+  lnglat_line = LineString(((-122.1, 45.1), (-122.2, 45.2)), srid=SRID_LNGLAT)
   tile_line = linestring_in_tile(tile_bounds, lnglat_line)
   tile_pbf = mapbox_vector_tile.encode({
     "name": "my-layer",
