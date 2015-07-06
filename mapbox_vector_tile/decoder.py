@@ -41,7 +41,8 @@ class TileData:
                 new_feature = {
                     "geometry": geometry,
                     "properties": props,
-                    "id": feature.id
+                    "id": feature.id,
+                    "type": feature.type
                 }
                 features_for_layer.append(new_feature)
         return features_by_layer
