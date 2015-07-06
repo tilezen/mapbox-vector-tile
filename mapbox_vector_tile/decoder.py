@@ -46,6 +46,9 @@ class TileData:
                 features_for_layer.append(new_feature)
         return features_by_layer
 
+    def zero_pad(self, val):
+        return '0' + val if val[0] == 'b' else val
+
     def parse_value(self, val):
         for candidate in ('bool_value',
                           'double_value',
@@ -71,8 +74,8 @@ class TileData:
         while i != len(geom):
             item = bin(geom[i])
             ilen = len(item)
-            cmd  = int(item[(ilen-cmd_bits):ilen], 2)
-            cmd_len = int(item[:ilen-cmd_bits], 2)
+            cmd  = int(self.zero_pad(item[(ilen-cmd_bits):ilen]), 2)
+            cmd_len = int(self.zero_pad(item[:ilen-cmd_bits]), 2)
 
             i = i + 1
 
