@@ -150,6 +150,18 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
       }
     ]
   }
+  
+.. code-block:: python
+
+  >>> import mapbox_vector_tile
+  
+  >>> from mapbox_vector_tile import decode
+  >>> with open('1.mvt') as f:
+  >>>   data = f.read()
+  >>> decoded_data = decode(data)
+  >>> f = open('out.txt', 'w')
+  >>> f.write(repr(decoded_data))
+  >>> f.close()
 
 Changelog
 ---------
