@@ -195,7 +195,8 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
           'foo': 'bar', 
           'uid': 123, 
           'cat': 'flew'
-        }, 
+        },
+        'type': 3,
         'id': 1
       }
     ], 
@@ -207,7 +208,8 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
           'uid': 1234, 
           'balls': 'foo', 
           'cat': 'flew'
-        }, 
+        },
+        'type': 3,
         'id': 1
       }
     ]
