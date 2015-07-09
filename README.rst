@@ -150,18 +150,17 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
       }
     ]
   }
-  
+
+  Here's how you might decode a tile from a file.
+
 .. code-block:: python
 
   >>> import mapbox_vector_tile
-  
-  >>> from mapbox_vector_tile import decode
-  >>> with open('1.mvt') as f:
-  >>>   data = f.read()
-  >>> decoded_data = decode(data)
-  >>> f = open('out.txt', 'w')
-  >>> f.write(repr(decoded_data))
-  >>> f.close()
+  >>> with open('tile.mvt', 'rb') as f:
+  >>>     data = f.read()
+  >>> decoded_data = mapbox_vector_tile.decode(data)
+  >>> with open('out.txt', 'w') as f:
+  >>>     f.write(repr(decoded_data))
 
 Changelog
 ---------
