@@ -22,7 +22,7 @@ Encode method expects an array of layers or atleast a single valid layer. A vali
 * ``name``: layer name
 * ``features``: an array of features. A feature is a dictionary with the following keys:
 
-  * ``geometry``: representation of the feature geometry in WKT or WKB. Coordinates are relative to the tile, scaled in the range `[0, 4096]`. See below for example code to perform the necessary transformation.
+  * ``geometry``: representation of the feature geometry in WKT or WKB. Coordinates are relative to the tile, scaled in the range `[0, 4096)`. See below for example code to perform the necessary transformation.
   * ``properties``: a dictionary with a few keys and their corresponding values.
 
 .. code-block:: python
@@ -108,7 +108,7 @@ If you have geometries in longitude and latitude (EPSG:4326), you can convert to
   SRID_SPHERICAL_MERCATOR = 3857
 
   def linestring_in_tile(tile_bounds, line):
-      # `mapbox-vector-tile` has hardcoded tile extent of 4096 units.
+      # `mapbox-vector-tile` has a hardcoded tile extent of 4096 units.
       MVT_EXTENT = 4096
       from django.contrib.gis.geos import LineString
 
@@ -155,6 +155,8 @@ The tile bounds can be found with `mercantile`, so a complete usage example migh
   })
 
 Note that this example may not have anything visible within the tile when rendered. It's up to you to make sure you put the right data in the tile!
+
+Also note that the spec allows the extents to be modified, even though they are often set to 4096 by convention. `mapbox-vector-tile` assumes an extent of 4096.
 
 Decoding
 --------
