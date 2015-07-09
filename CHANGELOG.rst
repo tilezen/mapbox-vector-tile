@@ -1,3 +1,7 @@
+Version 0.0.9
+    * Handle tiles from java-vector-tile (zero pad binary integers)
+    * Update README
+
 Version 0.0.8
     * Handle unicode properties
 
