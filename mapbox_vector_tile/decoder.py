@@ -7,9 +7,10 @@ CMD_LINE_TO = 2
 CMD_SEG_END = 7
 
 UNKNOWN = 0
-POINT   = 1
+POINT = 1
 LINESTRING = 2
 POLYGON = 3
+
 
 class TileData:
     """
@@ -20,7 +21,7 @@ class TileData:
 
     def getMessage(self, pbf_data):
         self.tile.ParseFromString(pbf_data)
-        
+
         features_by_layer = {}
         for layer in self.tile.layers:
             features_for_layer = features_by_layer.setdefault(layer.name, [])
@@ -35,18 +36,28 @@ class TileData:
                     val = vals[val_idx]
                     value = self.parse_value(val)
                     props[key] = value
-                
+
                 geometry = self.parse_geometry(feature.geometry, feature.type)
-                new_feature = {"geometry": geometry, 
-                    "properties": props, 
-                    "id": feature.id
+                new_feature = {
+                    "geometry": geometry,
+                    "properties": props,
+                    "id": feature.id,
+                    "type": feature.type
                 }
                 features_for_layer.append(new_feature)
         return features_by_layer
 
+    def zero_pad(self, val):
+        return '0' + val if val[0] == 'b' else val
+
     def parse_value(self, val):
-        for candidate in ('bool_value', 'double_value', 'float_value', 'int_value',
-                          'sint_value', 'string_value', 'uint_value'):
+        for candidate in ('bool_value',
+                          'double_value',
+                          'float_value',
+                          'int_value',
+                          'sint_value',
+                          'string_value',
+                          'uint_value'):
             if val.HasField(candidate):
                 return getattr(val, candidate)
         raise ValueError('%s is an unknown value')
@@ -61,18 +72,18 @@ class TileData:
         dx = 0
         dy = 0
 
-        while(i!=len(geom)):
+        while i != len(geom):
             item = bin(geom[i])
             ilen = len(item)
-            cmd  = int(item[(ilen-cmd_bits):ilen], 2)
-            cmd_len = int(item[:ilen-cmd_bits], 2)
+            cmd  = int(self.zero_pad(item[(ilen-cmd_bits):ilen]), 2)
+            cmd_len = int(self.zero_pad(item[:ilen-cmd_bits]), 2)
 
             i = i + 1
 
             if cmd == CMD_SEG_END:
-                break;
+                break
 
-            if (cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO):
+            if cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO:
                 for point in xrange(0, cmd_len):
                     x = geom[i]
                     i = i + 1
@@ -90,10 +101,8 @@ class TileData:
                     dx = x
                     dy = y
 
-                    coords.append([x,4096-y])
-        
+                    coords.append([x, 4096-y])
+
         if ftype == POLYGON and len(coords) > 0:
             coords.append(coords[0])
         return coords
-
-
