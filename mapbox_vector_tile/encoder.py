@@ -2,6 +2,7 @@ import types
 from Mapbox import vector_tile_pb2
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
+from shapely.geometry.base import BaseGeometry
 from numbers import Number
 
 from math import floor, fabs
@@ -35,13 +36,14 @@ class VectorTile:
         for feature in features:
 
             # skip missing or empty geometries
-            wkb_or_wkt = feature.get('geometry')
-            if wkb_or_wkt is None:
+            geometry_spec = feature.get('geometry')
+            if geometry_spec is None:
                 continue
-            shape = self._load_geometry(wkb_or_wkt)
+            shape = self._load_geometry(geometry_spec)
             if shape is None:
                 raise NotImplementedError(
-                    'Can\'t do geometries that are not wkt or wkb')
+                    'Can\'t do geometries that are not wkt, wkb, or shapely '
+                    'geometries')
             if shape.is_empty:
                 continue
             # if we are a multipolygon, we will create separate
@@ -67,12 +69,15 @@ class VectorTile:
             exploded_features.append(new_feature)
         return exploded_features
 
-    def _load_geometry(self, wkb_or_wkt):
+    def _load_geometry(self, geometry_spec):
+        if isinstance(geometry_spec, BaseGeometry):
+            return geometry_spec
+
         try:
-            return load_wkb(wkb_or_wkt)
+            return load_wkb(geometry_spec)
         except:
             try:
-                return load_wkt(wkb_or_wkt)
+                return load_wkt(geometry_spec)
             except:
                 return None
 
