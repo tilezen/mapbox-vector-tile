@@ -1,3 +1,6 @@
+Version 0.0.10
+    * Allow encoder to accept shapely objects directly
+
 Version 0.0.9
     * Handle tiles from java-vector-tile (zero pad binary integers)
     * Update README
