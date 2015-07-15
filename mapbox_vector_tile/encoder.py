@@ -2,6 +2,7 @@ import types
 from Mapbox import vector_tile_pb2
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
+from shapely.geometry.base import BaseGeometry
 from numbers import Number
 
 from math import floor, fabs
@@ -68,6 +69,9 @@ class VectorTile:
         return exploded_features
 
     def _load_geometry(self, wkb_or_wkt):
+        if isinstance(wkb_or_wkt, BaseGeometry):
+            return wkb_or_wkt
+
         try:
             return load_wkb(wkb_or_wkt)
         except:
