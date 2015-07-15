@@ -22,8 +22,8 @@ Encode method expects an array of layers or atleast a single valid layer. A vali
 * ``name``: layer name
 * ``features``: an array of features. A feature is a dictionary with the following keys:
 
-  * ``geometry``: representation of the feature geometry in WKT or WKB
-  * ``properties``: a dictionary with a few keys and their corresponding values. 
+  * ``geometry``: representation of the feature geometry in WKT, WKB, or a shapely geometry
+  * ``properties``: a dictionary with a few keys and their corresponding values.
 
 .. code-block:: python
 
