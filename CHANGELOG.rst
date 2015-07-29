@@ -1,3 +1,6 @@
+Version 0.0.11
+    * Decode string keys to utf-8
+
 Version 0.0.10
     * Allow encoder to accept shapely objects directly
 
