@@ -114,6 +114,8 @@ class VectorTile:
     def _handle_attr(self, layer, feature, props):
         for k,v in props.items():
             if v is not None:
+                if isinstance(k, str):
+                    k = k.decode('utf-8')
                 if k not in self.keys:
                     layer.keys.append(k)
                     self.keys.append(k)
