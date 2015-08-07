@@ -5,7 +5,7 @@ Mapbox Vector Tile
 Installation
 ------------
 
-mapbox-vector-tile is compatible with Python 2.6, 2.7, 3.2, 3.3, and 3.4. It is listed on `PyPi as 'mapbox-vector-tile'`_. The recommended way to install is via pip_:
+mapbox-vector-tile is compatible with Python 2.6, 2.7. It is listed on `PyPi as 'mapbox-vector-tile'`_. The recommended way to install is via pip_:
 
 .. code-block:: bash
 
