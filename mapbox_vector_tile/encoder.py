@@ -1,5 +1,5 @@
 import types
-from Mapbox import vector_tile_pb2
+from .Mapbox import vector_tile_pb2
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 from shapely.geometry.base import BaseGeometry
