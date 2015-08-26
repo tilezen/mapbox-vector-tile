@@ -1,4 +1,11 @@
-from Mapbox import vector_tile_pb2
+import sys
+
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    from .Mapbox import vector_tile_pb2_p3 as vector_tile
+else:
+    from .Mapbox import vector_tile_pb2 as vector_tile
 
 cmd_bits = 3
 
@@ -16,7 +23,7 @@ class TileData:
     """
     """
     def __init__(self, extents=4096):
-        self.tile    = vector_tile_pb2.tile()
+        self.tile    = vector_tile.tile()
         self.extents = extents
 
     def getMessage(self, pbf_data):

@@ -1,5 +1,6 @@
 import types
-from .Mapbox import vector_tile_pb2
+import sys
+
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 from shapely.geometry.base import BaseGeometry
@@ -7,6 +8,13 @@ from numbers import Number
 
 from math import floor, fabs
 from array import array
+
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    from .Mapbox import vector_tile_pb2_p3 as vector_tile
+else:
+    from .Mapbox import vector_tile_pb2 as vector_tile
 
 # tiles are padded by this number of pixels for the current zoom level 
 padding = 0
@@ -22,7 +30,7 @@ class VectorTile:
     """
     """
     def __init__(self, extents, layer_name=""):
-        self.tile          = vector_tile_pb2.tile()
+        self.tile          = vector_tile.tile()
         self.extents       = extents
         
     def addFeatures(self, features, layer_name=""):
@@ -114,7 +122,7 @@ class VectorTile:
     def _handle_attr(self, layer, feature, props):
         for k,v in props.items():
             if v is not None:
-                if isinstance(k, str):
+                if not PY3 and isinstance(k, str):
                     k = k.decode('utf-8')
                 if k not in self.keys:
                     layer.keys.append(k)
@@ -127,11 +135,14 @@ class VectorTile:
                         val.bool_value = v
                     elif (isinstance(v,str)):
                         val = layer.values.add()
-                        val.string_value = unicode(v,'utf8')
-                    elif (isinstance(v,unicode)):
+                        if PY3:
+                            val.string_value = str(v)
+                        else:
+                            val.string_value = unicode(v, 'utf8')
+                    elif (isinstance(v, str if PY3 else unicode)):
                         val = layer.values.add()
                         val.string_value = v
-                    elif (isinstance(v,int)) or (isinstance(v,long)):
+                    elif (isinstance(v,int)) or (isinstance(v, int if PY3 else long)):  # noqa
                         val = layer.values.add()
                         val.int_value = v
                     elif (isinstance(v,float)):
