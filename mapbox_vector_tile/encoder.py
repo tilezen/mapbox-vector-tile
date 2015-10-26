@@ -1,13 +1,9 @@
-import types
-import sys
-
+from math import fabs
+from numbers import Number
+from shapely.geometry.base import BaseGeometry
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
-from shapely.geometry.base import BaseGeometry
-from numbers import Number
-
-from math import floor, fabs
-from array import array
+import sys
 
 PY3 = sys.version_info[0] == 3
 
@@ -17,7 +13,7 @@ if PY3:
 else:
     from .Mapbox import vector_tile_pb2 as vector_tile
 
-# tiles are padded by this number of pixels for the current zoom level 
+# tiles are padded by this number of pixels for the current zoom level
 padding = 0
 
 cmd_bits = 3
@@ -27,19 +23,20 @@ CMD_MOVE_TO = 1
 CMD_LINE_TO = 2
 CMD_SEG_END = 7
 
+
 class VectorTile:
     """
     """
     def __init__(self, extents, layer_name=""):
-        self.tile          = vector_tile.tile()
-        self.extents       = extents
-        
+        self.tile = vector_tile.tile()
+        self.extents = extents
+
     def addFeatures(self, features, layer_name=""):
-        self.layer         = self.tile.layers.add()
-        self.layer.name    = layer_name
+        self.layer = self.tile.layers.add()
+        self.layer.name = layer_name
         self.layer.version = 2
-        self.layer.extent  = self.extents
-        self.keys   = []
+        self.layer.extent = self.extents
+        self.keys = []
         self.values = []
 
         for feature in features:
@@ -121,7 +118,7 @@ class VectorTile:
         return [seq[pos:pos + size] for pos in xrange(0, len(seq), size)]
 
     def _handle_attr(self, layer, feature, props):
-        for k,v in props.items():
+        for k, v in props.items():
             if v is not None:
                 if not PY3 and isinstance(k, str):
                     k = k.decode('utf-8')
@@ -131,10 +128,10 @@ class VectorTile:
                 feature.tags.append(self.keys.index(k))
                 if v not in self.values:
                     self.values.append(v)
-                    if (isinstance(v,bool)):
+                    if isinstance(v, bool):
                         val = layer.values.add()
                         val.bool_value = v
-                    elif (isinstance(v,str)):
+                    elif (isinstance(v, str)):
                         val = layer.values.add()
                         if PY3:
                             val.string_value = str(v)
@@ -143,16 +140,13 @@ class VectorTile:
                     elif (isinstance(v, str if PY3 else unicode)):
                         val = layer.values.add()
                         val.string_value = v
-                    elif (isinstance(v,int)) or (isinstance(v, int if PY3 else long)):  # noqa
+                    elif (isinstance(v, int)) or (
+                            isinstance(v, int if PY3 else long)):
                         val = layer.values.add()
                         val.int_value = v
-                    elif (isinstance(v,float)):
+                    elif (isinstance(v, float)):
                         val = layer.values.add()
                         val.double_value = v
-                    # else:
-                    #     # do nothing because we know kind is sometimes <type NoneType>
-                    #     logging.info("Unknown value type: '%s' for key: '%s'", type(v), k)
-                    #     raise Exception("Unknown value type: '%s'" % type(v))
                 feature.tags.append(self.values.index(v))
 
     def _handle_skipped_last(self, f, skipped_index, cur_x, cur_y, x_, y_):
@@ -169,20 +163,20 @@ class VectorTile:
 
     def _parseGeometry(self, shape):
         coordinates = []
-        line    = "line"
+        line = "line"
         polygon = "polygon"
 
         def _get_point_obj(x, y, cmd=CMD_MOVE_TO):
             coordinate = {
-                'x'  : x,
-                'y'  : self.extents - y,
-                'cmd': cmd 
+                'x': x,
+                'y': self.extents - y,
+                'cmd': cmd
             }
             coordinates.append(coordinate)
 
         def _get_arc_obj(arc, type):
             length = len(arc.coords)
-            iterator=0
+            iterator = 0
             cmd = CMD_MOVE_TO
             while (iterator < length):
                 x = arc.coords[iterator][0]
@@ -199,26 +193,26 @@ class VectorTile:
         if shape.type == 'GeometryCollection':
             # do nothing
             coordinates = []
-    
+
         elif shape.type == 'Point':
-            _get_point_obj(shape.x,shape.y)
-    
+            _get_point_obj(shape.x, shape.y)
+
         elif shape.type == 'LineString':
             _get_arc_obj(shape, line)
-    
+
         elif shape.type == 'Polygon':
             rings = [shape.exterior] + list(shape.interiors)
             for ring in rings:
                 _get_arc_obj(ring, polygon)
-        
+
         elif shape.type == 'MultiPoint':
             for point in shape.geoms:
                 _get_point_obj(point.x, point.y)
-        
+
         elif shape.type == 'MultiLineString':
             for arc in shape.geoms:
                 _get_arc_obj(arc, line)
-        
+
         elif shape.type == 'MultiPolygon':
             for polygon in shape.geoms:
                 rings = [polygon.exterior] + list(polygon.interiors)
@@ -233,11 +227,11 @@ class VectorTile:
     def _geo_encode(self, f, shape):
         x_, y_ = 0, 0
 
-        cmd= -1
+        cmd = -1
         cmd_idx = -1
         vtx_cmd = -1
-        prev_cmd= -1
-        
+        prev_cmd = -1
+
         skipped_index = -1
         skipped_last = False
         cur_x = 0
@@ -247,33 +241,35 @@ class VectorTile:
         length = 0
 
         coordinates = self._parseGeometry(shape)
-        
+
         while (True):
             if it >= len(coordinates):
                 break
-            
-            x,y,vtx_cmd = coordinates[it]['x'],coordinates[it]['y'],coordinates[it]['cmd']
-            
+
+            c_it = coordinates[it]
+            x, y, vtx_cmd = c_it['x'], c_it['y'], c_it['cmd']
+
             if vtx_cmd != cmd:
-                if (cmd_idx >= 0):
-                    f.geometry.__setitem__(cmd_idx, self._encode_cmd_length(cmd, length))
+                if cmd_idx >= 0:
+                    f.geometry[cmd_idx] = self._encode_cmd_length(cmd, length)
 
                 cmd = vtx_cmd
                 length = 0
                 cmd_idx = len(f.geometry)
-                f.geometry.append(0) #placeholder added in first pass
+                f.geometry.append(0)  # placeholder added in first pass
 
             if (vtx_cmd == CMD_MOVE_TO or vtx_cmd == CMD_LINE_TO):
-                if cmd == CMD_MOVE_TO and skipped_last and skipped_index >1:
-                    self._handle_skipped_last(f, skipped_index, cur_x, cur_y, x_, y_)
-                
+                if cmd == CMD_MOVE_TO and skipped_last and skipped_index > 1:
+                    self._handle_skipped_last(
+                        f, skipped_index, cur_x, cur_y, x_, y_)
+
                 # Compute delta to the previous coordinate.
                 cur_x = int(x)
                 cur_y = int(y)
 
                 dx = cur_x - x_
                 dy = cur_y - y_
-                
+
                 sharp_turn_ahead = False
 
                 if (it+2 <= len(coordinates)):
@@ -282,14 +278,17 @@ class VectorTile:
                         next_x, next_y = next_coord['x'], next_coord['y']
                         next_dx = fabs(cur_x - int(next_x))
                         next_dy = fabs(cur_y - int(next_y))
-                        if ((next_dx == 0 and next_dy >= tolerance) or (next_dy == 0 and next_dx >= tolerance)):
+                        if ((next_dx == 0 and next_dy >= tolerance) or
+                                (next_dy == 0 and next_dx >= tolerance)):
                             sharp_turn_ahead = True
 
-                # Keep all move_to commands, but omit other movements that are
-                # not >= the tolerance threshold and should be considered no-ops.
+                # Keep all move_to commands, but omit other movements
+                # that are not >= the tolerance threshold and should
+                # be considered no-ops.
                 # NOTE: length == 0 indicates the command has changed and will
                 # preserve any non duplicate move_to or line_to
-                if length == 0 or sharp_turn_ahead or fabs(dx) >= tolerance or fabs(dy) >= tolerance:
+                if (length == 0 or sharp_turn_ahead or
+                        fabs(dx) >= tolerance or fabs(dy) >= tolerance):
                     # Manual zigzag encoding.
                     f.geometry.append((dx << 1) ^ (dx >> 31))
                     f.geometry.append((dy << 1) ^ (dy >> 31))
@@ -305,15 +304,16 @@ class VectorTile:
                     length = length + 1
             else:
                 raise Exception("Unknown command type: '%s'" % vtx_cmd)
-            
+
             it = it + 1
             prev_cmd = cmd
 
         # at least one vertex + cmd/length
-        if (skipped_last and skipped_index > 1): 
-            # if we skipped previous vertex we just update it to the last one here.
+        if skipped_last and skipped_index > 1:
+            # if we skipped previous vertex we just update it to the
+            # last one here.
             self._handle_skipped_last(f, skipped_index, cur_x, cur_y, x_, y_)
-        
+
         # Update the last length/command value.
-        if (cmd_idx >= 0):
-            f.geometry.__setitem__(cmd_idx, self._encode_cmd_length(cmd, length))
+        if cmd_idx >= 0:
+            f.geometry[cmd_idx] = self._encode_cmd_length(cmd, length)

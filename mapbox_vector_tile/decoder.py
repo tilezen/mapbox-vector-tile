@@ -24,7 +24,7 @@ class TileData:
     """
     """
     def __init__(self, extents=4096):
-        self.tile    = vector_tile.tile()
+        self.tile = vector_tile.tile()
         self.extents = extents
 
     def getMessage(self, pbf_data):
@@ -83,7 +83,7 @@ class TileData:
         while i != len(geom):
             item = bin(geom[i])
             ilen = len(item)
-            cmd  = int(self.zero_pad(item[(ilen-cmd_bits):ilen]), 2)
+            cmd = int(self.zero_pad(item[(ilen-cmd_bits):ilen]), 2)
             cmd_len = int(self.zero_pad(item[:ilen-cmd_bits]), 2)
 
             i = i + 1
