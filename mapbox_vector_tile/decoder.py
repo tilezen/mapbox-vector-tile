@@ -79,6 +79,7 @@ class TileData:
         coords = []
         dx = 0
         dy = 0
+        parts = []  # for multi linestrings and multi polygons
 
         while i != len(geom):
             item = bin(geom[i])
@@ -89,9 +90,18 @@ class TileData:
             i = i + 1
 
             if cmd == CMD_SEG_END:
-                break
+                if ftype == POLYGON and coords:
+                    coords.append(coords[0])
+                parts.append(coords)
+                coords = []
 
-            if cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO:
+            elif cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO:
+
+                if ftype == LINESTRING and coords and cmd == CMD_MOVE_TO:
+                    # multi line string
+                    parts.append(coords)
+                    coords = []
+
                 for point in xrange(0, cmd_len):
                     x = geom[i]
                     i = i + 1
@@ -109,8 +119,16 @@ class TileData:
                     dx = x
                     dy = y
 
-                    coords.append([x, 4096-y])
+                    coords.append([x, self.extents-y])
 
-        if ftype == POLYGON and len(coords) > 0:
-            coords.append(coords[0])
-        return coords
+        if ftype == POINT:
+            return coords
+        elif ftype == LINESTRING or ftype == POLYGON:
+            if parts:
+                if coords:
+                    parts.append(coords)
+                return parts[0] if len(parts) == 1 else parts
+            else:
+                return coords
+        else:
+            raise ValueError('Unknown geometry type: %s' % ftype)
