@@ -89,9 +89,13 @@ class TileData:
 
             i = i + 1
 
-            if cmd == CMD_SEG_END:
-                if ftype == POLYGON and coords:
+            def _ensure_polygon_closed(coords):
+                if coords and coords[0] != coords[-1]:
                     coords.append(coords[0])
+
+            if cmd == CMD_SEG_END:
+                if ftype == POLYGON:
+                    _ensure_polygon_closed(coords)
                 parts.append(coords)
                 coords = []
 
@@ -104,6 +108,11 @@ class TileData:
                         # the end of a polygon ring, but this path
                         # would also handle the case where we receive
                         # a move without a previous close on polygons
+
+                        # for polygons, we want to ensure that it is
+                        # closed
+                        if ftype == POLYGON:
+                            _ensure_polygon_closed(coords)
                         parts.append(coords)
                         coords = []
 
@@ -128,7 +137,7 @@ class TileData:
 
         if ftype == POINT:
             return coords
-        elif ftype == LINESTRING or ftype == POLYGON:
+        elif ftype in (LINESTRING, POLYGON):
             if parts:
                 if coords:
                     parts.append(coords)
