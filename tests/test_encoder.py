@@ -56,8 +56,8 @@ class TestDifferentGeomFormats(BaseTestCase):
 
     def test_encoder(self):
         self.assertRoundTrip(
-            input_geometry='POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))',
-            expected_geometry=[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]])
+            input_geometry='POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))',
+            expected_geometry=[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
 
     def test_with_wkt(self):
         self.assertRoundTrip(
@@ -67,7 +67,7 @@ class TestDifferentGeomFormats(BaseTestCase):
     def test_with_wkb(self):
         self.assertRoundTrip(
             input_geometry=b"\001\003\000\000\000\001\000\000\000\005\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000",  # noqa
-            expected_geometry=[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]])
+            expected_geometry=[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
 
     def test_with_shapely(self):
         geometry = "LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)"  # noqa
@@ -128,6 +128,12 @@ class TestDifferentGeomFormats(BaseTestCase):
         geometry = 'POINT(1 1)'
         self.assertRoundTrip(input_geometry=geometry,
                              expected_geometry=[[1, 1]], id=42)
+
+    def test_encode_polygon_reverse_winding_order(self):
+        geometry = 'POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))'
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
 
     def test_encode_multilinestring(self):
         geometry = 'MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))'  # noqa

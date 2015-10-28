@@ -67,6 +67,11 @@ class VectorTile:
                 # and the beginning of another are signaled.
                 shape = self.enforce_multipolygon_winding_order(shape)
 
+            elif shape.type == 'Polygon':
+                # Ensure that polygons are also oriented with the
+                # appropriate winding order
+                shape = orient(shape, sign=1.0)
+
             self.addFeature(feature, shape)
 
     def enforce_multipolygon_winding_order(self, shape):
