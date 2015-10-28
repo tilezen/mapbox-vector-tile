@@ -79,6 +79,7 @@ class TileData:
         coords = []
         dx = 0
         dy = 0
+        parts = []  # for multi linestrings and multi polygons
 
         while i != len(geom):
             item = bin(geom[i])
@@ -88,10 +89,33 @@ class TileData:
 
             i = i + 1
 
-            if cmd == CMD_SEG_END:
-                break
+            def _ensure_polygon_closed(coords):
+                if coords and coords[0] != coords[-1]:
+                    coords.append(coords[0])
 
-            if cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO:
+            if cmd == CMD_SEG_END:
+                if ftype == POLYGON:
+                    _ensure_polygon_closed(coords)
+                parts.append(coords)
+                coords = []
+
+            elif cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO:
+
+                if coords and cmd == CMD_MOVE_TO:
+                    if ftype in (LINESTRING, POLYGON):
+                        # multi line string or polygon
+                        # our encoder includes CMD_SEG_END to denote
+                        # the end of a polygon ring, but this path
+                        # would also handle the case where we receive
+                        # a move without a previous close on polygons
+
+                        # for polygons, we want to ensure that it is
+                        # closed
+                        if ftype == POLYGON:
+                            _ensure_polygon_closed(coords)
+                        parts.append(coords)
+                        coords = []
+
                 for point in xrange(0, cmd_len):
                     x = geom[i]
                     i = i + 1
@@ -109,8 +133,16 @@ class TileData:
                     dx = x
                     dy = y
 
-                    coords.append([x, 4096-y])
+                    coords.append([x, self.extents-y])
 
-        if ftype == POLYGON and len(coords) > 0:
-            coords.append(coords[0])
-        return coords
+        if ftype == POINT:
+            return coords
+        elif ftype in (LINESTRING, POLYGON):
+            if parts:
+                if coords:
+                    parts.append(coords)
+                return parts[0] if len(parts) == 1 else parts
+            else:
+                return coords
+        else:
+            raise ValueError('Unknown geometry type: %s' % ftype)

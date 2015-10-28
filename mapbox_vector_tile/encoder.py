@@ -1,6 +1,8 @@
 from math import fabs
 from numbers import Number
 from shapely.geometry.base import BaseGeometry
+from shapely.geometry.multipolygon import MultiPolygon
+from shapely.geometry.polygon import orient
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 import sys
@@ -46,34 +48,41 @@ class VectorTile:
             if geometry_spec is None:
                 continue
             shape = self._load_geometry(geometry_spec)
+
             if shape is None:
                 raise NotImplementedError(
                     'Can\'t do geometries that are not wkt, wkb, or shapely '
                     'geometries')
+
             if shape.is_empty:
                 continue
-            # if we are a multipolygon, we will create separate
-            # features for each polygon and duplicate properties
-            if shape.type == 'MultiPolygon':
-                exploded_features = self.explode_multipolygon_features(
-                    feature, shape)
-                for exploded_feature in exploded_features:
-                    self.addFeature(exploded_feature,
-                                    exploded_feature['geometry'])
-            else:
-                self.addFeature(feature, shape)
 
-    def explode_multipolygon_features(self, feature, shape):
+            if shape.type == 'MultiPolygon':
+                # If we are a multipolygon, we need to ensure that the
+                # winding orders of the consituent polygons are
+                # correct. In particular, the winding order of the
+                # interior rings need to be the opposite of the
+                # exterior ones, and all interior rings need to follow
+                # the exterior one. This is how the end of one polygon
+                # and the beginning of another are signaled.
+                shape = self.enforce_multipolygon_winding_order(shape)
+
+            elif shape.type == 'Polygon':
+                # Ensure that polygons are also oriented with the
+                # appropriate winding order
+                shape = orient(shape, sign=1.0)
+
+            self.addFeature(feature, shape)
+
+    def enforce_multipolygon_winding_order(self, shape):
         assert shape.type == 'MultiPolygon'
-        exploded_features = []
-        properties = feature['properties']
-        feature_id = feature.get('id')
-        for geometry in shape.geoms:
-            new_feature = dict(properties=properties, geometry=geometry)
-            if feature_id is not None:
-                new_feature['id'] = feature_id
-            exploded_features.append(new_feature)
-        return exploded_features
+
+        parts = []
+        for part in shape.geoms:
+            part = orient(part, sign=1.0)
+            parts.append(part)
+        oriented_shape = MultiPolygon(parts)
+        return oriented_shape
 
     def _load_geometry(self, geometry_spec):
         if isinstance(geometry_spec, BaseGeometry):

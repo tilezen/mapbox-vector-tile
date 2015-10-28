@@ -29,3 +29,24 @@ class BaseTestCase(unittest.TestCase):
                 'type': 3
             }]
         })
+
+    def test_decode_polygon_no_cmd_seg_end(self):
+        # the binary here was generated without including the
+        # CMD_SEG_END after the polygon parts
+        # this tests that the decoder can detect that a new
+        # CMD_MOVE_TO implicitly closes the previous polygon
+        if PY3:
+            vector_tile = b'\x1a+\n\x05water\x12\x1d\x18\x03"\x19\t\x00\x80@"\x08\x00\x00\x07\x07\x00\x00\x08\t\x02\x01"\x00\x03\x04\x00\x00\x04\x03\x00(\x80 x\x02'  # noqa
+        else:
+            vector_tile = '\x1a+\n\x05water\x12\x1d\x18\x03"\x19\t\x00\x80@"\x08\x00\x00\x07\x07\x00\x00\x08\t\x02\x01"\x00\x03\x04\x00\x00\x04\x03\x00(\x80 x\x02'  # noqa
+        self.assertEqual(mapbox_vector_tile.decode(vector_tile), {
+            'water': [{
+                'geometry': [
+                    [[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]],
+                    [[1, 1], [1, 3], [3, 3], [3, 1], [1, 1]],
+                ],
+                'properties': {},
+                'id': 0,
+                'type': 3
+            }]
+        })
