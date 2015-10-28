@@ -97,10 +97,15 @@ class TileData:
 
             elif cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO:
 
-                if ftype == LINESTRING and coords and cmd == CMD_MOVE_TO:
-                    # multi line string
-                    parts.append(coords)
-                    coords = []
+                if coords and cmd == CMD_MOVE_TO:
+                    if ftype in (LINESTRING, POLYGON):
+                        # multi line string or polygon
+                        # our encoder includes CMD_SEG_END to denote
+                        # the end of a polygon ring, but this path
+                        # would also handle the case where we receive
+                        # a move without a previous close on polygons
+                        parts.append(coords)
+                        coords = []
 
                 for point in xrange(0, cmd_len):
                     x = geom[i]
