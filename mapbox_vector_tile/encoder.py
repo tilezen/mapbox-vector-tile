@@ -69,8 +69,14 @@ class VectorTile:
 
             elif shape.type == 'Polygon':
                 # Ensure that polygons are also oriented with the
-                # appropriate winding order
-                shape = orient(shape, sign=1.0)
+                # appropriate winding order. Their exterior rings must
+                # have a clockwise order, which is translated into a
+                # clockwise order in MVT's tile-local coordinates with
+                # the Y axis in "screen" (i.e: +ve down) configuration.
+                # Note that while the Y axis flips, we also invert the
+                # Y coordinate to get the tile-local value, which means
+                # the clockwise orientation is unchanged.
+                shape = orient(shape, sign=-1.0)
 
             self.addFeature(feature, shape)
 
@@ -79,7 +85,9 @@ class VectorTile:
 
         parts = []
         for part in shape.geoms:
-            part = orient(part, sign=1.0)
+            # see comment in shape.type == 'Polygon' above about why
+            # the sign here has to be -1.
+            part = orient(part, sign=-1.0)
             parts.append(part)
         oriented_shape = MultiPolygon(parts)
         return oriented_shape
