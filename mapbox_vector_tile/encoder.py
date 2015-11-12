@@ -41,6 +41,22 @@ class VectorTile:
         self.keys = []
         self.values = []
 
+        if layer_name != 'earth':
+            return
+
+        # fake feature
+        import shapely.geometry
+        props = dict(id='1')
+        poly1 = shapely.geometry.Polygon([(1050, 1050), (30, 1050), (30, 30), (1050, 30), (1050, 1050)])
+        poly2 = shapely.geometry.Polygon([(4050, 4050), (3030, 4050), (3030, 3030), (4050, 3030), (4050, 4050)])
+        multi = shapely.geometry.MultiPolygon([poly1, poly2])
+        shape = multi
+        shape = self.enforce_multipolygon_winding_order(shape)
+        feature = dict(properties=props, geometry=shape)
+        self.addFeature(feature, shape)
+
+        return
+
         for feature in features:
 
             # skip missing or empty geometries
