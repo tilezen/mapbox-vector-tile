@@ -1,3 +1,6 @@
+Version 0.0.12
+    * Skip property values which are lists, as MVT doesn't support this.
+
 Version 0.0.11
     * Decode string keys to utf-8
 
