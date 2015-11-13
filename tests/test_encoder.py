@@ -178,7 +178,6 @@ class TestDifferentGeomFormats(BaseTestCase):
             expected_geometry=[[0, 0]],
             properties=properties)
 
-
     def test_encode_property_long(self):
         geometry = 'POINT(0 0)'
         properties = {
@@ -200,16 +199,16 @@ class TestDifferentGeomFormats(BaseTestCase):
             input_geometry=geometry,
             expected_geometry=[[0, 0]],
             properties=properties,
-            expected_properties={'test_empty':''})
+            expected_properties={'test_empty': ''})
 
     def test_encode_property_list(self):
         geometry = 'POINT(0 0)'
         properties = {
-            'test_list': [1,2,3],
+            'test_list': [1, 2, 3],
             'test_empty': ""
         }
         self.assertRoundTrip(
             input_geometry=geometry,
             expected_geometry=[[0, 0]],
             properties=properties,
-            expected_properties={'test_empty':''})
+            expected_properties={'test_empty': ''})

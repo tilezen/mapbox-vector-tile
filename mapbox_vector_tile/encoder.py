@@ -144,8 +144,8 @@ class VectorTile:
             return True
         elif isinstance(v, bool):
             return True
-        elif isinstance(v, int) or \
-             isinstance(v, int if PY3 else long):
+        elif (isinstance(v, int) or
+              isinstance(v, int if PY3 else long)):
             return True
         elif isinstance(v, float):
             return True
