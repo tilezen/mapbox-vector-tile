@@ -114,6 +114,10 @@ class VectorTile:
     def _handle_attr(self, layer, feature, props):
         for k,v in props.items():
             if v is not None:
+                # lists can cause problems, as there's no way to
+                # represent them as MVT values.
+                if isinstance(v, list):
+                    continue
                 if isinstance(k, str):
                     k = k.decode('utf-8')
                 if k not in self.keys:
