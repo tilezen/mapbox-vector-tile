@@ -25,13 +25,16 @@ class BaseTestCase(unittest.TestCase):
         self.feature_geometry = 'POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))'
 
     def assertRoundTrip(self, input_geometry, expected_geometry, name=None,
-                        properties=None, id=None, expected_len=1):
+                        properties=None, id=None, expected_len=1,
+                        expected_properties=None):
         if input_geometry is None:
             input_geometry = self.feature_geometry
         if name is None:
             name = self.layer_name
         if properties is None:
             properties = self.feature_properties
+        if expected_properties is None:
+            expected_properties = properties
         source = [{
             "name": name,
             "features": [{
@@ -46,7 +49,7 @@ class BaseTestCase(unittest.TestCase):
         self.assertIn(name, decoded)
         features = decoded[name]
         self.assertEqual(expected_len, len(features))
-        self.assertEqual(features[0]['properties'], properties)
+        self.assertEqual(features[0]['properties'], expected_properties)
         self.assertEqual(features[0]['geometry'], expected_geometry)
         if id:
             self.assertEqual(decoded[name][0]['id'], id)
@@ -163,3 +166,49 @@ class TestDifferentGeomFormats(BaseTestCase):
                 [[8, 8], [2, 8], [2, 0], [8, 0], [8, 8]],
             ],
             expected_len=1)
+
+    def test_encode_property_bool(self):
+        geometry = 'POINT(0 0)'
+        properties = {
+            'test_bool_true': True,
+            'test_bool_false': False
+        }
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=[[0, 0]],
+            properties=properties)
+
+    def test_encode_property_long(self):
+        geometry = 'POINT(0 0)'
+        properties = {
+            'test_int': int(1),
+            'test_long': long(1)
+        }
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=[[0, 0]],
+            properties=properties)
+
+    def test_encode_property_null(self):
+        geometry = 'POINT(0 0)'
+        properties = {
+            'test_none': None,
+            'test_empty': ""
+        }
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=[[0, 0]],
+            properties=properties,
+            expected_properties={'test_empty': ''})
+
+    def test_encode_property_list(self):
+        geometry = 'POINT(0 0)'
+        properties = {
+            'test_list': [1, 2, 3],
+            'test_empty': ""
+        }
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=[[0, 0]],
+            properties=properties,
+            expected_properties={'test_empty': ''})

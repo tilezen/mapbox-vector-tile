@@ -134,9 +134,31 @@ class VectorTile:
     def _chunker(self, seq, size):
         return [seq[pos:pos + size] for pos in xrange(0, len(seq), size)]
 
+    def _can_handle_key(self, k):
+        return isinstance(k, str) or \
+            isinstance(k, str if PY3 else unicode)
+
+    def _can_handle_val(self, v):
+        if isinstance(v, str) or \
+           isinstance(v, str if PY3 else unicode):
+            return True
+        elif isinstance(v, bool):
+            return True
+        elif (isinstance(v, int) or
+              isinstance(v, int if PY3 else long)):
+            return True
+        elif isinstance(v, float):
+            return True
+
+        return False
+
+    def _can_handle_attr(self, k, v):
+        return self._can_handle_key(k) and \
+            self._can_handle_val(v)
+
     def _handle_attr(self, layer, feature, props):
         for k, v in props.items():
-            if v is not None:
+            if self._can_handle_attr(k, v):
                 if not PY3 and isinstance(k, str):
                     k = k.decode('utf-8')
                 if k not in self.keys:
@@ -145,24 +167,20 @@ class VectorTile:
                 feature.tags.append(self.keys.index(k))
                 if v not in self.values:
                     self.values.append(v)
+                    val = layer.values.add()
                     if isinstance(v, bool):
-                        val = layer.values.add()
                         val.bool_value = v
                     elif (isinstance(v, str)):
-                        val = layer.values.add()
                         if PY3:
                             val.string_value = str(v)
                         else:
                             val.string_value = unicode(v, 'utf8')
                     elif (isinstance(v, str if PY3 else unicode)):
-                        val = layer.values.add()
                         val.string_value = v
                     elif (isinstance(v, int)) or (
                             isinstance(v, int if PY3 else long)):
-                        val = layer.values.add()
                         val.int_value = v
                     elif (isinstance(v, float)):
-                        val = layer.values.add()
                         val.double_value = v
                 feature.tags.append(self.values.index(v))
 
