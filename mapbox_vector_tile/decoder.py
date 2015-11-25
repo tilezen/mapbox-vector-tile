@@ -25,7 +25,6 @@ class TileData:
     """
     def __init__(self, extents=4096):
         self.tile = vector_tile.tile()
-        self.extents = extents
 
     def getMessage(self, pbf_data):
         self.tile.ParseFromString(pbf_data)
@@ -35,6 +34,7 @@ class TileData:
             features_for_layer = features_by_layer.setdefault(layer.name, [])
             keys = layer.keys
             vals = layer.values
+            extent = layer.extent
             for feature in layer.features:
                 tags = feature.tags
                 props = {}
@@ -45,7 +45,7 @@ class TileData:
                     value = self.parse_value(val)
                     props[key] = value
 
-                geometry = self.parse_geometry(feature.geometry, feature.type)
+                geometry = self.parse_geometry(feature.geometry, feature.type, extent)
                 new_feature = {
                     "geometry": geometry,
                     "properties": props,
@@ -73,7 +73,7 @@ class TileData:
     def zig_zag_decode(self, n):
         return (n >> 1) ^ (-(n & 1))
 
-    def parse_geometry(self, geom, ftype):
+    def parse_geometry(self, geom, ftype, extent):
         # [9 0 8192 26 0 10 2 0 0 2 15]
         i = 0
         coords = []
@@ -133,7 +133,7 @@ class TileData:
                     dx = x
                     dy = y
 
-                    coords.append([x, self.extents-y])
+                    coords.append([x, extent-y])
 
         if ftype == POINT:
             return coords
