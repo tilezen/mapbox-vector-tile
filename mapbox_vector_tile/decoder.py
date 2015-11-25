@@ -45,7 +45,8 @@ class TileData:
                     value = self.parse_value(val)
                     props[key] = value
 
-                geometry = self.parse_geometry(feature.geometry, feature.type, extent)
+                geometry = self.parse_geometry(feature.geometry, feature.type,
+                                               extent)
                 new_feature = {
                     "geometry": geometry,
                     "properties": props,
