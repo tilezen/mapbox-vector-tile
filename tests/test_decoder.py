@@ -50,3 +50,18 @@ class BaseTestCase(unittest.TestCase):
                 'type': 3
             }]
         })
+
+    def test_nondefault_extent(self):
+        if PY3:
+            vector_tile = b'\x1aK\n\x05water\x12\x1c\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x02"\x0e\t\x80}\xd0\x12\x12\xbf>\xd86\xbf>\xd86\x1a\x03foo\x1a\x03baz\x1a\x03uid"\x05\n\x03bar"\x05\n\x03foo"\x02 {(\x80@x\x02'
+        else:
+            vector_tile = '\x1aK\n\x05water\x12\x1c\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x02"\x0e\t\x80}\xd0\x12\x12\xbf>\xd86\xbf>\xd86\x1a\x03foo\x1a\x03baz\x1a\x03uid"\x05\n\x03bar"\x05\n\x03foo"\x02 {(\x80@x\x02'
+
+        self.assertEqual(mapbox_vector_tile.decode(vector_tile), {
+            'water': [{
+                'geometry': [[8000, 7000], [4000, 3500], [0, 0]],
+                'id': 1,
+                'properties': {'baz': 'foo', 'foo': 'bar', 'uid': 123},
+                'type': 2
+            }]
+        })
