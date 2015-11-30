@@ -23,18 +23,18 @@ POLYGON = 3
 class TileData:
     """
     """
-    def __init__(self, extents=4096):
+    def __init__(self):
         self.tile = vector_tile.tile()
 
     def getMessage(self, pbf_data):
         self.tile.ParseFromString(pbf_data)
 
-        features_by_layer = {}
+        tile = {}
         for layer in self.tile.layers:
-            features_for_layer = features_by_layer.setdefault(layer.name, [])
             keys = layer.keys
             vals = layer.values
-            extent = layer.extent
+
+            features = []
             for feature in layer.features:
                 tags = feature.tags
                 props = {}
@@ -46,15 +46,21 @@ class TileData:
                     props[key] = value
 
                 geometry = self.parse_geometry(feature.geometry, feature.type,
-                                               extent)
+                                               layer.extent)
                 new_feature = {
                     "geometry": geometry,
                     "properties": props,
                     "id": feature.id,
                     "type": feature.type
                 }
-                features_for_layer.append(new_feature)
-        return features_by_layer
+                features.append(new_feature)
+
+            tile[layer.name] = {
+                "extent": layer.extent,
+                "version": layer.version,
+                "features": features,
+            }
+        return tile
 
     def zero_pad(self, val):
         return '0' + val if val[0] == 'b' else val

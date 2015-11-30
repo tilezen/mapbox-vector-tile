@@ -47,12 +47,13 @@ class BaseTestCase(unittest.TestCase):
         encoded = encode(source)
         decoded = decode(encoded)
         self.assertIn(name, decoded)
-        features = decoded[name]
+        layer = decoded[name]
+        features = layer['features']
         self.assertEqual(expected_len, len(features))
         self.assertEqual(features[0]['properties'], expected_properties)
         self.assertEqual(features[0]['geometry'], expected_geometry)
         if id:
-            self.assertEqual(decoded[name][0]['id'], id)
+            self.assertEqual(features[0]['id'], id)
 
 
 class TestDifferentGeomFormats(BaseTestCase):
