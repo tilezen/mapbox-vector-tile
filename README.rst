@@ -174,15 +174,15 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
           'properties': 'dictionary of key/value pairs',
           'id': 'unique id for the given feature within the layer '
           }, ...
-          ]
+        ]
       },
       {
         # ...
       }
     ],
-    layername2: [
+    layername2: {
       # ...
-    ]
+    }
   }
 
 .. code-block:: python
