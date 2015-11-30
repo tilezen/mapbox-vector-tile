@@ -167,19 +167,15 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
 
   {
     layername: {
-        'extent': integer layer extent
-        'version': integer
+        'extent': 'integer layer extent'
+        'version': 'integer'
         'features': [{
           'geometry': 'list of points',
           'properties': 'dictionary of key/value pairs',
           'id': 'unique id for the given feature within the layer '
           }, ...
         ]
-      },
-      {
-        # ...
-      }
-    ],
+    },
     layername2: {
       # ...
     }
