@@ -6,7 +6,7 @@ extents = 4096
 
 
 def decode(tile):
-    vector_tile = decoder.TileData(extents)
+    vector_tile = decoder.TileData()
     message = vector_tile.getMessage(tile)
     return message
 
