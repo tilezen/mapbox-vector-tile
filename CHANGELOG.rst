@@ -1,3 +1,9 @@
+Version 0.1.0
+    * Add compatibility with python 3
+    * Handle multipolygons as single features
+    * Use winding order from mapbox vector tile 2.0 spec
+    * Support custom extents when decoding
+
 Version 0.0.11
     * Decode string keys to utf-8
 
