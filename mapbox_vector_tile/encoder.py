@@ -40,6 +40,7 @@ class VectorTile:
         self.layer.extent = self.extents
         self.keys = []
         self.values = []
+        self.seen_values = set()
 
         for feature in features:
 
@@ -165,8 +166,9 @@ class VectorTile:
                     layer.keys.append(k)
                     self.keys.append(k)
                 feature.tags.append(self.keys.index(k))
-                if v not in self.values:
+                if v not in self.seen_values:
                     self.values.append(v)
+                    self.seen_values.add(v)
                     val = layer.values.add()
                     if isinstance(v, bool):
                         val.bool_value = v
