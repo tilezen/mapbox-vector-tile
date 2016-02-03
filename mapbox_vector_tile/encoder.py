@@ -40,7 +40,7 @@ class VectorTile:
         self.layer.extent = self.extents
         self.keys = []
         self.values = []
-        self.seen_values = set()
+        self.seen_values_idx = {}
 
         for feature in features:
 
@@ -166,9 +166,9 @@ class VectorTile:
                     layer.keys.append(k)
                     self.keys.append(k)
                 feature.tags.append(self.keys.index(k))
-                if v not in self.seen_values:
+                if v not in self.seen_values_idx:
+                    self.seen_values_idx[v] = len(self.values)
                     self.values.append(v)
-                    self.seen_values.add(v)
                     val = layer.values.add()
                     if isinstance(v, bool):
                         val.bool_value = v
@@ -184,7 +184,7 @@ class VectorTile:
                         val.int_value = v
                     elif (isinstance(v, float)):
                         val.double_value = v
-                feature.tags.append(self.values.index(v))
+                feature.tags.append(self.seen_values_idx[v])
 
     def _handle_skipped_last(self, f, skipped_index, cur_x, cur_y, x_, y_):
         last_x = f.geometry[skipped_index - 2]
