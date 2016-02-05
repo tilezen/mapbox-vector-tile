@@ -213,3 +213,23 @@ class TestDifferentGeomFormats(BaseTestCase):
             expected_geometry=[[0, 0]],
             properties=properties,
             expected_properties={'test_empty': ''})
+
+    def test_encode_multiple_values_test(self):
+        geometry = 'POINT(0 0)'
+        properties1 = dict(foo='bar', baz='bar')
+        properties2 = dict(quux='morx', baz='bar')
+        name = 'foo'
+        feature1 = dict(geometry=geometry, properties=properties1)
+        feature2 = dict(geometry=geometry, properties=properties2)
+        source = [{
+            "name": name,
+            "features": [feature1, feature2]
+        }]
+        encoded = encode(source)
+        decoded = decode(encoded)
+        self.assertIn(name, decoded)
+        layer = decoded[name]
+        features = layer['features']
+        self.assertEqual(2, len(features))
+        self.assertEqual(features[0]['properties'], properties1)
+        self.assertEqual(features[1]['properties'], properties2)

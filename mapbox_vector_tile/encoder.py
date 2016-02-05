@@ -38,8 +38,10 @@ class VectorTile:
         self.layer.name = layer_name
         self.layer.version = 2
         self.layer.extent = self.extents
-        self.keys = []
-        self.values = []
+
+        self.key_idx = 0
+        self.val_idx = 0
+        self.seen_keys_idx = {}
         self.seen_values_idx = {}
 
         for feature in features:
@@ -162,13 +164,18 @@ class VectorTile:
             if self._can_handle_attr(k, v):
                 if not PY3 and isinstance(k, str):
                     k = k.decode('utf-8')
-                if k not in self.keys:
+
+                if k not in self.seen_keys_idx:
                     layer.keys.append(k)
-                    self.keys.append(k)
-                feature.tags.append(self.keys.index(k))
+                    self.seen_keys_idx[k] = self.key_idx
+                    self.key_idx += 1
+
+                feature.tags.append(self.seen_keys_idx[k])
+
                 if v not in self.seen_values_idx:
-                    self.seen_values_idx[v] = len(self.values)
-                    self.values.append(v)
+                    self.seen_values_idx[v] = self.val_idx
+                    self.val_idx += 1
+
                     val = layer.values.add()
                     if isinstance(v, bool):
                         val.bool_value = v
@@ -184,6 +191,7 @@ class VectorTile:
                         val.int_value = v
                     elif (isinstance(v, float)):
                         val.double_value = v
+
                 feature.tags.append(self.seen_values_idx[v])
 
     def _handle_skipped_last(self, f, skipped_index, cur_x, cur_y, x_, y_):
