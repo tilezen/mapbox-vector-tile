@@ -79,7 +79,7 @@ class VectorTile:
                 # Note that while the Y axis flips, we also invert the
                 # Y coordinate to get the tile-local value, which means
                 # the clockwise orientation is unchanged.
-                shape = orient(shape, sign=-1.0)
+                shape = orient(shape, sign=1.0)
 
             self.addFeature(feature, shape)
 
@@ -90,7 +90,7 @@ class VectorTile:
         for part in shape.geoms:
             # see comment in shape.type == 'Polygon' above about why
             # the sign here has to be -1.
-            part = orient(part, sign=-1.0)
+            part = orient(part, sign=1.0)
             parts.append(part)
         oriented_shape = MultiPolygon(parts)
         return oriented_shape
