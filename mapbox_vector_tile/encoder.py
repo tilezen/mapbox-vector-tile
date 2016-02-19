@@ -308,6 +308,15 @@ class VectorTile:
                     self._handle_skipped_last(
                         f, skipped_index, cur_x, cur_y, x_, y_)
 
+                # ensure that floating point values don't get truncated
+                if isinstance(x, float):
+                    x = round(x)
+                if isinstance(y, float):
+                    y = round(y)
+
+                x = int(x)
+                y = int(y)
+
                 # Compute delta to the previous coordinate.
                 cur_x = int(x)
                 cur_y = int(y)

@@ -66,7 +66,7 @@ class TestDifferentGeomFormats(BaseTestCase):
     def test_with_wkt(self):
         self.assertRoundTrip(
             input_geometry="LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)",  # noqa
-            expected_geometry=[[-71, 43], [-71, 43], [-71, 43]])
+            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]])
 
     def test_with_wkb(self):
         self.assertRoundTrip(
@@ -78,7 +78,7 @@ class TestDifferentGeomFormats(BaseTestCase):
         geometry = wkt.loads(geometry)
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry=[[-71, 43], [-71, 43], [-71, 43]])
+            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]])
 
     def test_with_invalid_geometry(self):
         expected_result = ('Can\'t do geometries that are not wkt, wkb, or '
@@ -105,7 +105,7 @@ class TestDifferentGeomFormats(BaseTestCase):
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry=[[-71, 43], [-71, 43], [-71, 43]],
+            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]],
             properties=properties)
 
     def test_encode_unicode_property_key(self):
@@ -115,7 +115,7 @@ class TestDifferentGeomFormats(BaseTestCase):
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry=[[-71, 43], [-71, 43], [-71, 43]],
+            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]],
             properties=properties)
 
     def test_encode_float_little_endian(self):
@@ -125,7 +125,7 @@ class TestDifferentGeomFormats(BaseTestCase):
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry=[[-71, 43], [-71, 43], [-71, 43]],
+            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]],
             properties=properties)
 
     def test_encode_feature_with_id(self):
@@ -233,3 +233,11 @@ class TestDifferentGeomFormats(BaseTestCase):
         self.assertEqual(2, len(features))
         self.assertEqual(features[0]['properties'], properties1)
         self.assertEqual(features[1]['properties'], properties2)
+
+    def test_encode_rounding_floats(self):
+        geometry = 'LINESTRING(1.1 1.1, 41.5 41.8)'
+        exp_geoemtry = [[1, 1], [42, 42]]
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=exp_geoemtry,
+        )
