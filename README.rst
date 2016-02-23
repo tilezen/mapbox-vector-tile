@@ -221,7 +221,7 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
     }
   }
 
-  Here's how you might decode a tile from a file.
+Here's how you might decode a tile from a file.
 
 .. code-block:: python
 
