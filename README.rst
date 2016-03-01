@@ -158,6 +158,30 @@ Note that this example may not have anything visible within the tile when render
 
 Also note that the spec allows the extents to be modified, even though they are often set to 4096 by convention. `mapbox-vector-tile` assumes an extent of 4096.
 
+### Quantization
+
+The encoder also has options to quantize the data for you via the `quantize_bounds` option. When encoding, pass in the bounds in the form (minx, maxx, miny, maxy) and the coordinates will be scaled appropriately during encoding.
+
+.. code-block:: python
+
+mapbox_vector_tile.encode([
+      {
+        "name": "water",
+        "features": [
+          {
+            "geometry":"POINT(15 15)",
+            "properties":{
+              "foo":"bar",
+            }
+          }
+        ]
+      }
+    ], quantize_bounds=(10.0, 10.0, 20.0, 20.0))
+
+In this example, the coordinate that would get encoded would be (2048, 2048)
+
+Additionally, if the data is already in a cooridnate system with y values going down, the encoder supports an option, `y_coord_down`, that can be set to True. This will suppress flipping the y coordinate values during encoding.
+
 Decoding
 --------
 
