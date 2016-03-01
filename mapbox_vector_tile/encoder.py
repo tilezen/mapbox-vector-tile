@@ -26,14 +26,39 @@ CMD_LINE_TO = 2
 CMD_SEG_END = 7
 
 
+def transform(shape, func):
+    ''' Ported from TileStache'''
+
+    construct = shape.__class__
+
+    if shape.type.startswith('Multi'):
+        parts = [transform(geom, func) for geom in shape.geoms]
+        return construct(parts)
+
+    if shape.type in ('Point', 'LineString'):
+        return construct(map(func, shape.coords))
+
+    if shape.type == 'Polygon':
+        exterior = map(func, shape.exterior.coords)
+        rings = [map(func, ring.coords) for ring in shape.interiors]
+        return construct(exterior, rings)
+
+    if shape.type == 'GeometryCollection':
+        return construct()
+
+    raise ValueError('Unknown geometry type, "%s"' % shape.type)
+
+
 class VectorTile:
     """
     """
-    def __init__(self, extents, layer_name=""):
+    def __init__(self, extents):
         self.tile = vector_tile.tile()
         self.extents = extents
 
-    def addFeatures(self, features, layer_name=""):
+    def addFeatures(self, features, layer_name='',
+                    quantize_bounds=None, y_coord_down=False):
+
         self.layer = self.tile.layers.add()
         self.layer.name = layer_name
         self.layer.version = 2
@@ -81,7 +106,23 @@ class VectorTile:
                 # the clockwise orientation is unchanged.
                 shape = orient(shape, sign=-1.0)
 
-            self.addFeature(feature, shape)
+            if quantize_bounds:
+                shape = self.quantize(shape, quantize_bounds)
+
+            self.addFeature(feature, shape, y_coord_down)
+
+    def quantize(self, shape, bounds):
+        minx, miny, maxx, maxy = bounds
+
+        def fn(point):
+            x, y = point
+            xfac = self.extents / (maxx - minx)
+            yfac = self.extents / (maxy - miny)
+            x = xfac * (x - minx)
+            y = yfac * (y - miny)
+            return x, y
+
+        return transform(shape, fn)
 
     def enforce_multipolygon_winding_order(self, shape):
         assert shape.type == 'MultiPolygon'
@@ -107,7 +148,7 @@ class VectorTile:
             except:
                 return None
 
-    def addFeature(self, feature, shape):
+    def addFeature(self, feature, shape, y_coord_down):
         f = self.layer.features.add()
 
         fid = feature.get('id')
@@ -121,7 +162,7 @@ class VectorTile:
             self._handle_attr(self.layer, f, properties)
 
         f.type = self._get_feature_type(shape)
-        self._geo_encode(f, shape)
+        self._geo_encode(f, shape, y_coord_down)
 
     def _get_feature_type(self, shape):
         if shape.type == 'Point' or shape.type == 'MultiPoint':
@@ -214,7 +255,7 @@ class VectorTile:
         def _get_point_obj(x, y, cmd=CMD_MOVE_TO):
             coordinate = {
                 'x': x,
-                'y': self.extents - y,
+                'y': y,
                 'cmd': cmd
             }
             coordinates.append(coordinate)
@@ -269,7 +310,7 @@ class VectorTile:
 
         return coordinates
 
-    def _geo_encode(self, f, shape):
+    def _geo_encode(self, f, shape, y_coord_down):
         x_, y_ = 0, 0
 
         cmd = -1
@@ -316,6 +357,9 @@ class VectorTile:
 
                 x = int(x)
                 y = int(y)
+
+                if not y_coord_down:
+                    y = self.extents - y
 
                 # Compute delta to the previous coordinate.
                 cur_x = int(x)

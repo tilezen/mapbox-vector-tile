@@ -241,3 +241,42 @@ class TestDifferentGeomFormats(BaseTestCase):
             input_geometry=geometry,
             expected_geometry=exp_geoemtry,
         )
+
+
+class QuantizeTest(unittest.TestCase):
+
+    def test_quantize(self):
+        from mapbox_vector_tile.encoder import VectorTile
+        extents = 4096
+        encoder = VectorTile(extents)
+        props = dict(foo='bar')
+        shape = 'POINT(15 15)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        bounds = 10.0, 10.0, 20.0, 20.0
+        encoder.addFeatures(features, 'layername', quantize_bounds=bounds)
+        pbf = encoder.tile.SerializeToString()
+        from mapbox_vector_tile import decode
+        result = decode(pbf)
+        act_feature = result['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[2048, 2048]]
+        self.assertEqual(exp_geom, act_geom)
+
+    def test_y_coord_down(self):
+        from mapbox_vector_tile.encoder import VectorTile
+        extents = 4096
+        encoder = VectorTile(extents)
+        props = dict(foo='bar')
+        shape = 'POINT(10 10)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        encoder.addFeatures(features, 'layername', y_coord_down=True)
+        pbf = encoder.tile.SerializeToString()
+        from mapbox_vector_tile.decoder import TileData
+        tile_data = TileData()
+        result = tile_data.getMessage(pbf, y_coord_down=True)
+        act_feature = result['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[10, 10]]
+        self.assertEqual(exp_geom, act_geom)
