@@ -246,17 +246,15 @@ class TestDifferentGeomFormats(BaseTestCase):
 class QuantizeTest(unittest.TestCase):
 
     def test_quantize(self):
-        from mapbox_vector_tile.encoder import VectorTile
-        extents = 4096
-        encoder = VectorTile(extents)
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
         props = dict(foo='bar')
         shape = 'POINT(15 15)'
         feature = dict(geometry=shape, properties=props)
         features = [feature]
+        source = dict(name='layername', features=features)
         bounds = 10.0, 10.0, 20.0, 20.0
-        encoder.addFeatures(features, 'layername', quantize_bounds=bounds)
-        pbf = encoder.tile.SerializeToString()
-        from mapbox_vector_tile import decode
+        pbf = encode(source, quantize_bounds=bounds)
         result = decode(pbf)
         act_feature = result['layername']['features'][0]
         act_geom = act_feature['geometry']
@@ -264,18 +262,15 @@ class QuantizeTest(unittest.TestCase):
         self.assertEqual(exp_geom, act_geom)
 
     def test_y_coord_down(self):
-        from mapbox_vector_tile.encoder import VectorTile
-        extents = 4096
-        encoder = VectorTile(extents)
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
         props = dict(foo='bar')
         shape = 'POINT(10 10)'
         feature = dict(geometry=shape, properties=props)
         features = [feature]
-        encoder.addFeatures(features, 'layername', y_coord_down=True)
-        pbf = encoder.tile.SerializeToString()
-        from mapbox_vector_tile.decoder import TileData
-        tile_data = TileData()
-        result = tile_data.getMessage(pbf, y_coord_down=True)
+        source = dict(name='layername', features=features)
+        pbf = encode(source, y_coord_down=True)
+        result = decode(pbf, y_coord_down=True)
         act_feature = result['layername']['features'][0]
         act_geom = act_feature['geometry']
         exp_geom = [[10, 10]]
