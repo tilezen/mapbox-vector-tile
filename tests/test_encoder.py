@@ -275,3 +275,26 @@ class QuantizeTest(unittest.TestCase):
         act_geom = act_feature['geometry']
         exp_geom = [[10, 10]]
         self.assertEqual(exp_geom, act_geom)
+
+    def test_quantize_and_y_coord_down(self):
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
+        props = dict(foo='bar')
+        shape = 'POINT(30 30)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = dict(name='layername', features=features)
+        bounds = 0.0, 0.0, 50.0, 50.0
+        pbf = encode(source, quantize_bounds=bounds, y_coord_down=True)
+
+        result_decode_no_flip = decode(pbf, y_coord_down=True)
+        act_feature = result_decode_no_flip['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[2458, 2458]]
+        self.assertEqual(exp_geom, act_geom)
+
+        result_decode_flip = decode(pbf)
+        act_feature = result_decode_flip['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[2458, 1638]]
+        self.assertEqual(exp_geom, act_geom)
