@@ -298,3 +298,22 @@ class QuantizeTest(unittest.TestCase):
         act_geom = act_feature['geometry']
         exp_geom = [[2458, 1638]]
         self.assertEqual(exp_geom, act_geom)
+
+
+class ExtentTest(unittest.TestCase):
+
+    def test_custom_extent(self):
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
+        props = dict(foo='bar')
+        shape = 'POINT(10 10)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = dict(name='layername', features=features)
+        bounds = 0.0, 0.0, 10.0, 10.0
+        pbf = encode(source, quantize_bounds=bounds, extents=50)
+        result = decode(pbf)
+        act_feature = result['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[50, 50]]
+        self.assertEqual(exp_geom, act_geom)

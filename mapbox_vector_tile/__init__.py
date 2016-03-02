@@ -1,9 +1,6 @@
 from . import encoder
 from . import decoder
 
-# coordindates are scaled to this range within tile
-extents = 4096
-
 
 def decode(tile, y_coord_down=False):
     vector_tile = decoder.TileData()
@@ -11,7 +8,7 @@ def decode(tile, y_coord_down=False):
     return message
 
 
-def encode(layers, quantize_bounds=None, y_coord_down=False):
+def encode(layers, quantize_bounds=None, y_coord_down=False, extents=4096):
     vector_tile = encoder.VectorTile(extents)
     if (isinstance(layers, list)):
         for layer in layers:

@@ -176,6 +176,26 @@ In this example, the coordinate that would get encoded would be (2048, 2048)
 
 Additionally, if the data is already in a cooridnate system with y values going down, the encoder supports an option, `y_coord_down`, that can be set to True. This will suppress flipping the y coordinate values during encoding.
 
+### Custom extents
+
+The encoder also supports passing in custom extents. These will be passed through to the layer in the pbf, and honored during any quantization or y coordinate flipping.
+
+```python
+mapbox_vector_tile.encode([
+      {
+        "name": "water",
+        "features": [
+          {
+            "geometry":"POINT(15 15)",
+            "properties":{
+              "foo":"bar",
+            }
+          }
+        ]
+      }
+    ], quantize_bounds=(0.0, 0.0, 10.0, 10.0), extents=50)
+```
+
 Decoding
 --------
 
