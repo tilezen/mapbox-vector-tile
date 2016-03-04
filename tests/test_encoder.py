@@ -241,3 +241,79 @@ class TestDifferentGeomFormats(BaseTestCase):
             input_geometry=geometry,
             expected_geometry=exp_geoemtry,
         )
+
+
+class QuantizeTest(unittest.TestCase):
+
+    def test_quantize(self):
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
+        props = dict(foo='bar')
+        shape = 'POINT(15 15)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = dict(name='layername', features=features)
+        bounds = 10.0, 10.0, 20.0, 20.0
+        pbf = encode(source, quantize_bounds=bounds)
+        result = decode(pbf)
+        act_feature = result['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[2048, 2048]]
+        self.assertEqual(exp_geom, act_geom)
+
+    def test_y_coord_down(self):
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
+        props = dict(foo='bar')
+        shape = 'POINT(10 10)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = dict(name='layername', features=features)
+        pbf = encode(source, y_coord_down=True)
+        result = decode(pbf, y_coord_down=True)
+        act_feature = result['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[10, 10]]
+        self.assertEqual(exp_geom, act_geom)
+
+    def test_quantize_and_y_coord_down(self):
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
+        props = dict(foo='bar')
+        shape = 'POINT(30 30)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = dict(name='layername', features=features)
+        bounds = 0.0, 0.0, 50.0, 50.0
+        pbf = encode(source, quantize_bounds=bounds, y_coord_down=True)
+
+        result_decode_no_flip = decode(pbf, y_coord_down=True)
+        act_feature = result_decode_no_flip['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[2458, 2458]]
+        self.assertEqual(exp_geom, act_geom)
+
+        result_decode_flip = decode(pbf)
+        act_feature = result_decode_flip['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[2458, 1638]]
+        self.assertEqual(exp_geom, act_geom)
+
+
+class ExtentTest(unittest.TestCase):
+
+    def test_custom_extent(self):
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
+        props = dict(foo='bar')
+        shape = 'POINT(10 10)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = dict(name='layername', features=features)
+        bounds = 0.0, 0.0, 10.0, 10.0
+        pbf = encode(source, quantize_bounds=bounds, extents=50)
+        result = decode(pbf)
+        act_feature = result['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[50, 50]]
+        self.assertEqual(exp_geom, act_geom)
