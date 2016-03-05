@@ -1,3 +1,12 @@
+Version 0.2.0
+    * python3 updates
+    * enforce winding order on multipolygons
+    * update key/val handling
+    * round floating point values instead of truncating
+    * add option to quantize bounds
+    * add option to flip y coord system
+    * add ability to pass custom extents
+
 Version 0.1.0
     * Add compatibility with python 3
     * Handle multipolygons as single features
