@@ -1,3 +1,6 @@
+Version 0.2.1
+    * include README.md in distribution to fix install
+
 Version 0.2.0
     * python3 updates
     * enforce winding order on multipolygons
