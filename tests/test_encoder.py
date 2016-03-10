@@ -7,6 +7,7 @@ import unittest
 
 import mapbox_vector_tile
 from mapbox_vector_tile import encode, decode
+from past.builtins import long, unicode
 
 from shapely import wkt
 

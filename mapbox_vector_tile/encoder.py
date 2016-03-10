@@ -1,4 +1,5 @@
 from math import fabs
+from past.builtins import long, unicode
 from numbers import Number
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
