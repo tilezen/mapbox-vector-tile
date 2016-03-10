@@ -23,6 +23,7 @@ POLYGON = 3
 class TileData:
     """
     """
+
     def __init__(self):
         self.tile = vector_tile.tile()
 
@@ -91,8 +92,8 @@ class TileData:
         while i != len(geom):
             item = bin(geom[i])
             ilen = len(item)
-            cmd = int(self.zero_pad(item[(ilen-cmd_bits):ilen]), 2)
-            cmd_len = int(self.zero_pad(item[:ilen-cmd_bits]), 2)
+            cmd = int(self.zero_pad(item[(ilen - cmd_bits):ilen]), 2)
+            cmd_len = int(self.zero_pad(item[:ilen - cmd_bits]), 2)
 
             i = i + 1
 

@@ -52,6 +52,7 @@ def transform(shape, func):
 class VectorTile:
     """
     """
+
     def __init__(self, extents):
         self.tile = vector_tile.tile()
         self.extents = extents
@@ -269,7 +270,7 @@ class VectorTile:
                 y = arc.coords[iterator][1]
                 if iterator == 0:
                     cmd = CMD_MOVE_TO
-                elif iterator == length-1 and type == polygon:
+                elif iterator == length - 1 and type == polygon:
                     cmd = CMD_SEG_END
                 else:
                     cmd = CMD_LINE_TO
@@ -370,8 +371,8 @@ class VectorTile:
 
                 sharp_turn_ahead = False
 
-                if (it+2 <= len(coordinates)):
-                    next_coord = coordinates[it+1]
+                if (it + 2 <= len(coordinates)):
+                    next_coord = coordinates[it + 1]
                     if next_coord['cmd'] == CMD_LINE_TO:
                         next_x, next_y = next_coord['x'], next_coord['y']
                         next_dx = fabs(cur_x - int(next_x))
