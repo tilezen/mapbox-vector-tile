@@ -1,8 +1,0 @@
-dependencies:
-  pre:
-    - pip install -U flake8
-
-test:
-  override:
-    - python setup.py test
-    - find . -name '*.py' -not -path '*/.eggs/*' -not -path '*vector_tile_pb2_p3.py' -not -path '*vector_tile_pb2.py' | xargs flake8

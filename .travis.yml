@@ -1,0 +1,12 @@
+language: python
+python:
+- 2.7
+- 3.5
+install:
+- pip install flake8
+- pip install coveralls
+- python setup.py install
+script:
+- find mapbox_vector_tile tests -type f -name "*.py" -not -path "*/Mapbox/*" | xargs flake8
+- coverage run --source=mapbox_vector_tile setup.py test
+after_success: coveralls

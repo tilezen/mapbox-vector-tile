@@ -7,6 +7,7 @@ import unittest
 
 import mapbox_vector_tile
 from mapbox_vector_tile import encode, decode
+from past.builtins import long, unicode
 
 from shapely import wkt
 
@@ -153,7 +154,7 @@ class TestDifferentGeomFormats(BaseTestCase):
             input_geometry=geometry,
             expected_geometry=[
                 [[40, 40], [45, 30], [20, 45], [40, 40]],
-                [[20, 35], [45, 20], [30,  5], [10, 10], [10, 30], [20, 35]],
+                [[20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]],
                 [[30, 20], [20, 25], [20, 15], [30, 20]],
             ],
             expected_len=1)
