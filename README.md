@@ -276,4 +276,4 @@ Here's how you might decode a tile from a file.
 Changelog
 ---------
 
-Click [here](https://github.com/mapzen/mapbox-vector-tile/blob/master/CHANGELOG.rst) to see what changed over time in various versions.
+Click [here](https://github.com/mapzen/mapbox-vector-tile/blob/master/CHANGELOG.md) to see what changed over time in various versions.
