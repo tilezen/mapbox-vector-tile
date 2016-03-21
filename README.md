@@ -13,6 +13,8 @@ mapbox-vector-tile is compatible with Python 2.6, 2.7 and 3.5. It is listed on P
 pip install mapbox-vector-tile
 ```
 
+Note that `mapbox-vector-tile` depends on [Shapely](https://pypi.python.org/pypi/Shapely), a Python library for computational geometry which requires a library called [GEOS](https://trac.osgeo.org/geos/). Please see [Shapely's instructions](https://pypi.python.org/pypi/Shapely#installing-shapely) for information on how to install its prerequisites.
+
 Encoding
 --------
 
