@@ -3,7 +3,7 @@ from past.builtins import long, unicode
 from numbers import Number
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
-from shapely.geometry.polygon import orient
+from shapely.geometry.polygon import orient, Polygon
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 import sys
@@ -13,8 +13,14 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     from .Mapbox import vector_tile_pb2_p3 as vector_tile
     xrange = range
+
+    def apply_map(fn, x):
+        return list(map(fn, x))
 else:
     from .Mapbox import vector_tile_pb2 as vector_tile
+
+    def apply_map(fn, x):
+        return map(fn, x)
 
 # tiles are padded by this number of pixels for the current zoom level
 padding = 0
@@ -37,11 +43,11 @@ def transform(shape, func):
         return construct(parts)
 
     if shape.type in ('Point', 'LineString'):
-        return construct(map(func, shape.coords))
+        return construct(apply_map(func, shape.coords))
 
     if shape.type == 'Polygon':
-        exterior = map(func, shape.exterior.coords)
-        rings = [map(func, ring.coords) for ring in shape.interiors]
+        exterior = apply_map(func, shape.exterior.coords)
+        rings = [apply_map(func, ring.coords) for ring in shape.interiors]
         return construct(exterior, rings)
 
     if shape.type == 'GeometryCollection':
@@ -87,6 +93,9 @@ class VectorTile:
             if shape.is_empty:
                 continue
 
+            if quantize_bounds:
+                shape = self.quantize(shape, quantize_bounds)
+
             if shape.type == 'MultiPolygon':
                 # If we are a multipolygon, we need to ensure that the
                 # winding orders of the consituent polygons are
@@ -106,10 +115,7 @@ class VectorTile:
                 # Note that while the Y axis flips, we also invert the
                 # Y coordinate to get the tile-local value, which means
                 # the clockwise orientation is unchanged.
-                shape = orient(shape, sign=-1.0)
-
-            if quantize_bounds:
-                shape = self.quantize(shape, quantize_bounds)
+                shape = self.enforce_polygon_winding_order(shape)
 
             self.addFeature(feature, shape, y_coord_down)
 
@@ -133,10 +139,25 @@ class VectorTile:
         for part in shape.geoms:
             # see comment in shape.type == 'Polygon' above about why
             # the sign here has to be -1.
-            part = orient(part, sign=-1.0)
+            part = self.enforce_polygon_winding_order(part)
             parts.append(part)
         oriented_shape = MultiPolygon(parts)
         return oriented_shape
+
+    def enforce_polygon_winding_order(self, shape):
+        assert shape.type == 'Polygon'
+
+        def fn(point):
+            x, y = point
+            return round(x), round(y)
+
+        exterior = apply_map(fn, shape.exterior.coords)
+        rings = None
+
+        if len(shape.interiors) > 0:
+            rings = [apply_map(fn, ring.coords) for ring in shape.interiors]
+
+        return orient(Polygon(exterior, rings), sign=-1.0)
 
     def _load_geometry(self, geometry_spec):
         if isinstance(geometry_spec, BaseGeometry):
