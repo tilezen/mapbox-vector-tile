@@ -64,6 +64,24 @@ class TestDifferentGeomFormats(BaseTestCase):
             input_geometry='POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))',
             expected_geometry=[[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]])
 
+    def test_encoder_quantize_before_orient(self):
+        self.assertRoundTrip(
+            input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2, 2 2, 1 1))',
+
+            expected_geometry=[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
+                               [[1, 1], [3, 2], [2, 2], [1, 1]]])
+
+    def test_encoder_ensure_winding_after_quantization(self):
+        self.assertRoundTrip(
+            input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2.4, 2 1.6, 1 1))',
+
+            # should be single polygon with hole
+            expected_geometry=[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
+                               [[1, 1], [3, 2], [2, 2], [1, 1]]])
+            # but becomes multi-polygon
+            #expected_geometry=[[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]],
+            #                   [[[1, 1], [2, 2], [3, 2], [1, 1]]]])
+
     def test_with_wkt(self):
         self.assertRoundTrip(
             input_geometry="LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)",  # noqa
