@@ -23,7 +23,7 @@ class BaseTestCase(unittest.TestCase):
                 'version': 2,
                 'extent': 4096,
                 'features': [{
-                    'geometry': [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
+                    'geometry': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
                     'properties': {
                         'foo': 'bar',
                         'baz': 'foo',
