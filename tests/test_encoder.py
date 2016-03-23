@@ -66,21 +66,19 @@ class TestDifferentGeomFormats(BaseTestCase):
 
     def test_encoder_quantize_before_orient(self):
         self.assertRoundTrip(
-            input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2, 2 2, 1 1))',
-
+            input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2, 2 2, 1 1))',  # noqa
             expected_geometry=[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
                                [[1, 1], [3, 2], [2, 2], [1, 1]]])
 
     def test_encoder_ensure_winding_after_quantization(self):
         self.assertRoundTrip(
-            input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2.4, 2 1.6, 1 1))',
-
+            input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2.4, 2 1.6, 1 1))',  # noqa
             # should be single polygon with hole
             expected_geometry=[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
                                [[1, 1], [3, 2], [2, 2], [1, 1]]])
-            # but becomes multi-polygon
-            #expected_geometry=[[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]],
-            #                   [[[1, 1], [2, 2], [3, 2], [1, 1]]]])
+        # but becomes multi-polygon
+        # expected_geometry=[[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]],
+        #                   [[[1, 1], [2, 2], [3, 2], [1, 1]]]])
 
     def test_with_wkt(self):
         self.assertRoundTrip(

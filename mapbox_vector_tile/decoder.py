@@ -160,7 +160,7 @@ class TileData:
                 parts.append(coords)
 
             def _area_sign(ring):
-                a = sum(ring[i][0]*ring[i+1][1] - ring[i+1][0]*ring[i][1] for i in range(0, len(ring)-1))
+                a = sum(ring[i][0]*ring[i+1][1] - ring[i+1][0]*ring[i][1] for i in range(0, len(ring)-1))  # noqa
                 return -1 if a < 0 else 1 if a > 0 else 0
 
             polygon = []
