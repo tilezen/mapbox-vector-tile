@@ -251,8 +251,8 @@ class VectorTile:
 
     def _parseGeometry(self, shape):
         coordinates = []
-        line = "line"
-        polygon = "polygon"
+        lineType = "line"
+        polygonType = "polygon"
 
         def _get_point_obj(x, y, cmd=CMD_MOVE_TO):
             coordinate = {
@@ -271,7 +271,7 @@ class VectorTile:
                 y = arc.coords[iterator][1]
                 if iterator == 0:
                     cmd = CMD_MOVE_TO
-                elif iterator == length - 1 and type == polygon:
+                elif iterator == length - 1 and type == polygonType:
                     cmd = CMD_SEG_END
                 else:
                     cmd = CMD_LINE_TO
@@ -286,12 +286,12 @@ class VectorTile:
             _get_point_obj(shape.x, shape.y)
 
         elif shape.type == 'LineString':
-            _get_arc_obj(shape, line)
+            _get_arc_obj(shape, lineType)
 
         elif shape.type == 'Polygon':
             rings = [shape.exterior] + list(shape.interiors)
             for ring in rings:
-                _get_arc_obj(ring, polygon)
+                _get_arc_obj(ring, polygonType)
 
         elif shape.type == 'MultiPoint':
             for point in shape.geoms:
@@ -299,13 +299,13 @@ class VectorTile:
 
         elif shape.type == 'MultiLineString':
             for arc in shape.geoms:
-                _get_arc_obj(arc, line)
+                _get_arc_obj(arc, lineType)
 
         elif shape.type == 'MultiPolygon':
             for polygon in shape.geoms:
                 rings = [polygon.exterior] + list(polygon.interiors)
                 for ring in rings:
-                    _get_arc_obj(ring, polygon)
+                    _get_arc_obj(ring, polygonType)
 
         else:
             raise NotImplementedError("Can't do %s geometries" % shape.type)
