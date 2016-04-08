@@ -87,7 +87,7 @@ class TileData:
         coords = []
         dx = 0
         dy = 0
-        parts = []  # for multi linestrings and multi polygons
+        parts = []  # for multi linestrings and polygons
 
         while i != len(geom):
             item = bin(geom[i])
@@ -148,12 +148,43 @@ class TileData:
 
         if ftype == POINT:
             return coords
-        elif ftype in (LINESTRING, POLYGON):
+        elif ftype == LINESTRING:
             if parts:
                 if coords:
                     parts.append(coords)
                 return parts[0] if len(parts) == 1 else parts
             else:
                 return coords
+        elif ftype == POLYGON:
+            if coords:
+                parts.append(coords)
+
+            def _area_sign(ring):
+                a = sum(ring[i][0]*ring[i+1][1] - ring[i+1][0]*ring[i][1] for i in range(0, len(ring)-1))  # noqa
+                return -1 if a < 0 else 1 if a > 0 else 0
+
+            polygon = []
+            polygons = []
+            winding = 0
+
+            for ring in parts:
+                a = _area_sign(ring)
+                if a == 0:
+                    continue
+                if winding == 0:
+                    winding = a
+
+                if winding == a:
+                    if polygon:
+                        polygons.append(polygon)
+                    polygon = [ring]
+                else:
+                    polygon.append(ring)
+
+            if polygon:
+                polygons.append(polygon)
+
+            return polygons[0] if len(polygons) == 1 else polygons
+
         else:
             raise ValueError('Unknown geometry type: %s' % ftype)
