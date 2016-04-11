@@ -128,7 +128,7 @@ class VectorTile:
             yfac = self.extents / (maxy - miny)
             x = xfac * (x - minx)
             y = yfac * (y - miny)
-            return x, y
+            return round(x), round(y)
 
         return transform(shape, fn)
 
