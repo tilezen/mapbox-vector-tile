@@ -56,13 +56,28 @@ def transform(shape, func):
     raise ValueError('Unknown geometry type, "%s"' % shape.type)
 
 
+def on_invalid_geometry_raise(shape):
+    raise Exception('Invalid geometry: %s' % shape.wkt)
+
+
+def on_invalid_geometry_ignore(shape):
+    return None
+
+
+def on_invalid_geometry_make_valid(shape):
+    if shape.type in ('Polygon', 'MultiPolygon'):
+        shape = shape.buffer(0)
+    return shape
+
+
 class VectorTile:
     """
     """
 
-    def __init__(self, extents):
+    def __init__(self, extents, on_invalid_geometry=None):
         self.tile = vector_tile.tile()
         self.extents = extents
+        self.on_invalid_geometry = on_invalid_geometry
 
     def addFeatures(self, features, layer_name='',
                     quantize_bounds=None, y_coord_down=False):
@@ -117,7 +132,8 @@ class VectorTile:
                 # the clockwise orientation is unchanged.
                 shape = self.enforce_polygon_winding_order(shape)
 
-            self.addFeature(feature, shape, y_coord_down)
+            if shape is not None and not shape.is_empty:
+                self.addFeature(feature, shape, y_coord_down)
 
     def quantize(self, shape, bounds):
         minx, miny, maxx, maxy = bounds
@@ -132,6 +148,13 @@ class VectorTile:
 
         return transform(shape, fn)
 
+    def handle_shape_validity(self, shape):
+        if shape.is_valid:
+            return shape
+        if self.on_invalid_geometry:
+            shape = self.on_invalid_geometry(shape)
+        return shape
+
     def enforce_multipolygon_winding_order(self, shape):
         assert shape.type == 'MultiPolygon'
 
@@ -142,6 +165,7 @@ class VectorTile:
             part = self.enforce_polygon_winding_order(part)
             parts.append(part)
         oriented_shape = MultiPolygon(parts)
+        oriented_shape = self.handle_shape_validity(oriented_shape)
         return oriented_shape
 
     def enforce_polygon_winding_order(self, shape):
@@ -157,7 +181,9 @@ class VectorTile:
         if len(shape.interiors) > 0:
             rings = [apply_map(fn, ring.coords) for ring in shape.interiors]
 
-        return orient(Polygon(exterior, rings), sign=-1.0)
+        oriented_shape = orient(Polygon(exterior, rings), sign=-1.0)
+        oriented_shape = self.handle_shape_validity(oriented_shape)
+        return oriented_shape
 
     def _load_geometry(self, geometry_spec):
         if isinstance(geometry_spec, BaseGeometry):
