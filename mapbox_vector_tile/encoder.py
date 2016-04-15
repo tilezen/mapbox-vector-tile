@@ -69,7 +69,7 @@ class VectorTile:
 
         self.layer = self.tile.layers.add()
         self.layer.name = layer_name
-        self.layer.version = 2
+        self.layer.version = 1
         self.layer.extent = self.extents
 
         self.key_idx = 0
