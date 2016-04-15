@@ -67,6 +67,8 @@ def on_invalid_geometry_ignore(shape):
 def on_invalid_geometry_make_valid(shape):
     if shape.type in ('Polygon', 'MultiPolygon'):
         shape = shape.buffer(0)
+        assert shape.is_valid, \
+            'buffer(0) did not make geometry valid: %s' % shape.wkt
     return shape
 
 
