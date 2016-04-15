@@ -1,3 +1,13 @@
+Version 0.3.0
+-------------
+
+* python3 compatability improvements
+* travis integration
+* documentation updates
+* insert CMD_SEG_END for MultiPolygons
+* decode multipolygons correctly
+* encode tiles using version 1
+
 Version 0.2.1
 -------------
 
