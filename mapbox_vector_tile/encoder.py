@@ -57,7 +57,7 @@ def transform(shape, func):
 
 
 def on_invalid_geometry_raise(shape):
-    raise Exception('Invalid geometry: %s' % shape.wkt)
+    raise ValueError('Invalid geometry: %s' % shape.wkt)
 
 
 def on_invalid_geometry_ignore(shape):
