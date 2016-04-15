@@ -98,7 +98,14 @@ Encode method expects an array of layers or atleast a single valid layer. A vali
 
 ### Coordinate transformations for encoding
 
-The encoder expects geometries in tile-relative coordinates, where the lower left corner is origin and values grow up and to the right, and the tile is 4096 pixels square. For example, `POINT(0 0)` is the lower left corner of the tile and `POINT(4095, 4095)` is the upper right corner of the tile. Per the specification, geometries are expected to be in spherical mercator projection before this transformations
+The encoder expects geometries either:
+
+1. In tile-relative coordinates, where the lower left corner is origin and values grow up and to the right, and the tile is 4096 pixels square. For example, `POINT(0 0)` is the lower left corner of the tile and `POINT(4096, 4096)` is the upper right corner of the tile. In this case, the library does no projection, and coordinates are encoded as-is.
+2. In another coordinate system, with the tile bounds given by the `quantize_bounds` parameter. In this case, the library will scale coordinates so that the `quantize_bounds` fit within the range (0, 4096) in both `x` and `y` directions. Aside than the affine transformation, the library does no other projection.
+
+It is possible to control whether the tile is in a "y down" coordinate system by setting the parameter `y_coord_down=True` on the call to `encode()`. The default is "y up".
+
+It is possible to control the tile extents (by default, 4096 as used in the examples above), by setting the `extents` parameter on the call to `encode()`. The default is 4096.
 
 If you have geometries in longitude and latitude (EPSG:4326), you can convert to tile-based coordinates by first projecting to Spherical Mercator (EPSG:3857) and then computing the pixel location within the tile. This example code uses Django's included GEOS library to do the transformation for `LineString` objects:
 
