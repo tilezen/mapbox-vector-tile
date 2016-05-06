@@ -334,3 +334,91 @@ class ExtentTest(unittest.TestCase):
         act_geom = act_feature['geometry']
         exp_geom = [[50, 50]]
         self.assertEqual(exp_geom, act_geom)
+
+
+class InvalidGeometryTest(unittest.TestCase):
+
+    def test_invalid_geometry_ignore(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_ignore
+        import shapely.wkt
+        geometry = 'POLYGON ((10 10, 20 10, 20 20, 15 15, 15 5, 10 10))'
+        shape = shapely.wkt.loads(geometry)
+        self.assertFalse(shape.is_valid)
+        feature = dict(geometry=shape, properties={})
+        source = dict(name='layername', features=[feature])
+        pbf = encode(source, on_invalid_geometry=on_invalid_geometry_ignore)
+        result = decode(pbf)
+        self.assertEqual(0, len(result['layername']['features']))
+
+    def test_invalid_geometry_raise(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_raise
+        import shapely.wkt
+        geometry = 'POLYGON ((10 10, 20 10, 20 20, 15 15, 15 5, 10 10))'
+        shape = shapely.wkt.loads(geometry)
+        self.assertFalse(shape.is_valid)
+        feature = dict(geometry=shape, properties={})
+        source = dict(name='layername', features=[feature])
+        with self.assertRaises(Exception):
+            encode(source, on_invalid_geometry=on_invalid_geometry_raise)
+
+    def test_invalid_geometry_make_valid(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.geometry
+        import shapely.wkt
+        geometry = 'POLYGON ((10 10, 20 10, 20 20, 15 15, 15 5, 10 10))'
+        shape = shapely.wkt.loads(geometry)
+        self.assertFalse(shape.is_valid)
+        feature = dict(geometry=shape, properties={})
+        source = dict(name='layername', features=[feature])
+        pbf = encode(source,
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        self.assertEqual(1, len(result['layername']['features']))
+        valid_geometry = result['layername']['features'][0]['geometry']
+        shape = shapely.geometry.Polygon(valid_geometry[0])
+        self.assertTrue(shape.is_valid)
+
+    def test_bowtie(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.geometry
+        import shapely.wkt
+        bowtie = ('POLYGON ((0 0, 0 2, 1 1, 2 2, 2 0, 1 1, 0 0))')
+        shape = shapely.wkt.loads(bowtie)
+        self.assertFalse(shape.is_valid)
+        feature = dict(geometry=shape, properties={})
+        source = dict(name='layername', features=[feature])
+        pbf = encode(source,
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        self.assertEqual(1, len(result['layername']['features']))
+        valid_geometries = result['layername']['features'][0]['geometry']
+        self.assertEqual(2, len(valid_geometries))
+        shape1, shape2 = [shapely.geometry.Polygon(x[0])
+                          for x in valid_geometries]
+        self.assertTrue(shape1.is_valid)
+        self.assertTrue(shape2.is_valid)
+        self.assertGreater(shape1.area, 0)
+        self.assertGreater(shape2.area, 0)
+
+    def test_validate_generates_rounding_error(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.geometry
+        import shapely.wkt
+        bowtie = ('POLYGON((0 0, 1 1, 0 1, 1 0, 0 0))')
+        shape = shapely.wkt.loads(bowtie)
+        self.assertFalse(shape.is_valid)
+        feature = dict(geometry=shape, properties={})
+        source = dict(name='layername', features=[feature])
+        pbf = encode(source,
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        features = result['layername']['features']
+        self.assertEqual(1, len(features))
+        shape = shapely.geometry.Polygon(features[0]['geometry'][0])
+        self.assertTrue(shape.is_valid)
+        self.assertGreater(shape.area, 0)

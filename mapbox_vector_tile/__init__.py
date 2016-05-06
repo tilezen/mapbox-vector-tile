@@ -8,8 +8,9 @@ def decode(tile, y_coord_down=False):
     return message
 
 
-def encode(layers, quantize_bounds=None, y_coord_down=False, extents=4096):
-    vector_tile = encoder.VectorTile(extents)
+def encode(layers, quantize_bounds=None, y_coord_down=False, extents=4096,
+           on_invalid_geometry=None):
+    vector_tile = encoder.VectorTile(extents, on_invalid_geometry)
     if (isinstance(layers, list)):
         for layer in layers:
             vector_tile.addFeatures(layer['features'], layer['name'],

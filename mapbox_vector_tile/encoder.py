@@ -1,11 +1,15 @@
 from math import fabs
-from past.builtins import long, unicode
 from numbers import Number
+from past.builtins import long
+from past.builtins import unicode
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
-from shapely.geometry.polygon import orient, Polygon
+from shapely.geometry.polygon import orient
+from shapely.geometry.polygon import Polygon
+from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
+import decimal
 import sys
 
 PY3 = sys.version_info[0] == 3
@@ -33,36 +37,37 @@ CMD_LINE_TO = 2
 CMD_SEG_END = 7
 
 
-def transform(shape, func):
-    ''' Ported from TileStache'''
+def on_invalid_geometry_raise(shape):
+    raise ValueError('Invalid geometry: %s' % shape.wkt)
 
-    construct = shape.__class__
 
-    if shape.type.startswith('Multi'):
-        parts = [transform(geom, func) for geom in shape.geoms]
-        return construct(parts)
+def on_invalid_geometry_ignore(shape):
+    return None
 
-    if shape.type in ('Point', 'LineString'):
-        return construct(apply_map(func, shape.coords))
 
-    if shape.type == 'Polygon':
-        exterior = apply_map(func, shape.exterior.coords)
-        rings = [apply_map(func, ring.coords) for ring in shape.interiors]
-        return construct(exterior, rings)
-
-    if shape.type == 'GeometryCollection':
-        return construct()
-
-    raise ValueError('Unknown geometry type, "%s"' % shape.type)
+def on_invalid_geometry_make_valid(shape):
+    if shape.type in ('Polygon', 'MultiPolygon'):
+        shape = shape.buffer(0)
+        assert shape.is_valid, \
+            'buffer(0) did not make geometry valid: %s' % shape.wkt
+    return shape
 
 
 class VectorTile:
     """
     """
 
-    def __init__(self, extents):
+    def __init__(self, extents, on_invalid_geometry=None,
+                 max_geometry_validate_tries=5):
         self.tile = vector_tile.tile()
         self.extents = extents
+        self.on_invalid_geometry = on_invalid_geometry
+        self.max_geometry_validate_tries = max_geometry_validate_tries
+
+    def _round(self, val):
+        d = decimal.Decimal(val)
+        rounded = d.quantize(1, rounding=decimal.ROUND_HALF_EVEN)
+        return float(rounded)
 
     def addFeatures(self, features, layer_name='',
                     quantize_bounds=None, y_coord_down=False):
@@ -96,60 +101,88 @@ class VectorTile:
             if quantize_bounds:
                 shape = self.quantize(shape, quantize_bounds)
 
-            if shape.type == 'MultiPolygon':
-                # If we are a multipolygon, we need to ensure that the
-                # winding orders of the consituent polygons are
-                # correct. In particular, the winding order of the
-                # interior rings need to be the opposite of the
-                # exterior ones, and all interior rings need to follow
-                # the exterior one. This is how the end of one polygon
-                # and the beginning of another are signaled.
-                shape = self.enforce_multipolygon_winding_order(shape)
+            shape = self.enforce_winding_order(shape)
 
-            elif shape.type == 'Polygon':
-                # Ensure that polygons are also oriented with the
-                # appropriate winding order. Their exterior rings must
-                # have a clockwise order, which is translated into a
-                # clockwise order in MVT's tile-local coordinates with
-                # the Y axis in "screen" (i.e: +ve down) configuration.
-                # Note that while the Y axis flips, we also invert the
-                # Y coordinate to get the tile-local value, which means
-                # the clockwise orientation is unchanged.
-                shape = self.enforce_polygon_winding_order(shape)
+            if shape is not None and not shape.is_empty:
+                self.addFeature(feature, shape, y_coord_down)
 
-            self.addFeature(feature, shape, y_coord_down)
+    def enforce_winding_order(self, shape, n_try=1):
+        if shape.type == 'MultiPolygon':
+            # If we are a multipolygon, we need to ensure that the
+            # winding orders of the consituent polygons are
+            # correct. In particular, the winding order of the
+            # interior rings need to be the opposite of the
+            # exterior ones, and all interior rings need to follow
+            # the exterior one. This is how the end of one polygon
+            # and the beginning of another are signaled.
+            shape = self.enforce_multipolygon_winding_order(shape, n_try)
+
+        elif shape.type == 'Polygon':
+            # Ensure that polygons are also oriented with the
+            # appropriate winding order. Their exterior rings must
+            # have a clockwise order, which is translated into a
+            # clockwise order in MVT's tile-local coordinates with
+            # the Y axis in "screen" (i.e: +ve down) configuration.
+            # Note that while the Y axis flips, we also invert the
+            # Y coordinate to get the tile-local value, which means
+            # the clockwise orientation is unchanged.
+            shape = self.enforce_polygon_winding_order(shape, n_try)
+
+        # other shapes just get passed through
+        return shape
 
     def quantize(self, shape, bounds):
         minx, miny, maxx, maxy = bounds
 
-        def fn(point):
-            x, y = point
+        def fn(x, y, z=None):
             xfac = self.extents / (maxx - minx)
             yfac = self.extents / (maxy - miny)
             x = xfac * (x - minx)
             y = yfac * (y - miny)
-            return round(x), round(y)
+            return self._round(x), self._round(y)
 
-        return transform(shape, fn)
+        return transform(fn, shape)
 
-    def enforce_multipolygon_winding_order(self, shape):
+    def handle_shape_validity(self, shape, n_try):
+        if shape.is_valid:
+            return shape
+
+        if n_try >= self.max_geometry_validate_tries:
+            # ensure that we don't recurse indefinitely with an
+            # invalid geometry handler that doesn't validate
+            # geometries
+            return None
+
+        if self.on_invalid_geometry:
+            shape = self.on_invalid_geometry(shape)
+            if shape is not None and not shape.is_empty:
+                # this means that we have a handler that might have
+                # altered the geometry. We'll run through the process
+                # again, but keep track of which attempt we are on to
+                # terminate the recursion.
+                shape = self.enforce_winding_order(shape, n_try + 1)
+
+        return shape
+
+    def enforce_multipolygon_winding_order(self, shape, n_try):
         assert shape.type == 'MultiPolygon'
 
         parts = []
         for part in shape.geoms:
             # see comment in shape.type == 'Polygon' above about why
             # the sign here has to be -1.
-            part = self.enforce_polygon_winding_order(part)
+            part = self.enforce_polygon_winding_order(part, n_try)
             parts.append(part)
         oriented_shape = MultiPolygon(parts)
+        oriented_shape = self.handle_shape_validity(oriented_shape, n_try)
         return oriented_shape
 
-    def enforce_polygon_winding_order(self, shape):
+    def enforce_polygon_winding_order(self, shape, n_try):
         assert shape.type == 'Polygon'
 
         def fn(point):
             x, y = point
-            return round(x), round(y)
+            return self._round(x), self._round(y)
 
         exterior = apply_map(fn, shape.exterior.coords)
         rings = None
@@ -157,7 +190,9 @@ class VectorTile:
         if len(shape.interiors) > 0:
             rings = [apply_map(fn, ring.coords) for ring in shape.interiors]
 
-        return orient(Polygon(exterior, rings), sign=-1.0)
+        oriented_shape = orient(Polygon(exterior, rings), sign=-1.0)
+        oriented_shape = self.handle_shape_validity(oriented_shape, n_try)
+        return oriented_shape
 
     def _load_geometry(self, geometry_spec):
         if isinstance(geometry_spec, BaseGeometry):
@@ -374,9 +409,9 @@ class VectorTile:
 
                 # ensure that floating point values don't get truncated
                 if isinstance(x, float):
-                    x = round(x)
+                    x = self._round(x)
                 if isinstance(y, float):
-                    y = round(y)
+                    y = self._round(y)
 
                 x = int(x)
                 y = int(y)
