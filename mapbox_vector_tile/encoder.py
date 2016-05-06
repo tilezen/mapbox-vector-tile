@@ -9,6 +9,7 @@ from shapely.geometry.polygon import Polygon
 from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
+import decimal
 import sys
 
 PY3 = sys.version_info[0] == 3
@@ -62,6 +63,11 @@ class VectorTile:
         self.extents = extents
         self.on_invalid_geometry = on_invalid_geometry
         self.max_geometry_validate_tries = max_geometry_validate_tries
+
+    def _round(self, val):
+        d = decimal.Decimal(val)
+        rounded = d.quantize(1, rounding=decimal.ROUND_HALF_EVEN)
+        return float(rounded)
 
     def addFeatures(self, features, layer_name='',
                     quantize_bounds=None, y_coord_down=False):
@@ -133,7 +139,7 @@ class VectorTile:
             yfac = self.extents / (maxy - miny)
             x = xfac * (x - minx)
             y = yfac * (y - miny)
-            return round(x), round(y)
+            return self._round(x), self._round(y)
 
         return transform(fn, shape)
 
@@ -176,7 +182,7 @@ class VectorTile:
 
         def fn(point):
             x, y = point
-            return round(x), round(y)
+            return self._round(x), self._round(y)
 
         exterior = apply_map(fn, shape.exterior.coords)
         rings = None
@@ -403,9 +409,9 @@ class VectorTile:
 
                 # ensure that floating point values don't get truncated
                 if isinstance(x, float):
-                    x = round(x)
+                    x = self._round(x)
                 if isinstance(y, float):
-                    y = round(y)
+                    y = self._round(y)
 
                 x = int(x)
                 y = int(y)

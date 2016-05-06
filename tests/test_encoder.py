@@ -417,4 +417,8 @@ class InvalidGeometryTest(unittest.TestCase):
         pbf = encode(source,
                      on_invalid_geometry=on_invalid_geometry_make_valid)
         result = decode(pbf)
-        self.assertEqual(0, len(result['layername']['features']))
+        features = result['layername']['features']
+        self.assertEqual(1, len(features))
+        shape = shapely.geometry.Polygon(features[0]['geometry'][0])
+        self.assertTrue(shape.is_valid)
+        self.assertGreater(shape.area, 0)
