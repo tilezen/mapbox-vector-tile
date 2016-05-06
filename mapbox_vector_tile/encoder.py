@@ -1,9 +1,12 @@
 from math import fabs
-from past.builtins import long, unicode
 from numbers import Number
+from past.builtins import long
+from past.builtins import unicode
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
-from shapely.geometry.polygon import orient, Polygon
+from shapely.geometry.polygon import orient
+from shapely.geometry.polygon import Polygon
+from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 import sys
@@ -31,29 +34,6 @@ tolerance = 0
 CMD_MOVE_TO = 1
 CMD_LINE_TO = 2
 CMD_SEG_END = 7
-
-
-def transform(shape, func):
-    ''' Ported from TileStache'''
-
-    construct = shape.__class__
-
-    if shape.type.startswith('Multi'):
-        parts = [transform(geom, func) for geom in shape.geoms]
-        return construct(parts)
-
-    if shape.type in ('Point', 'LineString'):
-        return construct(apply_map(func, shape.coords))
-
-    if shape.type == 'Polygon':
-        exterior = apply_map(func, shape.exterior.coords)
-        rings = [apply_map(func, ring.coords) for ring in shape.interiors]
-        return construct(exterior, rings)
-
-    if shape.type == 'GeometryCollection':
-        return construct()
-
-    raise ValueError('Unknown geometry type, "%s"' % shape.type)
 
 
 def on_invalid_geometry_raise(shape):
@@ -148,15 +128,14 @@ class VectorTile:
     def quantize(self, shape, bounds):
         minx, miny, maxx, maxy = bounds
 
-        def fn(point):
-            x, y = point
+        def fn(x, y, z=None):
             xfac = self.extents / (maxx - minx)
             yfac = self.extents / (maxy - miny)
             x = xfac * (x - minx)
             y = yfac * (y - miny)
             return round(x), round(y)
 
-        return transform(shape, fn)
+        return transform(fn, shape)
 
     def handle_shape_validity(self, shape, n_try):
         if shape.is_valid:
