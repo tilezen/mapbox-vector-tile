@@ -422,3 +422,10 @@ class InvalidGeometryTest(unittest.TestCase):
         shape = shapely.geometry.Polygon(features[0]['geometry'][0])
         self.assertTrue(shape.is_valid)
         self.assertGreater(shape.area, 0)
+
+    def test_geometry_collection_raises(self):
+        from mapbox_vector_tile import encode
+        import shapely.wkt
+        collection = shapely.wkt.loads('GEOMETRYCOLLECTION (GEOMETRYCOLLECTION (POINT (4095 3664), LINESTRING (2889 0, 2889 0)), POINT (4095 3664), LINESTRING (2889 0, 2912 158, 3757 1700, 3732 1999, 4095 3277))')  # noqa
+        with self.assertRaises(ValueError):
+            encode({'name': 'streets', 'features': [{'geometry': collection}]})
