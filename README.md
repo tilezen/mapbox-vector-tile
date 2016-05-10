@@ -23,7 +23,7 @@ Encode method expects an array of layers or atleast a single valid layer. A vali
 * `name`: layer name
 * `features`: an array of features. A feature is a dictionary with the following keys:
 
-  * `geometry`: representation of the feature geometry in WKT, WKB, or a shapely geometry. Coordinates are relative to the tile, scaled in the range `[0, 4096)`. See below for example code to perform the necessary transformation.
+  * `geometry`: representation of the feature geometry in WKT, WKB, or a shapely geometry. Coordinates are relative to the tile, scaled in the range `[0, 4096)`. See below for example code to perform the necessary transformation. *Note* that `GeometryCollection` types are not supported, and will trigger a `ValueError`.
   * `properties`: a dictionary with a few keys and their corresponding values.
 
 ```python

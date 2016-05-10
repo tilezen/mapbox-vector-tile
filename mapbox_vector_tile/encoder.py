@@ -229,6 +229,11 @@ class VectorTile:
             return self.tile.LineString
         elif shape.type == 'Polygon' or shape.type == 'MultiPolygon':
             return self.tile.Polygon
+        elif shape.type == 'GeometryCollection':
+            raise ValueError('Encoding geometry collections not supported')
+        else:
+            raise ValueError('Cannot encode unknown geometry type: %s' %
+                             shape.type)
 
     def _encode_cmd_length(self, cmd, length):
         return (length << cmd_bits) | (cmd & ((1 << cmd_bits) - 1))
