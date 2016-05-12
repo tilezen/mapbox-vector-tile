@@ -1,6 +1,5 @@
 from math import fabs
 from numbers import Number
-from builtins import map
 from past.builtins import long
 from past.builtins import unicode
 from past.builtins import xrange
@@ -12,11 +11,8 @@ from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 import decimal
-from .compat import PY3, vector_tile
+from .compat import PY3, vector_tile, apply_map
 
-
-def apply_map(fn, x):
-    return list(map(fn, x))
 
 # tiles are padded by this number of pixels for the current zoom level
 padding = 0
