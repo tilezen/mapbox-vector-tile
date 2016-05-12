@@ -1,7 +1,9 @@
 from math import fabs
 from numbers import Number
+from builtins import map
 from past.builtins import long
 from past.builtins import unicode
+from past.builtins import xrange
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import orient
@@ -10,21 +12,11 @@ from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 import decimal
-import sys
+from .compat import PY3, vector_tile
 
-PY3 = sys.version_info[0] == 3
 
-if PY3:
-    from .Mapbox import vector_tile_pb2_p3 as vector_tile
-    xrange = range
-
-    def apply_map(fn, x):
-        return list(map(fn, x))
-else:
-    from .Mapbox import vector_tile_pb2 as vector_tile
-
-    def apply_map(fn, x):
-        return map(fn, x)
+def apply_map(fn, x):
+    return list(map(fn, x))
 
 # tiles are padded by this number of pixels for the current zoom level
 padding = 0
@@ -242,17 +234,14 @@ class VectorTile:
         return [seq[pos:pos + size] for pos in xrange(0, len(seq), size)]
 
     def _can_handle_key(self, k):
-        return isinstance(k, str) or \
-            isinstance(k, str if PY3 else unicode)
+        return isinstance(k, str) or isinstance(k, unicode)
 
     def _can_handle_val(self, v):
-        if isinstance(v, str) or \
-           isinstance(v, str if PY3 else unicode):
+        if isinstance(v, str) or isinstance(v, unicode):
             return True
         elif isinstance(v, bool):
             return True
-        elif (isinstance(v, int) or
-              isinstance(v, int if PY3 else long)):
+        elif isinstance(v, int) or isinstance(v, long):
             return True
         elif isinstance(v, float):
             return True
@@ -283,17 +272,16 @@ class VectorTile:
                     val = layer.values.add()
                     if isinstance(v, bool):
                         val.bool_value = v
-                    elif (isinstance(v, str)):
+                    elif isinstance(v, str):
                         if PY3:
-                            val.string_value = str(v)
+                            val.string_value = v
                         else:
-                            val.string_value = unicode(v, 'utf8')
-                    elif (isinstance(v, str if PY3 else unicode)):
+                            val.string_value = unicode(v, 'utf-8')
+                    elif isinstance(v, unicode):
                         val.string_value = v
-                    elif (isinstance(v, int)) or (
-                            isinstance(v, int if PY3 else long)):
+                    elif isinstance(v, int) or isinstance(v, long):
                         val.int_value = v
-                    elif (isinstance(v, float)):
+                    elif isinstance(v, float):
                         val.double_value = v
 
                 feature.tags.append(self.seen_values_idx[v])

@@ -1,12 +1,5 @@
-import sys
-
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    from .Mapbox import vector_tile_pb2_p3 as vector_tile
-    xrange = range
-else:
-    from .Mapbox import vector_tile_pb2 as vector_tile
+from past.builtins import xrange
+from .compat import vector_tile
 
 cmd_bits = 3
 

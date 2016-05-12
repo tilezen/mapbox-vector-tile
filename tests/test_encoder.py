@@ -2,16 +2,14 @@
 """
 Tests for vector_tile/encoder.py
 """
-import sys
 import unittest
 
 import mapbox_vector_tile
 from mapbox_vector_tile import encode, decode
+from mapbox_vector_tile.compat import PY3
 from past.builtins import long, unicode
 
 from shapely import wkt
-
-PY3 = sys.version_info[0] == 3
 
 
 class BaseTestCase(unittest.TestCase):
