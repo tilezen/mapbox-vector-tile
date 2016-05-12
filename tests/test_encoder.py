@@ -173,6 +173,16 @@ class TestDifferentGeomFormats(BaseTestCase):
             ],
             expected_len=1)
 
+    def test_encode_multipolygon_normal_winding_order_zero_area(self):
+        geometry = 'MULTIPOLYGON (((40 40, 40 20, 40 45, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))'  # noqa
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=[
+                [[20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]],
+                [[30, 20], [20, 25], [20, 15], [30, 20]],
+            ],
+            expected_len=1)
+
     def test_encode_multipolygon_reverse_winding_order(self):
         geometry = 'MULTIPOLYGON (((10 10, 10 0, 0 0, 0 10, 10 10), (8 8, 2 8, 2 0, 8 0, 8 8)))'  # noqa
         self.assertRoundTrip(
