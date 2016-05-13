@@ -3,12 +3,10 @@
 Tests for vector_tile/decoder.py
 """
 
-import sys
 import unittest
 
 import mapbox_vector_tile
-
-PY3 = sys.version_info[0] == 3
+from mapbox_vector_tile.compat import PY3
 
 
 class BaseTestCase(unittest.TestCase):

@@ -2,16 +2,14 @@
 """
 Tests for vector_tile/encoder.py
 """
-import sys
 import unittest
 
 import mapbox_vector_tile
 from mapbox_vector_tile import encode, decode
+from mapbox_vector_tile.compat import PY3
 from past.builtins import long, unicode
 
 from shapely import wkt
-
-PY3 = sys.version_info[0] == 3
 
 
 class BaseTestCase(unittest.TestCase):
@@ -172,6 +170,16 @@ class TestDifferentGeomFormats(BaseTestCase):
                 [[[40, 40], [45, 30], [20, 45], [40, 40]]],
                 [[[20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]],
                  [[30, 20], [20, 25], [20, 15], [30, 20]]],
+            ],
+            expected_len=1)
+
+    def test_encode_multipolygon_normal_winding_order_zero_area(self):
+        geometry = 'MULTIPOLYGON (((40 40, 40 20, 40 45, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))'  # noqa
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=[
+                [[20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]],
+                [[30, 20], [20, 25], [20, 15], [30, 20]],
             ],
             expected_len=1)
 
