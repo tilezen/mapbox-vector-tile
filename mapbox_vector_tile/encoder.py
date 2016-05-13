@@ -230,14 +230,14 @@ class VectorTile:
         return [seq[pos:pos + size] for pos in xrange(0, len(seq), size)]
 
     def _can_handle_key(self, k):
-        return isinstance(k, str) or isinstance(k, unicode)
+        return isinstance(k, (str, unicode))
 
     def _can_handle_val(self, v):
-        if isinstance(v, str) or isinstance(v, unicode):
+        if isinstance(v, (str, unicode)):
             return True
         elif isinstance(v, bool):
             return True
-        elif isinstance(v, int) or isinstance(v, long):
+        elif isinstance(v, (int, long)):
             return True
         elif isinstance(v, float):
             return True
@@ -275,7 +275,7 @@ class VectorTile:
                             val.string_value = unicode(v, 'utf-8')
                     elif isinstance(v, unicode):
                         val.string_value = v
-                    elif isinstance(v, int) or isinstance(v, long):
+                    elif isinstance(v, (int, long)):
                         val.int_value = v
                     elif isinstance(v, float):
                         val.double_value = v
