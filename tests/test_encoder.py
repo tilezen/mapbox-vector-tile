@@ -350,7 +350,7 @@ class RoundTest(unittest.TestCase):
         from mapbox_vector_tile import decode
         from mapbox_vector_tile import encode
         props = dict(foo='bar')
-        shape = 'POINT(5.01 5.01)'
+        shape = 'POINT(10 10)'
         feature = dict(geometry=shape, properties=props)
         features = [feature]
         source = dict(name='layername', features=features)
