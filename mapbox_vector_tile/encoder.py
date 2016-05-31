@@ -46,13 +46,21 @@ class VectorTile:
     """
 
     def __init__(self, extents, on_invalid_geometry=None,
-                 max_geometry_validate_tries=5):
+                 max_geometry_validate_tries=5, round_fn=None):
         self.tile = vector_tile.tile()
         self.extents = extents
         self.on_invalid_geometry = on_invalid_geometry
         self.max_geometry_validate_tries = max_geometry_validate_tries
+        self.round_fn = round_fn
 
     def _round(self, val):
+        # Prefer provided round function.
+        if self.round_fn:
+            return self.round_fn(val)
+
+        # round() has different behavior in python 2/3
+        # For consistency between 2 and 3 we use quantize, however
+        # it is slower than the built in round function.
         d = decimal.Decimal(val)
         rounded = d.quantize(1, rounding=decimal.ROUND_HALF_EVEN)
         return float(rounded)
