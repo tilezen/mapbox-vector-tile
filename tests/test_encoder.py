@@ -344,6 +344,27 @@ class ExtentTest(unittest.TestCase):
         self.assertEqual(exp_geom, act_geom)
 
 
+class RoundTest(unittest.TestCase):
+
+    def test_custom_rounding_function(self):
+        from mapbox_vector_tile import decode
+        from mapbox_vector_tile import encode
+        props = dict(foo='bar')
+        shape = 'POINT(10 10)'
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = dict(name='layername', features=features)
+        bounds = 0.0, 0.0, 10.0, 10.0
+        # A really bad, custom "rounding" function
+        pbf = encode(source, quantize_bounds=bounds, round_fn=lambda x: 5)
+        result = decode(pbf)
+
+        act_feature = result['layername']['features'][0]
+        act_geom = act_feature['geometry']
+        exp_geom = [[5, 5]]
+        self.assertEqual(exp_geom, act_geom)
+
+
 class InvalidGeometryTest(unittest.TestCase):
 
     def test_invalid_geometry_ignore(self):
