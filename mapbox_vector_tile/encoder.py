@@ -307,36 +307,24 @@ class VectorTile:
         lineType = "line"
         polygonType = "polygon"
 
-        def _get_point_obj(x, y, cmd=CMD_MOVE_TO):
-            coordinate = {
-                'x': x,
-                'y': y,
-                'cmd': cmd
-            }
-            coordinates.append(coordinate)
-
         def _get_arc_obj(arc, type):
-            length = len(arc.coords)
-            iterator = 0
             cmd = CMD_MOVE_TO
-            while (iterator < length):
-                x = arc.coords[iterator][0]
-                y = arc.coords[iterator][1]
-                if iterator == 0:
+            length = len(arc.coords)
+            for i, (x, y) in enumerate(arc.coords):
+                if i == 0:
                     cmd = CMD_MOVE_TO
-                elif iterator == length - 1 and type == polygonType:
+                elif i == length - 1 and type == polygonType:
                     cmd = CMD_SEG_END
                 else:
                     cmd = CMD_LINE_TO
-                _get_point_obj(x, y, cmd)
-                iterator = iterator + 1
+                coordinates.append((x, y, cmd))
 
         if shape.type == 'GeometryCollection':
             # do nothing
             coordinates = []
 
         elif shape.type == 'Point':
-            _get_point_obj(shape.x, shape.y)
+            coordinates.append((shape.x, shape.y, CMD_MOVE_TO))
 
         elif shape.type == 'LineString':
             _get_arc_obj(shape, lineType)
@@ -347,8 +335,8 @@ class VectorTile:
                 _get_arc_obj(ring, polygonType)
 
         elif shape.type == 'MultiPoint':
-            for point in shape.geoms:
-                _get_point_obj(point.x, point.y)
+            coordinates += [(point.x, point.y, CMD_MOVE_TO)
+                            for point in shape.geoms]
 
         elif shape.type == 'MultiLineString':
             for arc in shape.geoms:
@@ -383,12 +371,8 @@ class VectorTile:
 
         coordinates = self._parseGeometry(shape)
 
-        while (True):
-            if it >= len(coordinates):
-                break
-
-            c_it = coordinates[it]
-            x, y, vtx_cmd = c_it['x'], c_it['y'], c_it['cmd']
+        while it < len(coordinates):
+            x, y, vtx_cmd = coordinates[it]
 
             if vtx_cmd != cmd:
                 if cmd_idx >= 0:
@@ -426,9 +410,8 @@ class VectorTile:
                 sharp_turn_ahead = False
 
                 if (it + 2 <= len(coordinates)):
-                    next_coord = coordinates[it + 1]
-                    if next_coord['cmd'] == CMD_LINE_TO:
-                        next_x, next_y = next_coord['x'], next_coord['y']
+                    next_x, next_y, next_cmd = coordinates[it + 1]
+                    if next_cmd == CMD_LINE_TO:
                         next_dx = fabs(cur_x - int(next_x))
                         next_dy = fabs(cur_y - int(next_y))
                         if ((next_dx == 0 and next_dy >= tolerance) or
