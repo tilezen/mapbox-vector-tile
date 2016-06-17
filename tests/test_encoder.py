@@ -458,3 +458,17 @@ class InvalidGeometryTest(unittest.TestCase):
         collection = shapely.wkt.loads('GEOMETRYCOLLECTION (GEOMETRYCOLLECTION (POINT (4095 3664), LINESTRING (2889 0, 2889 0)), POINT (4095 3664), LINESTRING (2889 0, 2912 158, 3757 1700, 3732 1999, 4095 3277))')  # noqa
         with self.assertRaises(ValueError):
             encode({'name': 'streets', 'features': [{'geometry': collection}]})
+
+    def test_quantize_makes_mutlipolygon_invalid(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.wkt
+        shape = shapely.wkt.loads('MULTIPOLYGON (((656510.8206577231 5674684.979891453, 656511.16 5674685.9, 656514.1758819892 5674684.979891453, 656510.8206577231 5674684.979891453)), ((657115.9120547654 5674684.979891453, 657118.85 5674690, 657118.0689111941 5674684.979891453, 657115.9120547654 5674684.979891453)))')  # noqa
+        quantize_bounds = (645740.0149532147, 5674684.979891453, 665307.8941942193, 5694252.8591324575)  # noqa
+        features = [dict(geometry=shape, properties={})]
+        pbf = encode({'name': 'foo', 'features': features},
+                     quantize_bounds=quantize_bounds,
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        features = result['foo']['features']
+        self.assertEqual(1, len(features))

@@ -165,11 +165,18 @@ class VectorTile:
 
         parts = []
         for part in shape.geoms:
-            # see comment in shape.type == 'Polygon' above about why
-            # the sign here has to be -1.
             part = self.enforce_polygon_winding_order(part, n_try)
-            parts.append(part)
-        oriented_shape = MultiPolygon(parts)
+            if part is not None and not part.is_empty:
+                parts.append(part)
+
+        if not parts:
+            return None
+
+        if len(parts) == 1:
+            oriented_shape = parts[0]
+        else:
+            oriented_shape = MultiPolygon(parts)
+
         oriented_shape = self.handle_shape_validity(oriented_shape, n_try)
         return oriented_shape
 
