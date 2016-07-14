@@ -168,7 +168,8 @@ class VectorTile:
 
         parts = []
         for part in shape.geoms:
-            part = self.enforce_polygon_winding_order(part, y_coord_down, n_try)
+            part = self.enforce_polygon_winding_order(
+                part, y_coord_down, n_try)
             if part is not None and not part.is_empty:
                 parts.append(part)
 

@@ -511,33 +511,34 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         from mapbox_vector_tile.encoder import VectorTile
         # example from spec:
         # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon
-        # note that examples are in **tile local coordinates** which are y-down.
+        # note that examples are in **tile local coordinates** which are
+        # y-down.
         input_geometry = 'MULTIPOLYGON (' + \
                          '((0 0, 10 0, 10 10, 0 10, 0 0)),' + \
                          '((11 11, 20 11, 20 20, 11 20, 11 11),' + \
-                        ' (13 13, 13 17, 17 17, 17 13, 13 13)))'
+                         ' (13 13, 13 17, 17 17, 17 13, 13 13)))'
         expected_commands = [
-            9,      # 1 x move to
-            0,   0, #             +0,+0
-            26,     # 3 x line to
-            20,  0, #             +10,+0
-            0,  20, #             +0,+10
-            19,  0, #             -10,+0
-            15,     # 1 x close path
-            9,      # 1 x move to
-            22,  2, #             +11,+1
-            26,     # 3 x line to
-            18,  0, #             +9,+0
-            0,  18, #             +0,+9
-            17,  0, #             -9,+0
-            15,     # 1 x close path
-            9,      # 1 x move to
-            4,  13, #             +2,-7
-            26,     # 3 x line to
-            0,   8, #             +0,+4
-            8,   0, #             +4,+0
-            0,   7, #             +0,-4
-            15      # 1 x close path
+            9,       # 1 x move to
+            0,   0,  # ........... +0,+0
+            26,      # 3 x line to
+            20,  0,  # ........... +10,+0
+            0,  20,  # ........... +0,+10
+            19,  0,  # ........... -10,+0
+            15,      # 1 x close path
+            9,       # 1 x move to
+            22,  2,  # ........... +11,+1
+            26,      # 3 x line to
+            18,  0,  # ........... +9,+0
+            0,  18,  # ........... +0,+9
+            17,  0,  # ........... -9,+0
+            15,      # 1 x close path
+            9,       # 1 x move to
+            4,  13,  # ........... +2,-7
+            26,      # 3 x line to
+            0,   8,  # ........... +0,+4
+            8,   0,  # ........... +4,+0
+            0,   7,  # ........... +0,-4
+            15       # 1 x close path
         ]
 
         tile = VectorTile(4096)
@@ -557,29 +558,29 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         input_geometry = 'MULTIPOLYGON (' + \
                          '((0 20, 10 20, 10 10, 0 10, 0 20)),' + \
                          '((11 9, 20 9, 20 0, 11 0, 11 9),' + \
-                        ' (13 7, 13 3, 17 3, 17 7, 13 7)))'
+                         ' (13 7, 13 3, 17 3, 17 7, 13 7)))'
         expected_commands = [
-            9,      # 1 x move to
-            0,   0, #             +0,+0
-            26,     # 3 x line to
-            20,  0, #             +10,+0
-            0,  20, #             +0,+10
-            19,  0, #             -10,+0
-            15,     # 1 x close path
-            9,      # 1 x move to
-            22,  2, #             +11,+1
-            26,     # 3 x line to
-            18,  0, #             +9,+0
-            0,  18, #             +0,+9
-            17,  0, #             -9,+0
-            15,     # 1 x close path
-            9,      # 1 x move to
-            4,  13, #             +2,-7
-            26,     # 3 x line to
-            0,   8, #             +0,+4
-            8,   0, #             +4,+0
-            0,   7, #             +0,-4
-            15      # 1 x close path
+            9,       # 1 x move to
+            0,   0,  # ........... +0,+0
+            26,      # 3 x line to
+            20,  0,  # ........... +10,+0
+            0,  20,  # ........... +0,+10
+            19,  0,  # ........... -10,+0
+            15,      # 1 x close path
+            9,       # 1 x move to
+            22,  2,  # ........... +11,+1
+            26,      # 3 x line to
+            18,  0,  # ........... +9,+0
+            0,  18,  # ........... +0,+9
+            17,  0,  # ........... -9,+0
+            15,      # 1 x close path
+            9,       # 1 x move to
+            4,  13,  # ........... +2,-7
+            26,      # 3 x line to
+            0,   8,  # ........... +0,+4
+            8,   0,  # ........... +4,+0
+            0,   7,  # ........... +0,-4
+            15       # 1 x close path
         ]
 
         tile = VectorTile(20)
@@ -596,12 +597,12 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         # https://github.com/tilezen/mapbox-vector-tile/issues/57
         input_geometry = 'POLYGON ((2 2, 5 4, 2 6, 2 2))'
         expected_commands = [
-            9,      # 1 x move to
-            4,   4, #             +2,+2
-            18,     # 2 x line to
-            6,   4, #             +3,+2
-            5,   4, #             -3,+2
-            15      # 1 x close path
+            9,       # 1 x move to
+            4,   4,  # ........... +2,+2
+            18,      # 2 x line to
+            6,   4,  # ........... +3,+2
+            5,   4,  # ........... -3,+2
+            15       # 1 x close path
         ]
 
         tile = VectorTile(4096)
