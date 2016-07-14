@@ -97,12 +97,12 @@ class VectorTile:
             if quantize_bounds:
                 shape = self.quantize(shape, quantize_bounds)
 
-            shape = self.enforce_winding_order(shape)
+            shape = self.enforce_winding_order(shape, y_coord_down)
 
             if shape is not None and not shape.is_empty:
                 self.addFeature(feature, shape, y_coord_down)
 
-    def enforce_winding_order(self, shape, n_try=1):
+    def enforce_winding_order(self, shape, y_coord_down, n_try=1):
         if shape.type == 'MultiPolygon':
             # If we are a multipolygon, we need to ensure that the
             # winding orders of the consituent polygons are
@@ -111,7 +111,8 @@ class VectorTile:
             # exterior ones, and all interior rings need to follow
             # the exterior one. This is how the end of one polygon
             # and the beginning of another are signaled.
-            shape = self.enforce_multipolygon_winding_order(shape, n_try)
+            shape = self.enforce_multipolygon_winding_order(
+                shape, y_coord_down, n_try)
 
         elif shape.type == 'Polygon':
             # Ensure that polygons are also oriented with the
@@ -122,7 +123,8 @@ class VectorTile:
             # Note that while the Y axis flips, we also invert the
             # Y coordinate to get the tile-local value, which means
             # the clockwise orientation is unchanged.
-            shape = self.enforce_polygon_winding_order(shape, n_try)
+            shape = self.enforce_polygon_winding_order(
+                shape, y_coord_down, n_try)
 
         # other shapes just get passed through
         return shape
@@ -139,7 +141,7 @@ class VectorTile:
 
         return transform(fn, shape)
 
-    def handle_shape_validity(self, shape, n_try):
+    def handle_shape_validity(self, shape, y_coord_down, n_try):
         if shape.is_valid:
             return shape
 
@@ -156,16 +158,18 @@ class VectorTile:
                 # altered the geometry. We'll run through the process
                 # again, but keep track of which attempt we are on to
                 # terminate the recursion.
-                shape = self.enforce_winding_order(shape, n_try + 1)
+                shape = self.enforce_winding_order(
+                    shape, y_coord_down, n_try + 1)
 
         return shape
 
-    def enforce_multipolygon_winding_order(self, shape, n_try):
+    def enforce_multipolygon_winding_order(self, shape, y_coord_down, n_try):
         assert shape.type == 'MultiPolygon'
 
         parts = []
         for part in shape.geoms:
-            part = self.enforce_polygon_winding_order(part, n_try)
+            part = self.enforce_polygon_winding_order(
+                part, y_coord_down, n_try)
             if part is not None and not part.is_empty:
                 parts.append(part)
 
@@ -177,10 +181,11 @@ class VectorTile:
         else:
             oriented_shape = MultiPolygon(parts)
 
-        oriented_shape = self.handle_shape_validity(oriented_shape, n_try)
+        oriented_shape = self.handle_shape_validity(
+            oriented_shape, y_coord_down, n_try)
         return oriented_shape
 
-    def enforce_polygon_winding_order(self, shape, n_try):
+    def enforce_polygon_winding_order(self, shape, y_coord_down, n_try):
         assert shape.type == 'Polygon'
 
         def fn(point):
@@ -193,8 +198,10 @@ class VectorTile:
         if len(shape.interiors) > 0:
             rings = [apply_map(fn, ring.coords) for ring in shape.interiors]
 
-        oriented_shape = orient(Polygon(exterior, rings), sign=-1.0)
-        oriented_shape = self.handle_shape_validity(oriented_shape, n_try)
+        sign = 1.0 if y_coord_down else -1.0
+        oriented_shape = orient(Polygon(exterior, rings), sign=sign)
+        oriented_shape = self.handle_shape_validity(
+            oriented_shape, y_coord_down, n_try)
         return oriented_shape
 
     def _load_geometry(self, geometry_spec):
