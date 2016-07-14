@@ -1,3 +1,12 @@
+Version 0.4.0
+-------------
+
+* Custom rounding functions: a `round_fn` parameter was added to the `encode` function, which allows control over how floating point coordinates are transformed to integer ones. See [PR 55](https://github.com/tilezen/mapbox-vector-tile/pull/55).
+* Custom validity functions: an `on_invalid_geometry` parameter was added to the `encode` function, which is called when invalid geometry is found, or created through coordinate rounding. See [PR 46](https://github.com/tilezen/mapbox-vector-tile/pull/46).
+* Winding order bug fix: See [issue 57](https://github.com/tilezen/mapbox-vector-tile/issues/57) and [PR 59](https://github.com/tilezen/mapbox-vector-tile/pull/59).
+* Performance improvements: including a 2x speedup from using `tuple`s instead of `dict`s for coordinates, see [PR 56](https://github.com/tilezen/mapbox-vector-tile/pull/56).
+* Improvements to PY3 compatibility: See [PR 52](https://github.com/tilezen/mapbox-vector-tile/pull/52).
+
 Version 0.3.0
 -------------
 
