@@ -1,8 +1,8 @@
 Mapbox Vector Tile
 ==================
 
-[![Build Status](https://travis-ci.org/mapzen/mapbox-vector-tile.svg?branch=master)](https://travis-ci.org/mapzen/mapbox-vector-tile)
-[![Coverage Status](https://coveralls.io/repos/github/mapzen/mapbox-vector-tile/badge.svg?branch=master)](https://coveralls.io/github/mapzen/mapbox-vector-tile?branch=master)
+[![Build Status](https://travis-ci.org/tilezen/mapbox-vector-tile.svg?branch=master)](https://travis-ci.org/tilezen/mapbox-vector-tile)
+[![Coverage Status](https://coveralls.io/repos/github/tilezen/mapbox-vector-tile/badge.svg?branch=master)](https://coveralls.io/github/tilezen/mapbox-vector-tile?branch=master)
 
 Installation
 ------------
@@ -305,4 +305,4 @@ Here's how you might decode a tile from a file.
 Changelog
 ---------
 
-Click [here](https://github.com/mapzen/mapbox-vector-tile/blob/master/CHANGELOG.md) to see what changed over time in various versions.
+Click [here](https://github.com/tilezen/mapbox-vector-tile/blob/master/CHANGELOG.md) to see what changed over time in various versions.
