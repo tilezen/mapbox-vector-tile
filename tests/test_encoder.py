@@ -589,3 +589,25 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
+
+    def test_issue_57(self):
+        from mapbox_vector_tile.encoder import VectorTile
+        # example from issue:
+        # https://github.com/tilezen/mapbox-vector-tile/issues/57
+        input_geometry = 'POLYGON ((2 2, 5 4, 2 6, 2 2))'
+        expected_commands = [
+            9,      # 1 x move to
+            4,   4, #             +2,+2
+            18,     # 2 x line to
+            6,   4, #             +3,+2
+            5,   4, #             -3,+2
+            15      # 1 x close path
+        ]
+
+        tile = VectorTile(4096)
+        tile.addFeatures([dict(geometry=input_geometry)],
+                         'example_layer', quantize_bounds=None,
+                         y_coord_down=True)
+        self.assertEqual(1, len(tile.layer.features))
+        f = tile.layer.features[0]
+        self.assertEqual(expected_commands, list(f.geometry))
