@@ -62,7 +62,7 @@ Version 0.0.6
 -------------
 
 * Explode multipolygons into several features
-* https://github.com/mapzen/mapbox-vector-tile/issues/4
+* https://github.com/tilezen/mapbox-vector-tile/issues/4
 * Resolve issue when id is passed in
 * More tests
 
