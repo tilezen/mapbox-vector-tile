@@ -68,6 +68,38 @@ class TestDifferentGeomFormats(BaseTestCase):
             expected_geometry=[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
                                [[1, 1], [3, 2], [2, 2], [1, 1]]])
 
+    def test_encoder_winding_order_polygon(self):
+        # example from the spec
+        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4355-example-polygon
+        # the order given in the example is clockwise in a y-up coordinate
+        # system, but the coordinate system given for the example is y-down!
+        # therefore the y coordinate in this example is flipped negative.
+        self.assertRoundTrip(
+            input_geometry='POLYGON ((3 -6, 8 -12, 20 -34, 3 -6))',
+            expected_geometry=[[[3, -6], [8, -12], [20, -34], [3, -6]]])
+
+    def test_encoder_winding_order_polygon_reverse(self):
+        # tests that encode _corrects_ the winding order
+        # example is the same as above - note the flipped coordinate system.
+        self.assertRoundTrip(
+            input_geometry='POLYGON ((3 -6, 20 -34, 8 -12, 3 -6))',
+            expected_geometry=[[[3, -6], [8, -12], [20, -34], [3, -6]]])
+
+    def test_encoder_winding_order_multipolygon(self):
+        # example from the spec
+        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon
+        # the order given in the example is clockwise in a y-up coordinate
+        # system, but the coordinate system given for the example is y-down!
+        self.assertRoundTrip(
+            input_geometry=('MULTIPOLYGON (' +
+                            '((0 0, 10 0, 10 -10, 0 -10, 0 0)),' +
+                            '((11 -11, 20 -11, 20 -20, 11 -20, 11 -11),' +
+                            ' (13 -13, 13 -17, 17 -17, 17 -13, 13 -13)))'),
+            expected_geometry=[
+                [[[0, 0], [10, 0], [10, -10], [0, -10], [0, 0]]],
+                [[[11, -11], [20, -11], [20, -20], [11, -20], [11, -11]],
+                 [[13, -13], [13, -17], [17, -17], [17, -13], [13, -13]]]])
+
     def test_encoder_ensure_winding_after_quantization(self):
         self.assertRoundTrip(
             input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2.4, 2 1.6, 1 1))',  # noqa
@@ -472,3 +504,88 @@ class InvalidGeometryTest(unittest.TestCase):
         result = decode(pbf)
         features = result['foo']['features']
         self.assertEqual(1, len(features))
+
+
+class LowLevelEncodingTestCase(unittest.TestCase):
+    def test_example_multi_polygon(self):
+        from mapbox_vector_tile.encoder import VectorTile
+        # example from spec:
+        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon
+        # note that examples are in **tile local coordinates** which are y-down.
+        input_geometry = 'MULTIPOLYGON (' + \
+                         '((0 0, 10 0, 10 10, 0 10, 0 0)),' + \
+                         '((11 11, 20 11, 20 20, 11 20, 11 11),' + \
+                        ' (13 13, 13 17, 17 17, 17 13, 13 13)))'
+        expected_commands = [
+            9,      # 1 x move to
+            0,   0, #             +0,+0
+            26,     # 3 x line to
+            20,  0, #             +10,+0
+            0,  20, #             +0,+10
+            19,  0, #             -10,+0
+            15,     # 1 x close path
+            9,      # 1 x move to
+            22,  2, #             +11,+1
+            26,     # 3 x line to
+            18,  0, #             +9,+0
+            0,  18, #             +0,+9
+            17,  0, #             -9,+0
+            15,     # 1 x close path
+            9,      # 1 x move to
+            4,  13, #             +2,-7
+            26,     # 3 x line to
+            0,   8, #             +0,+4
+            8,   0, #             +4,+0
+            0,   7, #             +0,-4
+            15      # 1 x close path
+        ]
+
+        tile = VectorTile(4096)
+        tile.addFeatures([dict(geometry=input_geometry)],
+                         'example_layer', quantize_bounds=None,
+                         y_coord_down=True)
+        self.assertEqual(1, len(tile.layer.features))
+        f = tile.layer.features[0]
+        self.assertEqual(expected_commands, list(f.geometry))
+
+    def test_example_multi_polygon_y_up(self):
+        from mapbox_vector_tile.encoder import VectorTile
+        # example from spec:
+        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon
+        # in this example, we transform the coordinates to their equivalents
+        # in a y-up coordinate system.
+        input_geometry = 'MULTIPOLYGON (' + \
+                         '((0 20, 10 20, 10 10, 0 10, 0 20)),' + \
+                         '((11 9, 20 9, 20 0, 11 0, 11 9),' + \
+                        ' (13 7, 13 3, 17 3, 17 7, 13 7)))'
+        expected_commands = [
+            9,      # 1 x move to
+            0,   0, #             +0,+0
+            26,     # 3 x line to
+            20,  0, #             +10,+0
+            0,  20, #             +0,+10
+            19,  0, #             -10,+0
+            15,     # 1 x close path
+            9,      # 1 x move to
+            22,  2, #             +11,+1
+            26,     # 3 x line to
+            18,  0, #             +9,+0
+            0,  18, #             +0,+9
+            17,  0, #             -9,+0
+            15,     # 1 x close path
+            9,      # 1 x move to
+            4,  13, #             +2,-7
+            26,     # 3 x line to
+            0,   8, #             +0,+4
+            8,   0, #             +4,+0
+            0,   7, #             +0,-4
+            15      # 1 x close path
+        ]
+
+        tile = VectorTile(20)
+        tile.addFeatures([dict(geometry=input_geometry)],
+                         'example_layer', quantize_bounds=None,
+                         y_coord_down=False)
+        self.assertEqual(1, len(tile.layer.features))
+        f = tile.layer.features[0]
+        self.assertEqual(expected_commands, list(f.geometry))
