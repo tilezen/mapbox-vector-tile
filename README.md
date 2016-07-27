@@ -166,7 +166,7 @@ Also note that the spec allows the extents to be modified, even though they are 
 
 ### Quantization
 
-The encoder also has options to quantize the data for you via the `quantize_bounds` option. When encoding, pass in the bounds in the form (minx, maxx, miny, maxy) and the coordinates will be scaled appropriately during encoding.
+The encoder also has options to quantize the data for you via the `quantize_bounds` option. When encoding, pass in the bounds in the form (minx, miny, maxx, maxy) and the coordinates will be scaled appropriately during encoding.
 
 ```python
 mapbox_vector_tile.encode([
