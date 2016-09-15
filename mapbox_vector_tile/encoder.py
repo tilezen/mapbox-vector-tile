@@ -33,11 +33,58 @@ def on_invalid_geometry_ignore(shape):
     return None
 
 
+def make_valid_polygon_flip(shape):
+    assert shape.type == 'Polygon'
+    # TODO: need to manually reverse the coords in the polygon, then
+    # buffer(0) it, and reverse them again to get back to the original,
+    # intended orientation. note that Shapely's orient() doesn't work
+    # on zero-area (e.g: bow-tie) geometries.
+    return None
+
+
+def area_bounds(shape):
+    if shape.is_empty:
+        return 0
+
+    minx, miny, maxx, maxy = shape.bounds
+    return (maxx - minx) * (maxy - miny)
+
+
+def make_valid_polygon(shape):
+    prev_area = area_bounds(shape)
+    new_shape = shape.buffer(0)
+    assert new_shape.is_valid, \
+        'buffer(0) did not make geometry valid. old shape: %s' % shape.wkt
+    new_area = area_bounds(new_shape)
+
+    if new_area < 0.9 * prev_area:
+        alt_shape = make_valid_polygon_flip(shape)
+        if alt_shape:
+            new_shape = MultiPolygon([new_shape, alt_shape])
+
+    return new_shape
+
+
+def make_valid_multipolygon(shape):
+    new_g = []
+
+    for g in shape.geoms:
+        valid_g = on_invalid_geometry_make_valid(g)
+        if valid_g.type == 'MultiPolygon':
+            new_g.extend(valid_g.geoms)
+        else:
+            new_g.append(valid_g)
+
+    return MultiPolygon(new_g)
+
+
 def on_invalid_geometry_make_valid(shape):
-    if shape.type in ('Polygon', 'MultiPolygon'):
-        shape = shape.buffer(0)
-        assert shape.is_valid, \
-            'buffer(0) did not make geometry valid: %s' % shape.wkt
+    if shape.type == 'MultiPolygon':
+        shape = make_valid_multipolygon(shape)
+
+    elif shape.type == 'Polygon':
+        shape = make_valid_polygon(shape)
+
     return shape
 
 
