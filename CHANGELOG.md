@@ -1,3 +1,8 @@
+Version 0.5.0
+-------------
+
+* Improved results from `on_invalid_geometry_make_valid` when the geometry is self-crossing. It was possible for large parts of the geometry to be discarded, and it is now less likely. See [PR 66](https://github.com/tilezen/mapbox-vector-tile/pull/66) for more information.
+
 Version 0.4.0
 -------------
 
