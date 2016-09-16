@@ -7,6 +7,7 @@ from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import orient
 from shapely.geometry.polygon import Polygon
+from shapely.geometry.polygon import LinearRing
 from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
@@ -33,13 +34,31 @@ def on_invalid_geometry_ignore(shape):
     return None
 
 
+def reverse_ring(shape):
+    assert shape.type == 'LinearRing'
+    return LinearRing(list(shape.coords)[::-1])
+
+
+def reverse_polygon(shape):
+    assert shape.type == 'Polygon'
+
+    exterior = reverse_ring(shape.exterior)
+    interiors = [reverse_ring(r) for r in shape.interiors]
+
+    return Polygon(exterior, interiors)
+
+
 def make_valid_polygon_flip(shape):
     assert shape.type == 'Polygon'
-    # TODO: need to manually reverse the coords in the polygon, then
-    # buffer(0) it, and reverse them again to get back to the original,
-    # intended orientation. note that Shapely's orient() doesn't work
-    # on zero-area (e.g: bow-tie) geometries.
-    return None
+    # to handle cases where the area of the polygon is zero, we need to
+    # manually reverse the coords in the polygon, then buffer(0) it to make it
+    # valid in reverse, then reverse them again to get back to the original,
+    # intended orientation.
+
+    flipped = reverse_polygon(shape)
+    fixed = flipped.buffer(0)
+
+    return reverse_polygon(fixed)
 
 
 def area_bounds(shape):
@@ -60,7 +79,7 @@ def make_valid_polygon(shape):
     if new_area < 0.9 * prev_area:
         alt_shape = make_valid_polygon_flip(shape)
         if alt_shape:
-            new_shape = MultiPolygon([new_shape, alt_shape])
+            new_shape = new_shape.union(alt_shape)
 
     return new_shape
 
