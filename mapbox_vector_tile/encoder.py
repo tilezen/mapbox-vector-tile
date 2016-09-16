@@ -58,7 +58,10 @@ def make_valid_polygon_flip(shape):
     flipped = reverse_polygon(shape)
     fixed = flipped.buffer(0)
 
-    return reverse_polygon(fixed)
+    if fixed.is_empty:
+        return None
+    else:
+        return reverse_polygon(fixed)
 
 
 def area_bounds(shape):
@@ -88,7 +91,11 @@ def make_valid_multipolygon(shape):
     new_g = []
 
     for g in shape.geoms:
+        if g.is_empty:
+            continue
+
         valid_g = on_invalid_geometry_make_valid(g)
+
         if valid_g.type == 'MultiPolygon':
             new_g.extend(valid_g.geoms)
         else:
@@ -98,7 +105,10 @@ def make_valid_multipolygon(shape):
 
 
 def on_invalid_geometry_make_valid(shape):
-    if shape.type == 'MultiPolygon':
+    if shape.is_empty:
+        return shape
+
+    elif shape.type == 'MultiPolygon':
         shape = make_valid_multipolygon(shape)
 
     elif shape.type == 'Polygon':
