@@ -61,15 +61,33 @@ def make_valid_polygon_flip(shape):
     if fixed.is_empty:
         return None
     else:
-        return reverse_polygon(fixed)
+        if fixed.type == 'Polygon':
+            return reverse_polygon(fixed)
+        elif fixed.type == 'MultiPolygon':
+            flipped_geoms = []
+            for geom in fixed.geoms:
+                reversed_geom = reverse_polygon(geom)
+                flipped_geoms.append(reversed_geom)
+            return MultiPolygon(flipped_geoms)
 
 
 def area_bounds(shape):
     if shape.is_empty:
         return 0
 
-    minx, miny, maxx, maxy = shape.bounds
-    return (maxx - minx) * (maxy - miny)
+    elif shape.type == 'MultiPolygon':
+        area = 0
+        for geom in shape.geoms:
+            area += area_bounds(geom)
+        return area
+
+    elif shape.type == 'Polygon':
+        minx, miny, maxx, maxy = shape.bounds
+        area = (maxx - minx) * (maxy - miny)
+        return area
+
+    else:
+        assert 'area_bounds: invalid shape type: %s' % shape.type
 
 
 def make_valid_polygon(shape):
