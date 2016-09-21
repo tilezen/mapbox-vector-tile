@@ -530,6 +530,18 @@ class InvalidGeometryTest(unittest.TestCase):
         features = result['foo']['features']
         self.assertEqual(1, len(features))
 
+    def test_flipped_geometry_produces_multipolygon(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.wkt
+        shape = shapely.wkt.loads('POLYGON ((3449 1939, 3476 1967, 3473 1996, 3483 2027, 3542 2119, 3538 2160, 3563 2233, 3602 2255, 3639 2326, 3629 2388, 3573 2455, 3594 2493, 3558 2533, 3573 2549, 3518 2572, 3502 2592, 3505 2607, 3513 2614, 3535 2616, 3537 2610, 3535 2602, 3537 2599, 3548 2607, 3551 2636, 3528 2634, 3537 2668, 3549 2670, 3528 2711, 3550 2667, 3532 2635, 3550 2641, 3553 2613, 3549 2602, 3540 2596, 3512 2610, 3506 2589, 3576 2552, 3576 2543, 3563 2535, 3596 2506, 3597 2494, 3587 2469, 3589 2451, 3636 2385, 3644 2326, 3605 2251, 3566 2230, 3547 2122, 3482 2014, 3479 1966, 3455 1944, 3458 1910, 3449 1902, 3449 1939))')  # noqa
+        features = [dict(geometry=shape, properties={})]
+        pbf = encode({'name': 'foo', 'features': features},
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        features = result['foo']['features']
+        self.assertEqual(0, len(features))
+
 
 class LowLevelEncodingTestCase(unittest.TestCase):
     def test_example_multi_polygon(self):
