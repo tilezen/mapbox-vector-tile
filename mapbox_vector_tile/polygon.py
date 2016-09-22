@@ -5,11 +5,22 @@ import pyclipper
 
 
 def _reverse_ring(shape):
+    """
+    Reverse a LinearRing. A counter-clockwise ring given as input would return
+    a clockwise ring as output. This should reverse the sign of the ring.
+    """
+
     assert shape.geom_type == 'LinearRing'
     return LinearRing(list(shape.coords)[::-1])
 
 
 def _reverse_polygon(shape):
+    """
+    Reverse a Polygon, returning a polygon with the same coordinates in the
+    reverse order. This means the returned polygon should have an area equal to
+    the negative area of the input polygon.
+    """
+
     assert shape.geom_type == 'Polygon'
 
     exterior = _reverse_ring(shape.exterior)
@@ -19,6 +30,12 @@ def _reverse_polygon(shape):
 
 
 def _coords(shape):
+    """
+    Return a list of lists of coordinates of the polygon. The list consists
+    firstly of the list of exterior coordinates followed by zero or more lists
+    of any interior coordinates.
+    """
+
     assert shape.geom_type == 'Polygon'
     coords = [list(shape.exterior.coords)]
     for interior in shape.interiors:
@@ -27,6 +44,13 @@ def _coords(shape):
 
 
 def make_valid_pyclipper(shape):
+    """
+    Use the pyclipper library to union a polygon with its reversed polygon. The
+    result should contain all parts of the polygon and be consistently
+    oriented. The pyclipper library is robust, and uses integer coordinates, so
+    should not produce any additional degeneracies.
+    """
+
     pc = pyclipper.Pyclipper()
 
     try:
@@ -50,6 +74,19 @@ def make_valid_pyclipper(shape):
 
 
 def make_valid_polygon(shape):
+    """
+    Make a polygon valid. Polygons can be invalid in many ways, such as
+    self-intersection, self-touching and degeneracy. This process attempts to
+    make a polygon valid while retaining as much of its extent or area as
+    possible.
+
+    First, we call pyclipper to robustly union the polygon with its reverse.
+    This might result in polygons which still have degeneracies according to
+    the OCG standard of validity - as pyclipper does not consider these to be
+    invalid. Therefore we follow by using the `buffer(0)` technique to attempt
+    to remove any remaining degeneracies.
+    """
+
     assert shape.geom_type == 'Polygon'
 
     clipped_shape = make_valid_pyclipper(shape)
@@ -78,6 +115,10 @@ def make_valid_multipolygon(shape):
 
 
 def make_it_valid(shape):
+    """
+    Attempt to make any polygon or multipolygon valid.
+    """
+
     if shape.is_empty:
         return shape
 
