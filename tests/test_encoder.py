@@ -439,8 +439,10 @@ class InvalidGeometryTest(unittest.TestCase):
         result = decode(pbf)
         self.assertEqual(1, len(result['layername']['features']))
         valid_geometry = result['layername']['features'][0]['geometry']
-        shape = shapely.geometry.Polygon(valid_geometry[0])
-        self.assertTrue(shape.is_valid)
+
+        for poly in valid_geometry:
+            shape = shapely.geometry.Polygon(poly[0])
+            self.assertTrue(shape.is_valid)
 
     def test_bowtie_self_touching(self):
         from mapbox_vector_tile import encode
@@ -489,6 +491,52 @@ class InvalidGeometryTest(unittest.TestCase):
             self.assertGreater(p.area, 0)
             total_area += p.area
         self.assertEquals(2, total_area)
+
+    def test_make_valid_self_crossing(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.geometry
+        import shapely.wkt
+        geometry = 'POLYGON ((10 10, 20 10, 20 20, 15 15, 15 5, 10 10))'
+        shape = shapely.wkt.loads(geometry)
+        self.assertFalse(shape.is_valid)
+        feature = dict(geometry=shape, properties={})
+        source = dict(name='layername', features=[feature])
+        pbf = encode(source,
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        self.assertEqual(1, len(result['layername']['features']))
+        valid_geometries = result['layername']['features'][0]['geometry']
+        geom_type = result['layername']['features'][0]['type']
+        self.assertEqual(3, geom_type)  # 3 means POLYGON
+
+        def _depth(x):
+            if isinstance(x, (tuple, list)):
+                return 1 + _depth(x[0])
+            return 0
+
+        def _poly(c):
+            return shapely.geometry.Polygon(c[0], c[1:])
+
+        def _multi(c):
+            polys = [_poly(p) for p in c]
+            return shapely.geometry.multipolygon.Multipolygon(polys)
+
+        total_area = 0
+        for g in valid_geometries:
+            d = _depth(g)
+
+            if d == 4:
+                p = _multi(g)
+            elif d == 3:
+                p = _poly(g)
+            else:
+                self.fail("Expected depth %r to be 3 or 4." % (d,))
+
+            self.assertTrue(p.is_valid)
+            self.assertGreater(p.area, 0)
+            total_area += p.area
+        self.assertEquals(50, total_area)
 
     def test_validate_generates_rounding_error(self):
         from mapbox_vector_tile import encode
@@ -540,7 +588,12 @@ class InvalidGeometryTest(unittest.TestCase):
                      on_invalid_geometry=on_invalid_geometry_make_valid)
         result = decode(pbf)
         features = result['foo']['features']
-        self.assertEqual(0, len(features))
+        self.assertEqual(1, len(features))
+        geom = features[0]['geometry']
+
+        for poly in geom:
+            p = shapely.geometry.Polygon(poly[0], poly[1:])
+            self.assertTrue(p.is_valid)
 
 
 class LowLevelEncodingTestCase(unittest.TestCase):

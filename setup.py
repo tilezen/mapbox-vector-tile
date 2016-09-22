@@ -29,5 +29,11 @@ setup(name='mapbox-vector-tile',
       include_package_data=True,
       zip_safe=False,
       test_suite="setup.test_suite",
-      install_requires=["setuptools", "protobuf", "shapely", "future"]
+      install_requires=[
+          "setuptools",
+          "protobuf",
+          "shapely",
+          "future",
+          "pyclipper"
+      ]
       )
