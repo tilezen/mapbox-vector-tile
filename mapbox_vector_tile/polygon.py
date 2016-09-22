@@ -68,7 +68,7 @@ def make_valid_pyclipper(shape):
     if len(result) == 1:
         shape = Polygon(result[0])
     else:
-        shape = MultiPolygon(result)
+        shape = MultiPolygon([Polygon(r) for r in result])
 
     return shape
 
