@@ -128,6 +128,10 @@ def _polytree_node_to_shapely(node):
         children = []
 
     else:
+        # check expectations: this branch gets executed if this node is not a
+        # hole, and has no contour. in that situation we'd expect that it has
+        # no children, as it would not be possible to subtract children from
+        # an empty outer contour.
         assert len(children) == 0
 
     return (polygons, children)
