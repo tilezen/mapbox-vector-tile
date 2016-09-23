@@ -109,10 +109,13 @@ def _polytree_node_to_shapely(node):
             if not diff.is_valid:
                 diff = diff.buffer(0)
 
-            #assert diff.is_valid, \
-            #    "Difference of %s and %s did not make valid polygon %s " \
-            #    " because %s" \
-            #    % (poly.wkt, inner.wkt, diff.wkt, explain_validity(diff))
+            # keep this for when https://trac.osgeo.org/geos/ticket/789 is
+            # resolved.
+            #
+            #  assert diff.is_valid, \
+            #      "Difference of %s and %s did not make valid polygon %s " \
+            #      " because %s" \
+            #      % (poly.wkt, inner.wkt, diff.wkt, explain_validity(diff))
             #
             # NOTE: this throws away the inner ring if we can't produce a
             # valid difference. not ideal, but we'd rather produce something

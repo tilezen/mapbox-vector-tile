@@ -6,7 +6,6 @@ import unittest
 
 from mapbox_vector_tile.polygon import make_it_valid
 from shapely import wkt
-from shapely.validation import explain_validity
 import os
 
 
