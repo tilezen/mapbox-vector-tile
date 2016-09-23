@@ -1,6 +1,7 @@
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.polygon import LinearRing
+from shapely.ops import cascaded_union
 import pyclipper
 
 
@@ -43,32 +44,68 @@ def _coords(shape):
     return coords
 
 
+def _drop_degenerate_inners(shape):
+    """
+    Drop degenerate (zero-size) inners from the polygon.
+
+    This is implemented as dropping anything with a size less than 0.5, as the
+    polygon is in integer coordinates and the smallest valid inner would be a
+    triangle with height and width 1.
+    """
+
+    assert shape.geom_type == 'Polygon'
+
+    new_inners = []
+    for inner in shape.interiors:
+        if abs(inner.area) >= 0.5:
+            new_inners.append(inner)
+
+    return Polygon(shape.exterior, new_inners)
+
+
 def make_valid_pyclipper(shape):
     """
-    Use the pyclipper library to union a polygon with its reversed polygon. The
-    result should contain all parts of the polygon and be consistently
-    oriented. The pyclipper library is robust, and uses integer coordinates, so
-    should not produce any additional degeneracies.
+    Use the pyclipper library to "union" a polygon on its own. This operation
+    uses the even-odd rule to determine which points are in the interior of
+    the polygon, and can reconstruct the orientation of the polygon from that.
+    The pyclipper library is robust, and uses integer coordinates, so should
+    not produce any additional degeneracies.
+
+    Before cleaning the polygon, we remove all degenerate inners. This is
+    useful to remove inners which have collapsed to points or lines, which can
+    interfere with the cleaning process.
     """
+
+    # drop all degenerate inners
+    clean_shape = _drop_degenerate_inners(shape)
 
     pc = pyclipper.Pyclipper()
 
     try:
-        r_shape = _reverse_polygon(shape)
+        pc.AddPaths(_coords(clean_shape), pyclipper.PT_SUBJECT, True)
 
-        pc.AddPaths(_coords(shape), pyclipper.PT_CLIP, True)
-        pc.AddPaths(_coords(r_shape), pyclipper.PT_SUBJECT, True)
-
-        result = pc.Execute(pyclipper.CT_UNION, pyclipper.PFT_EVENODD,
-                            pyclipper.PFT_EVENODD)
+        result = pc.Execute(pyclipper.CT_UNION, pyclipper.PFT_EVENODD)
 
     except pyclipper.ClipperException:
         return MultiPolygon([])
 
-    if len(result) == 1:
+
+    if len(result) == 0:
+        shape = MultiPolygon([])
+
+    elif len(result) == 1:
         shape = Polygon(result[0])
+
     else:
-        shape = MultiPolygon([Polygon(r) for r in result])
+        polys = []
+        for r in result:
+            p = Polygon(r)
+            # buffer polygons to remove self-touching outers, which clipper
+            # considers valid, but OGC doesn't.
+            polys.append(p.buffer(0))
+
+        # use cascaded union in case any of the outers intersect
+        shape = cascaded_union(polys)
 
     return shape
 
@@ -80,7 +117,9 @@ def make_valid_polygon(shape):
     make a polygon valid while retaining as much of its extent or area as
     possible.
 
-    First, we call pyclipper to robustly union the polygon with its reverse.
+    First, we call pyclipper to robustly union the polygon. Using this on its
+    own appears to be good for "cleaning" the polygon.
+
     This might result in polygons which still have degeneracies according to
     the OCG standard of validity - as pyclipper does not consider these to be
     invalid. Therefore we follow by using the `buffer(0)` technique to attempt
