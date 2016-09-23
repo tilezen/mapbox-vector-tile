@@ -108,11 +108,17 @@ def _polytree_node_to_shapely(node):
             diff = poly.difference(inner)
             if not diff.is_valid:
                 diff = diff.buffer(0)
-            assert diff.is_valid, \
-                "Difference of %s and %s did not make valid polygon %s " \
-                " because %s" \
-                % (poly.wkt, inner.wkt, diff.wkt, explain_validity(diff))
-            poly = diff
+
+            #assert diff.is_valid, \
+            #    "Difference of %s and %s did not make valid polygon %s " \
+            #    " because %s" \
+            #    % (poly.wkt, inner.wkt, diff.wkt, explain_validity(diff))
+            #
+            # NOTE: this throws away the inner ring if we can't produce a
+            # valid difference. not ideal, but we'd rather produce something
+            # that's valid than nothing.
+            if diff.is_valid:
+                poly = diff
 
         assert poly.is_valid
         polygons.append(poly)

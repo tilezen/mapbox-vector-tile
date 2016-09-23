@@ -173,19 +173,3 @@ class TestPolygonMakeValid(unittest.TestCase):
         fixed = make_it_valid(geom)
         self.assertTrue(fixed.is_valid)
         self.assertEquals(22, fixed.area)
-
-    def test_shapely_difference(self):
-        geom_a = wkt.loads("""POLYGON(
-          (0 0, 4 0, 4 4, 0 4, 0 0),
-          (1 1, 1 2, 2 1, 1 1),
-          (1 2, 1 3, 2 3, 1 2),
-          (2 3, 3 3, 3 2, 2 3)
-        )""")
-        self.assertTrue(geom_a.is_valid)
-        geom_b = wkt.loads("""POLYGON(
-          (2 1, 3 1, 3 2, 2 1)
-        )""")
-        self.assertTrue(geom_b.is_valid)
-        diff = geom_a.difference(geom_b)
-        self.assertTrue(diff.is_valid, explain_validity(diff))
-        self.assertEquals(geom_a.area - geom_b.area, diff.area)
