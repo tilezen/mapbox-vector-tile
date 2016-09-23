@@ -2,6 +2,7 @@ from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.polygon import LinearRing
 from shapely.ops import cascaded_union
+from shapely.validation import explain_validity
 import pyclipper
 
 
@@ -57,10 +58,82 @@ def _drop_degenerate_inners(shape):
 
     new_inners = []
     for inner in shape.interiors:
-        if abs(inner.area) >= 0.5:
+        # need to make a polygon of the linearring to get the _filled_ area of
+        # the closed ring.
+        if abs(Polygon(inner).area) >= 0.5:
             new_inners.append(inner)
 
     return Polygon(shape.exterior, new_inners)
+
+
+def _contour_to_poly(contour):
+    poly = Polygon(contour)
+    if not poly.is_valid:
+        poly = poly.buffer(0)
+    assert poly.is_valid, \
+        "Contour %r did not make valid polygon %s because %s" \
+        % (contour, poly.wkt, explain_validity(poly))
+    return poly
+
+
+def _polytree_node_to_shapely(node):
+    """
+    Recurses down a Clipper PolyTree, extracting the results as Shapely
+    objects.
+
+    Returns a tuple of (list of polygons, list of children)
+    """
+
+    polygons = []
+    children = []
+    for ch in node.Childs:
+        p, c = _polytree_node_to_shapely(ch)
+        polygons.extend(p)
+        children.extend(c)
+
+    if node.IsHole:
+        # check expectations: a node should be a hole, _or_ return children.
+        # this is because children of holes must be outers, and should be on
+        # the polygons list.
+        assert len(children) == 0
+        if node.Contour:
+            children = [node.Contour]
+        else:
+            children = []
+
+    elif node.Contour:
+        poly = _contour_to_poly(node.Contour)
+        for ch in children:
+            inner = _contour_to_poly(ch)
+            diff = poly.difference(inner)
+            if not diff.is_valid:
+                diff = diff.buffer(0)
+            assert diff.is_valid, \
+                "Difference of %s and %s did not make valid polygon %s " \
+                " because %s" \
+                % (poly.wkt, inner.wkt, diff.wkt, explain_validity(diff))
+            poly = diff
+
+        assert poly.is_valid
+        polygons.append(poly)
+        children = []
+
+    else:
+        assert len(children) == 0
+
+    return (polygons, children)
+
+
+def _polytree_to_shapely(tree):
+    polygons, children = _polytree_node_to_shapely(tree)
+
+    # expect no left over children - should all be incorporated into polygons
+    # by the time recursion returns to the root.
+    assert len(children) == 0
+
+    union = cascaded_union(polygons)
+    assert union.is_valid
+    return union
 
 
 def make_valid_pyclipper(shape):
@@ -84,30 +157,13 @@ def make_valid_pyclipper(shape):
     try:
         pc.AddPaths(_coords(clean_shape), pyclipper.PT_SUBJECT, True)
 
-        result = pc.Execute(pyclipper.CT_UNION, pyclipper.PFT_EVENODD)
+        # note: Execute2 returns the polygon tree, not the list of paths
+        result = pc.Execute2(pyclipper.CT_UNION, pyclipper.PFT_EVENODD)
 
     except pyclipper.ClipperException:
         return MultiPolygon([])
 
-
-    if len(result) == 0:
-        shape = MultiPolygon([])
-
-    elif len(result) == 1:
-        shape = Polygon(result[0])
-
-    else:
-        polys = []
-        for r in result:
-            p = Polygon(r)
-            # buffer polygons to remove self-touching outers, which clipper
-            # considers valid, but OGC doesn't.
-            polys.append(p.buffer(0))
-
-        # use cascaded union in case any of the outers intersect
-        shape = cascaded_union(polys)
-
-    return shape
+    return _polytree_to_shapely(result)
 
 
 def make_valid_polygon(shape):
@@ -128,12 +184,9 @@ def make_valid_polygon(shape):
 
     assert shape.geom_type == 'Polygon'
 
-    clipped_shape = make_valid_pyclipper(shape)
-    new_shape = clipped_shape.buffer(0)
-
-    assert new_shape.is_valid, \
-        'buffer(0) did not make geometry valid. old shape: %s' % shape.wkt
-    return new_shape
+    shape = make_valid_pyclipper(shape)
+    assert shape.is_valid
+    return shape
 
 
 def make_valid_multipolygon(shape):

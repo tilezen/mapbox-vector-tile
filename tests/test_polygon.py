@@ -6,6 +6,7 @@ import unittest
 
 from mapbox_vector_tile.polygon import make_it_valid
 from shapely import wkt
+from shapely.validation import explain_validity
 import os
 
 
@@ -24,7 +25,167 @@ class TestPolygonMakeValid(unittest.TestCase):
           ((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 3, 3 3, 3 1, 1 1)),
           ((5 0, 9 0, 9 4, 5 4, 5 0), (6 1, 6 3, 8 3, 8 1, 6 1))
         )""")
-        #self.assertFalse(geom.is_valid)
         fixed = make_it_valid(geom)
-        self.assertTrue(geom.is_valid)
-        self.assertEquals(24, geom.area)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(24, fixed.area)
+
+    def test_polygon_self_touching(self):
+        geom = wkt.loads("""POLYGON(
+          (1 0, 5 0, 5 5, 0 5, 0 2, 2 2, 2 4, 3 4, 1 0)
+        )""")
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(21, fixed.area)
+
+    def test_polygon_self_touching_inner(self):
+        geom = wkt.loads("""POLYGON(
+          (-1 -1, -1 6, 6 6, 6 -1, -1 -1),
+          (1 0, 5 0, 5 5, 0 5, 0 2, 2 2, 2 4, 3 4, 1 0)
+        )""")
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(28, fixed.area)
+
+    def test_polygon_inners_touching(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 6 0, 6 6, 0 6, 0 0),
+          (1 1, 1 3, 3 3, 3 1, 1 1),
+          (3 3, 3 5, 5 5, 5 3, 3 3)
+        )""")
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(28, fixed.area)
+
+    def test_polygon_inner_touching_outer(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 3 0, 3 3, 0 3, 0 0),
+          (1 1, 2 3, 2 1, 1 1)
+        )""")
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(8, fixed.area)
+
+    def test_polygon_two_inners_touching_outer(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 6 0, 6 3, 0 3, 0 0),
+          (1 1, 2 3, 2 1, 1 1),
+          (4 1, 5 3, 5 1, 4 1)
+        )""")
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(16, fixed.area)
+
+    def test_polygon_inners_touching_colinear(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 6 0, 6 6, 0 6, 0 0),
+          (1 1, 1 3, 3 4, 3 1, 1 1),
+          (3 2, 3 5, 5 5, 5 3, 3 2)
+        )""")
+        self.assertFalse(geom.is_valid)
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(26, fixed.area)
+
+    def test_polygon_inner_colinear_outer(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 3 0, 3 3, 0 3, 0 0),
+          (1 1, 1 3, 2 3, 2 1, 1 1)
+        )""")
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(7, fixed.area)
+
+    def test_polygon_many_inners_touching(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 5 0, 5 5, 0 5, 0 0),
+          (1 1, 1 2, 3 2, 1 1),
+          (3 1, 3 3, 4 1, 3 1),
+          (2 2, 1 4, 2 4, 2 2),
+          (2 3, 4 4, 4 3, 2 3)
+        )""")
+        self.assertFalse(geom.is_valid)
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(21, fixed.area)
+
+    def test_polygon_inner_spike(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 3 0, 3 4, 0 4, 0 0),
+          (1 1, 1 3, 2 3, 2 2, 1 2, 2 2, 2 1, 1 1)
+        )""")
+        self.assertFalse(geom.is_valid)
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(10, fixed.area)
+
+    def test_polygon_disconnected_inner(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 5 0, 5 5, 0 5, 0 0),
+          (1 1, 1 2, 2 2, 1 1),
+          (2 1, 2 2, 3 2, 2 1),
+          (3 1, 3 2, 4 2, 3 1),
+          (1 2, 1 3, 2 3, 1 2),
+          (2 2, 2 3, 3 3, 2 2),
+          (3 2, 3 3, 4 3, 3 2),
+          (1 3, 1 4, 2 4, 1 3),
+          (2 3, 2 4, 3 4, 2 3),
+          (3 3, 3 4, 4 4, 3 3)
+        )""")
+        self.assertFalse(geom.is_valid)
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(20.5, fixed.area)
+
+    def test_polygon_disconnected_outer(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 4 0, 4 3, 3 3, 3 2, 2 3, 1 2, 1 3, 0 3, 0 0),
+          (1 1, 1 2, 3 2, 3 1, 1 1)
+        )""")
+        self.assertFalse(geom.is_valid)
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(9, fixed.area)
+
+    def test_polygon_ring_of_inners(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 4 0, 4 4, 0 4, 0 0),
+          (1 1, 1 2, 2 1, 1 1),
+          (1 2, 1 3, 2 3, 1 2),
+          (2 3, 3 3, 3 2, 2 3),
+          (2 1, 3 2, 3 1, 2 1)
+        )""")
+        self.assertFalse(geom.is_valid)
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(14, fixed.area)
+
+    def test_polygon_ring_of_inners_2(self):
+        geom = wkt.loads("""POLYGON(
+          (0 0, 5 0, 5 5, 0 5, 0 0),
+          (1 3, 1 4, 2 4, 1 3),
+          (3 3, 4 3, 4 2, 3 3),
+          (1 1, 1 2, 2 1, 1 1),
+          (1 2, 1 3, 2 3, 1 2),
+          (2 3, 3 3, 3 2, 2 3),
+          (2 1, 3 2, 3 1, 2 1)
+        )""")
+        self.assertFalse(geom.is_valid)
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertEquals(22, fixed.area)
+
+    def test_shapely_difference(self):
+        geom_a = wkt.loads("""POLYGON(
+          (0 0, 4 0, 4 4, 0 4, 0 0),
+          (1 1, 1 2, 2 1, 1 1),
+          (1 2, 1 3, 2 3, 1 2),
+          (2 3, 3 3, 3 2, 2 3)
+        )""")
+        self.assertTrue(geom_a.is_valid)
+        geom_b = wkt.loads("""POLYGON(
+          (2 1, 3 1, 3 2, 2 1)
+        )""")
+        self.assertTrue(geom_b.is_valid)
+        diff = geom_a.difference(geom_b)
+        self.assertTrue(diff.is_valid, explain_validity(diff))
+        self.assertEquals(geom_a.area - geom_b.area, diff.area)
