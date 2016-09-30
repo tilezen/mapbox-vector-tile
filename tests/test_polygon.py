@@ -18,6 +18,7 @@ class TestPolygonMakeValid(unittest.TestCase):
                 geom = wkt.loads(line)
                 fixed = make_it_valid(geom)
                 self.assertTrue(fixed.is_valid)
+                self.assertTrue(fixed.area > 0.9 * abs(geom.area))
 
     def test_multipolygon_with_flipped_ring(self):
         geom = wkt.loads("""MULTIPOLYGON(

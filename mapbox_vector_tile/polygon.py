@@ -124,7 +124,10 @@ def _polytree_node_to_shapely(node):
                 poly = diff
 
         assert poly.is_valid
-        polygons.append(poly)
+        if poly.type == 'MultiPolygon':
+            polygons.extend(poly.geoms)
+        else:
+            polygons.append(poly)
         children = []
 
     else:

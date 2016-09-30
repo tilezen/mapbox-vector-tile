@@ -168,7 +168,10 @@ class VectorTile:
             part = self.enforce_polygon_winding_order(
                 part, y_coord_down, n_try)
             if part is not None and not part.is_empty:
-                parts.append(part)
+                if part.type == 'MultiPolygon':
+                    parts.extend(part.geoms)
+                else:
+                    parts.append(part)
 
         if not parts:
             return None
