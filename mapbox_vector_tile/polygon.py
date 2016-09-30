@@ -1,6 +1,5 @@
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
-from shapely.geometry.polygon import LinearRing
 from shapely.ops import cascaded_union
 from shapely.validation import explain_validity
 import pyclipper
