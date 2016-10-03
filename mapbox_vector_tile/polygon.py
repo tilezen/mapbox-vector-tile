@@ -1,34 +1,8 @@
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
-from shapely.geometry.polygon import LinearRing
 from shapely.ops import cascaded_union
 from shapely.validation import explain_validity
 import pyclipper
-
-
-def _reverse_ring(shape):
-    """
-    Reverse a LinearRing. A counter-clockwise ring given as input would return
-    a clockwise ring as output. This should reverse the sign of the ring.
-    """
-
-    assert shape.geom_type == 'LinearRing'
-    return LinearRing(list(shape.coords)[::-1])
-
-
-def _reverse_polygon(shape):
-    """
-    Reverse a Polygon, returning a polygon with the same coordinates in the
-    reverse order. This means the returned polygon should have an area equal to
-    the negative area of the input polygon.
-    """
-
-    assert shape.geom_type == 'Polygon'
-
-    exterior = _reverse_ring(shape.exterior)
-    interiors = [_reverse_ring(r) for r in shape.interiors]
-
-    return Polygon(exterior, interiors)
 
 
 def _coords(shape):
@@ -124,7 +98,10 @@ def _polytree_node_to_shapely(node):
                 poly = diff
 
         assert poly.is_valid
-        polygons.append(poly)
+        if poly.type == 'MultiPolygon':
+            polygons.extend(poly.geoms)
+        else:
+            polygons.append(poly)
         children = []
 
     else:

@@ -595,6 +595,35 @@ class InvalidGeometryTest(unittest.TestCase):
             p = shapely.geometry.Polygon(poly[0], poly[1:])
             self.assertTrue(p.is_valid)
 
+    def test_make_valid_can_return_multipolygon(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.wkt
+        import os.path
+
+        test_dir = os.path.dirname(os.path.realpath(__file__))
+        file_name = 'error_nested_multipolygon.wkt'
+
+        with open(os.path.join(test_dir, file_name)) as fh:
+            shape = wkt.loads(fh.read())
+
+        features = [dict(geometry=shape, properties={})]
+        pbf = encode({'name': 'foo', 'features': features},
+                     quantize_bounds=(-10018754.1713946, 11271098.44281893,
+                                      -8766409.899970269, 12523442.714243261),
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        features = result['foo']['features']
+        self.assertEqual(1, len(features))
+        geom = features[0]['geometry']
+
+        area = 0
+        for poly in geom:
+            p = shapely.geometry.Polygon(poly[0], poly[1:])
+            self.assertTrue(p.is_valid)
+            area += p.area
+        self.assertEquals(4339852.5, area)
+
 
 class LowLevelEncodingTestCase(unittest.TestCase):
     def test_example_multi_polygon(self):
