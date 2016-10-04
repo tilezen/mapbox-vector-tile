@@ -1,3 +1,11 @@
+Version 1.0.0
+-------------
+
+* Generate more valid polygons and multipolygons using [pyclipper](https://pypi.python.org/pypi/pyclipper) library for v2 MVT compliance (but we're still not fully v2 compliant for [other](https://github.com/tilezen/mapbox-vector-tile/issues/42) reasons).
+* Handle edge cases where polygon buffer makes a multi-polygon, ensuring inner rings are dropped when subtracting them from the polygon would make it invalid, and not adding multipolygons as array elements for multipolygon constructor.
+* Calculate area more properly by using PolyTree result from Clipper.
+* Factor out polygon validity code into its own file.
+
 Version 0.5.0
 -------------
 
