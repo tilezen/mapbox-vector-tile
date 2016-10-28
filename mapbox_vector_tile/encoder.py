@@ -532,18 +532,27 @@ class VectorTile:
             self.last_y = y
             self.geom_size += 2
 
-        def append_arc_not_imp(arc):
-            length = len(arc.coords)
-            for i, (x, y) in enumerate(arc.coords):
-                if i == 0:
-                    append_cmd(CMD_MOVE_TO, 1)
-                    append_coords(x, y, True)
-                    reserve_space_for_cmd()
-                if i != length - 1:
-                    append_coords(x, y)
-            set_back_cmd(CMD_LINE_TO)
+        def omit_last(iterator):
+            try:
+                next_elmt = next(iterator)
+                while True:
+                    elmt = next_elmt
+                    next_elmt = next(iterator)
+                    yield elmt
+            except StopIteration:
+                pass
 
-        def append_arc(arc):
+        def append_ring(arc):
+            it = iter(arc.coords)
+            x, y = next(it)
+            append_cmd(CMD_MOVE_TO, 1)
+            append_coords(x, y, True)
+            reserve_space_for_cmd()
+            unused = ( append_coords(x, y) for x, y in omit_last(it))
+            set_back_cmd(CMD_LINE_TO)
+            append_cmd(CMD_SEG_END, 1)
+
+        def append_ring_ok(arc):
             it = iter(arc.coords)
             x, y = next(it)
             append_cmd(CMD_MOVE_TO, 1)
@@ -557,29 +566,23 @@ class VectorTile:
                     append_coords(x, y)
             except StopIteration:
                 set_back_cmd(CMD_LINE_TO)
+            append_cmd(CMD_SEG_END, 1)
 
-        def append_arc_improved(arc):
+        def append_arc(arc):
             it = iter(arc.coords)
             x, y = next(it)
             append_cmd(CMD_MOVE_TO, 1)
             append_coords(x, y, True)
             reserve_space_for_cmd()
-            try:
-                next_coords = next(it)
-                while True:
-                    coords = next_coords
-                    next_coords = next(it)
-                    append_coords(*coords)
-            except StopIteration:
-                set_back_cmd(CMD_LINE_TO)
-
+            unused = ( append_coords(x, y) for x, y in it)
+#            for x, y in it:
+#                append_coords(x, y)
+            set_back_cmd(CMD_LINE_TO)
 
         def append_polygon(shape):
-            append_arc(shape.exterior)
-            append_cmd(CMD_SEG_END, 1)
+            append_ring(shape.exterior)
             for arc in shape.interiors:
-                append_arc(arc)
-                append_cmd(CMD_SEG_END, 1)
+                append_ring(arc)
 
         if shape.type == 'GeometryCollection':
             # do nothing
@@ -587,13 +590,13 @@ class VectorTile:
 
         elif shape.type == 'Point':
             append_cmd(CMD_MOVE_TO, 1)
-            append_coords(shape.x, shape.y)
+            append_coords(shape.x, shape.y, True)
 
         elif shape.type == 'MultiPoint':
             append_cmd(CMD_MOVE_TO, len(shape.geoms))
             # map ? apply ?
             for point in shape.geoms:
-                append_coords(point.x, point.y)
+                append_coords(point.x, point.y, True)
 
         elif shape.type == 'LineString':
             append_arc(shape)
