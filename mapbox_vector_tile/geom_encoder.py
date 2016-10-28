@@ -34,25 +34,21 @@ class GeometryEncoder:
         return (length << cmd_bits) | (cmd & ((1 << cmd_bits) - 1))
 
     def reserve_space_for_cmd(self):
-        # print("Reserve space for command at pos {}".format(len(f.geometry)))
         self._geometry.append(CMD_FAKE)
         self._cmd_idx = self._geom_size
         self._geom_size += 1
 
     def append_cmd(self, cmd, length):
         cmd_encoded = self._encode_cmd_length(cmd, length)
-        # print("Command {} at pos {}".format(cmd_encoded, len(f.geometry)))
         self._geometry.append(cmd_encoded)
         self._geom_size += 1
 
     def set_back_cmd(self, cmd):
         length = (self._geom_size - self._cmd_idx) >> 1
         cmd_encoded = self._encode_cmd_length(cmd, length)
-        # print("Command back {} , length {} at pos {}".format(cmd_encoded, length, self._cmd_idx))
         self._geometry[self._cmd_idx] = cmd_encoded
 
     def append_coords(self, fx, fy, force=False):
-        # print("Append coords {}, {} at pos {}".format(fx, fy, len(f.geometry)))
         if isinstance(fx, float):
             x = int(self._round(fx))
         else:
