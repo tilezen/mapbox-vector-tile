@@ -1,3 +1,4 @@
+from itertools import islice
 from mapbox_vector_tile.polygon import make_it_valid
 from math import fabs
 from numbers import Number
@@ -322,6 +323,21 @@ class VectorTile:
         polygonType = "polygon"
 
         def _get_arc_obj(arc, type):
+            # seq = ( (x, y, CMD_LINE_TO) for (x, y) in islice(arc.coords, 1, len(arc.coords)))
+            # coordinates.extend(seq)
+
+            # x, y = arc.coords[0]
+            # coordinates.append((x, y, CMD_MOVE_TO))
+            # seq = ( (x, y, CMD_LINE_TO) for (x, y) in islice(arc.coords, 1, len(arc.coords)))
+            # coordinates.extend(seq)
+            # if type == polygonType:
+            #     cmd = CMD_MOVE_TO
+            # else:
+            #     cmd = CMD_SEG_END
+            # x, y = arc.coords[-1]
+            # coordinates.append((x, y, cmd))
+            #
+            #
             cmd = CMD_MOVE_TO
             length = len(arc.coords)
             for i, (x, y) in enumerate(arc.coords):
@@ -367,7 +383,7 @@ class VectorTile:
 
         return coordinates
 
-    def _geo_encode(self, f, shape, y_coord_down):
+    def _geo_encode_old(self, f, shape, y_coord_down):
         x_, y_ = 0, 0
 
         cmd = -1
@@ -467,3 +483,129 @@ class VectorTile:
         # Update the last length/command value.
         if cmd_idx >= 0:
             f.geometry[cmd_idx] = self._encode_cmd_length(cmd, length)
+
+    def _geo_encode(self, f, shape, y_coord_down):
+        self.geom_size = 0
+        self.cmd_idx = -1
+        self.last_x = 0
+        self.last_y = 0
+
+        def reserve_space_for_cmd():
+            # print("Reserve space for command at pos {}".format(len(f.geometry)))
+            f.geometry.append(0)
+            self.cmd_idx = self.geom_size
+            self.geom_size += 1
+
+        def append_cmd(cmd, length):
+            cmd_encoded = self._encode_cmd_length(cmd, length)
+            # print("Command {} at pos {}".format(cmd_encoded, len(f.geometry)))
+            f.geometry.append(cmd_encoded)
+            self.geom_size += 1
+
+        def set_back_cmd(cmd):
+            length = (self.geom_size - self.cmd_idx) >> 1
+            cmd_encoded = self._encode_cmd_length(cmd, length)
+            # print("Command back {} , length {} at pos {}".format(cmd_encoded, length, self.cmd_idx))
+            f.geometry[self.cmd_idx] = cmd_encoded
+
+        def append_coords(fx, fy, force=False):
+            # print("Append coords {}, {} at pos {}".format(fx, fy, len(f.geometry)))
+            if isinstance(fx, float):
+                x = int(self._round(fx))
+            else:
+                x = fx
+            if isinstance(fy, float):
+                y = int(self._round(fy))
+            else:
+                y = fy
+            if not y_coord_down:
+                 y = self.extents - y
+
+            dx = x - self.last_x
+            dy = y - self.last_y
+            if not force and dx == 0 and dy == 0:
+                # print("...Aborted")
+                return
+            f.geometry.append((dx << 1) ^ (dx >> 31))
+            f.geometry.append((dy << 1) ^ (dy >> 31))
+            self.last_x = x
+            self.last_y = y
+            self.geom_size += 2
+
+        def append_arc_not_imp(arc):
+            length = len(arc.coords)
+            for i, (x, y) in enumerate(arc.coords):
+                if i == 0:
+                    append_cmd(CMD_MOVE_TO, 1)
+                    append_coords(x, y, True)
+                    reserve_space_for_cmd()
+                if i != length - 1:
+                    append_coords(x, y)
+            set_back_cmd(CMD_LINE_TO)
+
+        def append_arc(arc):
+            it = iter(arc.coords)
+            x, y = next(it)
+            append_cmd(CMD_MOVE_TO, 1)
+            append_coords(x, y, True)
+            reserve_space_for_cmd()
+            try:
+                next_x, next_y = next(it)
+                while True:
+                    x, y = next_x, next_y
+                    next_x, next_y = next(it)
+                    append_coords(x, y)
+            except StopIteration:
+                set_back_cmd(CMD_LINE_TO)
+
+        def append_arc_improved(arc):
+            it = iter(arc.coords)
+            x, y = next(it)
+            append_cmd(CMD_MOVE_TO, 1)
+            append_coords(x, y, True)
+            reserve_space_for_cmd()
+            try:
+                next_coords = next(it)
+                while True:
+                    coords = next_coords
+                    next_coords = next(it)
+                    append_coords(*coords)
+            except StopIteration:
+                set_back_cmd(CMD_LINE_TO)
+
+
+        def append_polygon(shape):
+            append_arc(shape.exterior)
+            append_cmd(CMD_SEG_END, 1)
+            for arc in shape.interiors:
+                append_arc(arc)
+                append_cmd(CMD_SEG_END, 1)
+
+        if shape.type == 'GeometryCollection':
+            # do nothing
+            coordinates = []
+
+        elif shape.type == 'Point':
+            append_cmd(CMD_MOVE_TO, 1)
+            append_coords(shape.x, shape.y)
+
+        elif shape.type == 'MultiPoint':
+            append_cmd(CMD_MOVE_TO, len(shape.geoms))
+            # map ? apply ?
+            for point in shape.geoms:
+                append_coords(point.x, point.y)
+
+        elif shape.type == 'LineString':
+            append_arc(shape)
+
+        elif shape.type == 'MultiLineString':
+            for arc in shape.geoms:
+                append_arc(arc)
+
+        elif shape.type == 'Polygon':
+            append_polygon(shape)
+
+        elif shape.type == 'MultiPolygon':
+            for polygon in shape.geoms:
+                append_polygon(polygon)
+        # print str(f.geometry)
