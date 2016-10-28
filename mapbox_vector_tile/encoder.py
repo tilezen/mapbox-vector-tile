@@ -1,6 +1,4 @@
-from itertools import islice
 from mapbox_vector_tile.polygon import make_it_valid
-from math import fabs
 from numbers import Number
 from past.builtins import long
 from past.builtins import unicode
@@ -236,9 +234,6 @@ class VectorTile:
             raise ValueError('Cannot encode unknown geometry type: %s' %
                              shape.type)
 
-    def _encode_cmd_length(self, cmd, length):
-        return (length << cmd_bits) | (cmd & ((1 << cmd_bits) - 1))
-
     def _chunker(self, seq, size):
         return [seq[pos:pos + size] for pos in xrange(0, len(seq), size)]
 
@@ -297,7 +292,8 @@ class VectorTile:
 
     def _geo_encode(self, f, shape, y_coord_down):
 
-        geom_encoder = GeometryEncoder(f.geometry, y_coord_down, self.extents, self._round)
+        geom_encoder = GeometryEncoder(f.geometry, y_coord_down, self.extents,
+                                       self._round)
 
         if shape.type == 'GeometryCollection':
             # do nothing
