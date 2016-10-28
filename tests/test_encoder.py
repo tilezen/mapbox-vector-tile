@@ -112,8 +112,8 @@ class TestDifferentGeomFormats(BaseTestCase):
 
     def test_with_wkt(self):
         self.assertRoundTrip(
-            input_geometry="LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)",  # noqa
-            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]])
+            input_geometry="LINESTRING(-71.160281 42.258729,-71.160837 43.259113,-71.161144 42.25932)",  # noqa
+            expected_geometry=[[-71, 42], [-71, 43], [-71, 42]])
 
     def test_with_wkb(self):
         self.assertRoundTrip(
@@ -121,11 +121,11 @@ class TestDifferentGeomFormats(BaseTestCase):
             expected_geometry=[[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]])
 
     def test_with_shapely(self):
-        geometry = "LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)"  # noqa
+        geometry = "LINESTRING(-71.160281 42.258729,-71.160837 43.259113,-71.161144 42.25932)"  # noqa
         geometry = wkt.loads(geometry)
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]])
+            expected_geometry=[[-71, 42], [-71, 43], [-71, 42]])
 
     def test_with_invalid_geometry(self):
         expected_result = ('Can\'t do geometries that are not wkt, wkb, or '
@@ -145,34 +145,34 @@ class TestDifferentGeomFormats(BaseTestCase):
             func = str
         else:
             func = unicode
-        geometry = "LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)"  # noqa
+        geometry = "LINESTRING(-71.160281 42.258729,-71.160837 43.259113,-71.161144 42.25932)"  # noqa
         properties = {
             "foo": func(self.feature_properties["foo"]),
             "baz": func(self.feature_properties["baz"]),
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]],
+            expected_geometry=[[-71, 42], [-71, 43], [-71, 42]],
             properties=properties)
 
     def test_encode_unicode_property_key(self):
-        geometry = "LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)"  # noqa
+        geometry = "LINESTRING(-71.160281 42.258729,-71.160837 43.259113,-71.161144 42.25932)"  # noqa
         properties = {
             u'☺': u'☺'
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]],
+            expected_geometry=[[-71, 42], [-71, 43], [-71, 42]],
             properties=properties)
 
     def test_encode_float_little_endian(self):
-        geometry = "LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)"  # noqa
+        geometry = "LINESTRING(-71.160281 42.258729,-71.160837 43.259113,-71.161144 42.25932)"  # noqa
         properties = {
             'floatval': 3.14159
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry=[[-71, 42], [-71, 42], [-71, 42]],
+            expected_geometry=[[-71, 42], [-71, 43], [-71, 42]],
             properties=properties)
 
     def test_encode_feature_with_id(self):
