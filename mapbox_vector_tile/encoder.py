@@ -1,4 +1,4 @@
-from mapbox_vector_tile.polygon import make_it_valid
+from mapbox_vector_tile.polygon import make_it_valid, clean_multi
 from math import fabs
 from numbers import Number
 from past.builtins import long
@@ -36,6 +36,16 @@ def on_invalid_geometry_ignore(shape):
 
 def on_invalid_geometry_make_valid(shape):
     return make_it_valid(shape)
+
+
+def on_invalid_geometry_make_valid_and_clean(shape):
+    shape = make_it_valid(shape, asserted=False)
+    if not shape.is_valid and shape.type == 'MultiPolygon':
+        shape = clean_multi(shape)
+    assert shape.is_valid, \
+            "Not valid %s %s because %s" \
+            % (shape.type, shape.wkt, explain_validity(shape))
+    return shape
 
 
 class VectorTile:
