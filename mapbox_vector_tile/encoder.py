@@ -291,25 +291,6 @@ class VectorTile:
                 feature.tags.append(self.seen_values_idx[v])
 
     def _geo_encode(self, f, shape, y_coord_down):
-
         geom_encoder = GeometryEncoder(f.geometry, y_coord_down, self.extents,
                                        self._round)
-
-        if shape.type == 'GeometryCollection':
-            # do nothing
-            pass
-
-        elif shape.type == 'Point':
-            geom_encoder.encode_point(shape)
-        elif shape.type == 'MultiPoint':
-            geom_encoder.encode_points(shape)
-        elif shape.type == 'LineString':
-            geom_encoder.encode_linestring(shape)
-        elif shape.type == 'MultiLineString':
-            geom_encoder.encode_linestrings(shape)
-        elif shape.type == 'Polygon':
-            geom_encoder.encode_polygon(shape)
-        elif shape.type == 'MultiPolygon':
-            geom_encoder.encode_polygons(shape)
-        else:
-            raise NotImplementedError("Can't do %s geometries" % shape.type)
+        geom_encoder.encode(shape)

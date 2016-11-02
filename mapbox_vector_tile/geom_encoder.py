@@ -95,26 +95,26 @@ class GeometryEncoder:
         for arc in shape.interiors:
             self.append_ring(arc)
 
-    def encode_point(self, shape):
-        self.append_cmd(CMD_MOVE_TO, 1)
-        self.append_coords(shape.x, shape.y, True)
-
-    def encode_points(self, shape):
-        self.append_cmd(CMD_MOVE_TO, len(shape.geoms))
-        # map ? apply ?
-        for point in shape.geoms:
-            self.append_coords(point.x, point.y, True)
-
-    def encode_linestring(self, shape):
-        self.append_arc(shape)
-
-    def encode_linestrings(self, shape):
-        for arc in shape.geoms:
-            self.append_arc(arc)
-
-    def encode_polygon(self, shape):
-        self.append_polygon(shape)
-
-    def encode_polygons(self, shape):
-        for polygon in shape.geoms:
-            self.append_polygon(polygon)
+    def encode(self, shape):
+        if shape.type == 'GeometryCollection':
+            # do nothing
+            pass
+        elif shape.type == 'Point':
+            self.append_cmd(CMD_MOVE_TO, 1)
+            self.append_coords(shape.x, shape.y, True)
+        elif shape.type == 'MultiPoint':
+            self.append_cmd(CMD_MOVE_TO, len(shape.geoms))
+            for point in shape.geoms:
+                self.append_coords(point.x, point.y, True)
+        elif shape.type == 'LineString':
+            self.append_arc(shape)
+        elif shape.type == 'MultiLineString':
+            for arc in shape.geoms:
+                self.append_arc(arc)
+        elif shape.type == 'Polygon':
+            self.append_polygon(shape)
+        elif shape.type == 'MultiPolygon':
+            for polygon in shape.geoms:
+                self.append_polygon(polygon)
+        else:
+            raise NotImplementedError("Can't do %s geometries" % shape.type)
