@@ -97,7 +97,7 @@ class GeometryEncoder:
             last_x = x
             last_y = y
 
-    def append_polygon(self, shape):
+    def encode_polygon(self, shape):
         commands, final_x, final_y = self.arc_commands(shape.exterior, self.last_x, self.last_y, ring=True)
         self.append_commands(commands, final_x, final_y)
         for arc in shape.interiors:
@@ -108,6 +108,14 @@ class GeometryEncoder:
         if commands:
             self._geometry.extend(commands)
             self.last_x, self.last_y = final_x, final_y
+
+    def encode_multilinestring(self, shape):
+        last_x, last_y = 0, 0
+        for arc in shape.geoms:
+            commands, final_x, final_y = self.arc_commands(arc, last_x, last_y, ring=False)
+            if commands:
+                self._geometry.extend(commands)
+                last_x, last_y = final_x, final_y
 
     def encode(self, shape):
         if shape.type == 'GeometryCollection':
@@ -128,13 +136,11 @@ class GeometryEncoder:
             if commands:
                 self._geometry.extend(commands)
         elif shape.type == 'MultiLineString':
-            for arc in shape.geoms:
-                commands, final_x, final_y = self.arc_commands(arc, self.last_x, self.last_y, ring=False)
-                self.append_commands(commands, final_x, final_y)
+            self.encode_multilinestring(shape)
         elif shape.type == 'Polygon':
-            self.append_polygon(shape)
+            self.encode_polygon(shape)
         elif shape.type == 'MultiPolygon':
             for polygon in shape.geoms:
-                self.append_polygon(polygon)
+                self.encode_polygon(polygon)
         else:
             raise NotImplementedError("Can't do %s geometries" % shape.type)
