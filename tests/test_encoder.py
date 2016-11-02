@@ -299,6 +299,11 @@ class TestDifferentGeomFormats(BaseTestCase):
             expected_geometry=exp_geoemtry,
         )
 
+    def test_too_small_linestring(self):
+        self.assertRoundTrip(
+            input_geometry="LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)",  # noqa
+            expected_geometry=[])
+
 
 class QuantizeTest(unittest.TestCase):
 
