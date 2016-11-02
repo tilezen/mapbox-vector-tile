@@ -12,7 +12,7 @@ def test_suite():
     except:
         import unittest
 
-    suite = unittest.TestLoader().discover("tests",  pattern='test_enc*.py')
+    suite = unittest.TestLoader().discover("tests")
     return suite
 
 setup(name='mapbox-vector-tile',
