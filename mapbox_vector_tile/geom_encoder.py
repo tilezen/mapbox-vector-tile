@@ -48,22 +48,20 @@ class GeometryEncoder:
         cmd_encoded = self._encode_cmd_length(cmd, length)
         self._geometry[self._cmd_idx] = cmd_encoded
 
-    def append_coords(self, fx, fy, force=False):
-        if isinstance(fx, float):
-            x = int(self._round(fx))
-        else:
-            x = fx
-        if isinstance(fy, float):
-            y = int(self._round(fy))
-        else:
-            y = fy
-        if not self._y_coord_down:
-            y = self._extents - y
+    def force_int(self, n):
+        if isinstance(n, float):
+            return int(self._round(n))
+        return n
 
+    def append_coords(self, fx, fy, force=False):
+        x = self.force_int(fx)
+        if not self._y_coord_down:
+            y = self._extents - self.force_int(fy)
+        else:
+            y = self.force_int(fy)
         dx = x - self.last_x
         dy = y - self.last_y
         if not force and dx == 0 and dy == 0:
-            # print("...Aborted")
             return
         self._geometry.append((dx << 1) ^ (dx >> 31))
         self._geometry.append((dy << 1) ^ (dy >> 31))
