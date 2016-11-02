@@ -34,27 +34,7 @@ class GeometryEncoder:
         self._y_coord_down = y_coord_down
         self._extents = extents
         self._round = round_fn
-        self._cmd_idx = -1
-        self._geom_size = 0
         self.last_x, self.last_y = 0, 0
-
-    def _encode_cmd_length(self, cmd, length):
-        return (length << cmd_bits) | (cmd & ((1 << cmd_bits) - 1))
-
-    def reserve_space_for_cmd(self):
-        self._geometry.append(CMD_FAKE)
-        self._cmd_idx = self._geom_size
-        self._geom_size += 1
-
-    def append_cmd(self, cmd, length):
-        cmd_encoded = self._encode_cmd_length(cmd, length)
-        self._geometry.append(cmd_encoded)
-        self._geom_size += 1
-
-    def set_back_cmd(self, cmd):
-        length = (self._geom_size - self._cmd_idx) >> 1
-        cmd_encoded = self._encode_cmd_length(cmd, length)
-        self._geometry[self._cmd_idx] = cmd_encoded
 
     def force_int(self, n):
         if isinstance(n, float):
@@ -68,34 +48,6 @@ class GeometryEncoder:
         else:
             y = self.force_int(float_y)
         return x, y
-
-    def append_coords(self, fx, fy, force=False):
-        x = self.force_int(fx)
-        if not self._y_coord_down:
-            y = self._extents - self.force_int(fy)
-        else:
-            y = self.force_int(fy)
-        dx = x - self.last_x
-        dy = y - self.last_y
-        if not force and dx == 0 and dy == 0:
-            return 0
-        self._geometry.append((dx << 1) ^ (dx >> 31))
-        self._geometry.append((dy << 1) ^ (dy >> 31))
-        self.last_x = x
-        self.last_y = y
-        self._geom_size += 2
-        return 2
-
-    def append_ring(self, arc):
-        it = iter(arc.coords)
-        x, y = next(it)
-        self.append_cmd(CMD_MOVE_TO, 1)
-        self.append_coords(x, y, True)
-        self.reserve_space_for_cmd()
-        for x, y in omit_last(it):
-            self.append_coords(x, y)
-        self.set_back_cmd(CMD_LINE_TO)
-        self.append_cmd(CMD_SEG_END, 1)
 
     def arc_commands(self, arc, last_x, last_y, ring=False):
         if ring:
@@ -132,20 +84,18 @@ class GeometryEncoder:
         commands.append(cmd_encoded)
         return commands, last_x, last_y
 
-    def append_arc(self, arc):
-        it = iter(arc.coords)
-        x, y = next(it)
-        self.append_cmd(CMD_MOVE_TO, 1)
-        self.append_coords(x, y, True)
-        self.reserve_space_for_cmd()
-        for x, y in it:
-            self.append_coords(x, y)
-        self.set_back_cmd(CMD_LINE_TO)
-
-    def append_polygon_old(self, shape):
-        self.append_ring(shape.exterior)
-        for arc in shape.interiors:
-            self.append_ring(arc)
+    def points_commands(self, points):
+        cmd_move_to = _encode_cmd_length(CMD_MOVE_TO, len(points))
+        yield cmd_move_to
+        last_x = 0
+        last_y = 0
+        for float_x, float_y in points:
+            x, y = self.coords_on_grid(float_x, float_y)
+            dx, dy = x - last_x, y - last_y
+            yield zigzag(dx)
+            yield zigzag(dy)
+            last_x = x
+            last_y = y
 
     def append_polygon(self, shape):
         commands, final_x, final_y = self.arc_commands(shape.exterior, self.last_x, self.last_y, ring=True)
@@ -157,7 +107,6 @@ class GeometryEncoder:
     def append_commands(self, commands, final_x, final_y):
         if commands:
             self._geometry.extend(commands)
-            self._geom_size += len(commands)
             self.last_x, self.last_y = final_x, final_y
 
     def encode(self, shape):
@@ -165,17 +114,19 @@ class GeometryEncoder:
             # do nothing
             pass
         elif shape.type == 'Point':
-            self.append_cmd(CMD_MOVE_TO, 1)
-            self.append_coords(shape.x, shape.y, True)
+            x, y = self.coords_on_grid(shape.x, shape.y)
+            cmd_encoded = _encode_cmd_length(CMD_MOVE_TO, 1)
+            self._geometry.extend([cmd_encoded,
+                              zigzag(x),
+                              zigzag(y)
+            ])
         elif shape.type == 'MultiPoint':
-            self.append_cmd(CMD_MOVE_TO, len(shape.geoms))
-            for point in shape.geoms:
-                self.append_coords(point.x, point.y, True)
+            commands = self.points_commands(shape.geoms)
+            self.append_commands(commands, 0, 0)
         elif shape.type == 'LineString':
             commands, _, _ = self.arc_commands(shape, 0, 0, ring=False)
             if commands:
                 self._geometry.extend(commands)
-                self._geom_size += len(commands)
         elif shape.type == 'MultiLineString':
             for arc in shape.geoms:
                 commands, final_x, final_y = self.arc_commands(arc, self.last_x, self.last_y, ring=False)
