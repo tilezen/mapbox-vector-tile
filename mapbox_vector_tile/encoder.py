@@ -206,6 +206,14 @@ class VectorTile:
                 return None
 
     def addFeature(self, feature, shape, y_coord_down):
+        geom_encoder = GeometryEncoder(y_coord_down, self.extents,
+                                       self._round)
+        geometry = geom_encoder.encode(shape)
+
+        feature_type = self._get_feature_type(shape)
+        if len(geometry) == 0:
+            # Don't add geometry if it's too small
+            return
         f = self.layer.features.add()
 
         fid = feature.get('id')
@@ -218,8 +226,8 @@ class VectorTile:
         if properties is not None:
             self._handle_attr(self.layer, f, properties)
 
-        f.type = self._get_feature_type(shape)
-        self._geo_encode(f, shape, y_coord_down)
+        f.type = feature_type
+        f.geometry.extend(geometry)
 
     def _get_feature_type(self, shape):
         if shape.type == 'Point' or shape.type == 'MultiPoint':
@@ -291,6 +299,7 @@ class VectorTile:
                 feature.tags.append(self.seen_values_idx[v])
 
     def _geo_encode(self, f, shape, y_coord_down):
-        geom_encoder = GeometryEncoder(f.geometry, y_coord_down, self.extents,
+        geom_encoder = GeometryEncoder(y_coord_down, self.extents,
                                        self._round)
-        geom_encoder.encode(shape)
+        geometry = geom_encoder.encode(shape)
+        return geometry
