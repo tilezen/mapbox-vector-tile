@@ -91,23 +91,31 @@ class GeometryEncoder:
     def ring_commands(self, ring, last_x, last_y):
         coords = omit_last(iter(ring.coords))
         commands, final_x, final_y = self.arc_commands(coords, last_x, last_y)
-        if commands:
-            cmd_seg_end = encode_cmd_length(CMD_SEG_END, 1)
-            commands.append(cmd_seg_end)
-            return commands, final_x, final_y
-        return None, 0, 0
+        if not commands:
+            return None, 0, 0
+        cmd_seg_end = encode_cmd_length(CMD_SEG_END, 1)
+        commands.append(cmd_seg_end)
+        return commands, final_x, final_y
 
-    def encode_polygon(self, shape, last_x, last_y):
+    def polygon_commands(self, shape, last_x, last_y):
         commands, final_x, final_y = self.ring_commands(shape.exterior, last_x, last_y)
-        if commands:
-            self._geometry.extend(commands)
-            last_x, last_y = final_x, final_y
+        if not commands:
+            return None, 0, 0
+        last_x, last_y = final_x, final_y
         for arc in shape.interiors:
-            commands, final_x, final_y = self.ring_commands(arc, last_x, last_y)
+            interior_commands, final_x, final_y = self.ring_commands(arc, last_x, last_y)
+            if interior_commands:
+                commands.extend(interior_commands)
+                last_x, last_y = final_x, final_y
+        return commands, last_x, last_y
+
+    def encode_multipolygon(self, shape):
+        last_x, last_y = 0, 0
+        for polygon in shape.geoms:
+            commands, final_x, final_y = self.polygon_commands(polygon, last_x, last_y)
             if commands:
                 self._geometry.extend(commands)
                 last_x, last_y = final_x, final_y
-        return last_x, last_y
 
     def encode_multilinestring(self, shape):
         last_x, last_y = 0, 0
@@ -140,10 +148,11 @@ class GeometryEncoder:
         elif shape.type == 'MultiLineString':
             self.encode_multilinestring(shape)
         elif shape.type == 'Polygon':
-            self.encode_polygon(shape, 0, 0)
+            commands, _, _ = self.polygon_commands(shape, 0, 0)
+            if commands:
+                self._geometry.extend(commands)
         elif shape.type == 'MultiPolygon':
-            last_x, last_y = 0, 0
-            for polygon in shape.geoms:
-                last_x, last_y = self.encode_polygon(polygon, last_x, last_y )
+            self.encode_multipolygon(shape)
         else:
             raise NotImplementedError("Can't do %s geometries" % shape.type)
+
