@@ -34,6 +34,7 @@ class GeometryEncoder:
         self._y_coord_down = y_coord_down
         self._extents = extents
         self._round = round_fn
+        self._last_x, self._last_y = 0, 0
 
     def force_int(self, n):
         if isinstance(n, float):
@@ -48,7 +49,25 @@ class GeometryEncoder:
             y = self.force_int(float_y)
         return x, y
 
-    def arc_commands(self, coords, last_x, last_y):
+    def encode_multipoint(self, points):
+        cmd_move_to = encode_cmd_length(CMD_MOVE_TO, len(points))
+        self._geometry.append(cmd_move_to)
+        last_x = 0
+        last_y = 0
+        for float_x, float_y in points:
+            x, y = self.coords_on_grid(float_x, float_y)
+            dx, dy = x - last_x, y - last_y
+            self._geometry.append(zigzag(dx))
+            self._geometry.append(zigzag(dy))
+            last_x = x
+            last_y = y
+
+    def encode_arc(self, coords):
+        """ Appends commands to _geometry to create an arc.
+            - Returns False if nothing was added
+            - Returns True and moves _last_x, _last_y if some points where added
+        """
+        last_x, last_y = self._last_x, self._last_y
         float_x, float_y = next(coords)
         x, y = self.coords_on_grid(float_x, float_y)
         dx, dy = x - last_x, y - last_y
@@ -70,61 +89,35 @@ class GeometryEncoder:
             last_x, last_y = x, y
             pairs_added += 1
         if pairs_added == 0:
-            return None, 0, 0
+            return False
         cmd_encoded = encode_cmd_length(CMD_LINE_TO, pairs_added)
         commands[3] = cmd_encoded
-        return commands, last_x, last_y
-
-    def points_commands(self, points):
-        cmd_move_to = encode_cmd_length(CMD_MOVE_TO, len(points))
-        yield cmd_move_to
-        last_x = 0
-        last_y = 0
-        for float_x, float_y in points:
-            x, y = self.coords_on_grid(float_x, float_y)
-            dx, dy = x - last_x, y - last_y
-            yield zigzag(dx)
-            yield zigzag(dy)
-            last_x = x
-            last_y = y
-
-    def ring_commands(self, ring, last_x, last_y):
-        coords = omit_last(iter(ring.coords))
-        commands, final_x, final_y = self.arc_commands(coords, last_x, last_y)
-        if not commands:
-            return None, 0, 0
-        cmd_seg_end = encode_cmd_length(CMD_SEG_END, 1)
-        commands.append(cmd_seg_end)
-        return commands, final_x, final_y
-
-    def polygon_commands(self, shape, last_x, last_y):
-        commands, final_x, final_y = self.ring_commands(shape.exterior, last_x, last_y)
-        if not commands:
-            return None, 0, 0
-        last_x, last_y = final_x, final_y
-        for arc in shape.interiors:
-            interior_commands, final_x, final_y = self.ring_commands(arc, last_x, last_y)
-            if interior_commands:
-                commands.extend(interior_commands)
-                last_x, last_y = final_x, final_y
-        return commands, last_x, last_y
-
-    def encode_multipolygon(self, shape):
-        last_x, last_y = 0, 0
-        for polygon in shape.geoms:
-            commands, final_x, final_y = self.polygon_commands(polygon, last_x, last_y)
-            if commands:
-                self._geometry.extend(commands)
-                last_x, last_y = final_x, final_y
+        self._geometry.extend(commands)
+        self._last_x, self._last_y = last_x, last_y
+        return True
 
     def encode_multilinestring(self, shape):
-        last_x, last_y = 0, 0
         for arc in shape.geoms:
             coords = iter(arc.coords)
-            commands, final_x, final_y = self.arc_commands(coords, last_x, last_y)
-            if commands:
-                self._geometry.extend(commands)
-                last_x, last_y = final_x, final_y
+            self.encode_arc(coords)
+
+    def encode_ring(self, ring):
+        coords = omit_last(iter(ring.coords))
+        if not self.encode_arc(coords):
+            return False
+        cmd_seg_end = encode_cmd_length(CMD_SEG_END, 1)
+        self._geometry.append(cmd_seg_end)
+        return True
+
+    def encode_polygon(self, shape):
+        if not self.encode_ring(shape.exterior):
+            return
+        for arc in shape.interiors:
+            self.encode_ring(arc)
+
+    def encode_multipolygon(self, shape):
+        for polygon in shape.geoms:
+            self.encode_polygon(polygon)
 
     def encode(self, shape):
         if shape.type == 'GeometryCollection':
@@ -138,19 +131,14 @@ class GeometryEncoder:
                               zigzag(y)
             ])
         elif shape.type == 'MultiPoint':
-            commands = self.points_commands(shape.geoms)
-            self._geometry.extend(commands)
+            self.encode_multipoint(shape.geoms)
         elif shape.type == 'LineString':
             coords = iter(shape.coords)
-            commands, _, _ = self.arc_commands(coords, 0, 0)
-            if commands:
-                self._geometry.extend(commands)
+            self.encode_arc(coords)
         elif shape.type == 'MultiLineString':
             self.encode_multilinestring(shape)
         elif shape.type == 'Polygon':
-            commands, _, _ = self.polygon_commands(shape, 0, 0)
-            if commands:
-                self._geometry.extend(commands)
+            self.encode_polygon(shape)
         elif shape.type == 'MultiPolygon':
             self.encode_multipolygon(shape)
         else:
