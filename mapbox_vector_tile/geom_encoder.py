@@ -36,17 +36,15 @@ class GeometryEncoder:
         self._round = round_fn
         self._last_x, self._last_y = 0, 0
 
-    def force_int(self, n):
-        if isinstance(n, float):
-            return int(self._round(n))
-        return n
+    def coords_on_grid(self, x, y):
+        """ Snap coordinates on the grid with integer coordinates """
 
-    def coords_on_grid(self, float_x, float_y):
-        x = self.force_int(float_x)
+        if isinstance(x, float):
+            x = int(self._round(x))
+        if isinstance(y, float):
+            y = int(self._round(y))
         if not self._y_coord_down:
-            y = self._extents - self.force_int(float_y)
-        else:
-            y = self.force_int(float_y)
+            y = self._extents - y
         return x, y
 
     def encode_multipoint(self, points):
