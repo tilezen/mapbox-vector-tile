@@ -297,9 +297,3 @@ class VectorTile:
                         val.double_value = v
 
                 feature.tags.append(self.seen_values_idx[v])
-
-    def _geo_encode(self, f, shape, y_coord_down):
-        geom_encoder = GeometryEncoder(y_coord_down, self.extents,
-                                       self._round)
-        geometry = geom_encoder.encode(shape)
-        return geometry
