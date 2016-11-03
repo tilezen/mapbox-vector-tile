@@ -300,9 +300,17 @@ class TestDifferentGeomFormats(BaseTestCase):
         )
 
     def test_too_small_linestring(self):
-        self.assertRoundTrip(
-            input_geometry="LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)",  # noqa
-            expected_geometry=[])
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.wkt
+        shape = shapely.wkt.loads(
+            'LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)')  # noqa
+        features = [dict(geometry=shape, properties={})]
+        pbf = encode({'name': 'foo', 'features': features},
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        features = result['foo']['features']
+        self.assertEqual(0, len(features))
 
 
 class QuantizeTest(unittest.TestCase):
@@ -628,6 +636,22 @@ class InvalidGeometryTest(unittest.TestCase):
             self.assertTrue(p.is_valid)
             area += p.area
         self.assertEquals(4339852.5, area)
+
+    def test_too_small_geometry(self):
+        from mapbox_vector_tile import encode
+        from mapbox_vector_tile.encoder import on_invalid_geometry_make_valid
+        import shapely.wkt
+        shape = shapely.wkt.loads(
+            'LINESTRING (3065.656210384849 3629.831662879646, 3066.458953567231 3629.725941289478)')  # noqa
+        features = [dict(geometry=shape, properties={})]
+        pbf = encode({'name': 'foo', 'features': features},
+                     on_invalid_geometry=on_invalid_geometry_make_valid)
+        result = decode(pbf)
+        features = result['foo']['features']
+        import sys
+        sys.stderr.write(str(features))
+        sys.stderr.write("\n")
+        self.assertEqual(0, len(features))
 
 
 class LowLevelEncodingTestCase(unittest.TestCase):

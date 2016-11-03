@@ -29,8 +29,8 @@ def zigzag(delta):
 class GeometryEncoder:
     """
     """
-    def __init__(self, geometry, y_coord_down, extents, round_fn):
-        self._geometry = geometry
+    def __init__(self, y_coord_down, extents, round_fn):
+        self._geometry = []
         self._y_coord_down = y_coord_down
         self._extents = extents
         self._round = round_fn
@@ -49,7 +49,7 @@ class GeometryEncoder:
 
     def encode_multipoint(self, points):
         cmd_move_to = encode_cmd_length(CMD_MOVE_TO, len(points))
-        self._geometry.append(cmd_move_to)
+        self._geometry = [cmd_move_to]
         last_x = 0
         last_y = 0
         for float_x, float_y in points:
@@ -63,7 +63,8 @@ class GeometryEncoder:
     def encode_arc(self, coords):
         """ Appends commands to _geometry to create an arc.
             - Returns False if nothing was added
-            - Returns True and moves _last_x, _last_y if some points where added
+            - Returns True and moves _last_x, _last_y if
+                some points where added
         """
         last_x, last_y = self._last_x, self._last_y
         float_x, float_y = next(coords)
@@ -124,10 +125,9 @@ class GeometryEncoder:
         elif shape.type == 'Point':
             x, y = self.coords_on_grid(shape.x, shape.y)
             cmd_encoded = encode_cmd_length(CMD_MOVE_TO, 1)
-            self._geometry.extend([cmd_encoded,
+            self._geometry = [cmd_encoded,
                               zigzag(x),
-                              zigzag(y)
-            ])
+                              zigzag(y)]
         elif shape.type == 'MultiPoint':
             self.encode_multipoint(shape.geoms)
         elif shape.type == 'LineString':
@@ -141,4 +141,4 @@ class GeometryEncoder:
             self.encode_multipolygon(shape)
         else:
             raise NotImplementedError("Can't do %s geometries" % shape.type)
-
+        return self._geometry
