@@ -302,6 +302,30 @@ def clean_multi(shape):
     interior_lines = line_interior(linestrings)
     poly = poly_geom(interior_lines, exterior_lines)
     assert poly.is_valid, \
+        "Not valid multipolygon %s because %s" \
+        % (poly.wkt, explain_validity(poly))
+    return poly
+
+
+def clean_simple(shape):
+    """
+    Remove self- and ring-selfintersections from input Polygon geometries
+    """
+    linestrings = []
+    lnum = 0 # line number
+    boundary = shape.boundary
+    if boundary.type == 'LineString':
+        linestrings.append( (boundary, lnum) )
+    else:
+        for ls in boundary:
+            linestrings.append( (ls, lnum) )
+            lnum += 1
+    exterior_lines = []
+    for l, lnum in linestrings:
+        if lnum == 0: 
+           exterior_lines.append(l)
+    poly = Polygon(exterior_lines[0]).buffer(0)
+    assert poly.is_valid, \
         "Not valid polygon %s because %s" \
         % (poly.wkt, explain_validity(poly))
     return poly
