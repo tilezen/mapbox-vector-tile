@@ -648,9 +648,6 @@ class InvalidGeometryTest(unittest.TestCase):
                      on_invalid_geometry=on_invalid_geometry_make_valid)
         result = decode(pbf)
         features = result['foo']['features']
-        import sys
-        sys.stderr.write(str(features))
-        sys.stderr.write("\n")
         self.assertEqual(0, len(features))
 
 
