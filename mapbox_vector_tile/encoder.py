@@ -37,12 +37,12 @@ class VectorTile:
         self.extents = extents
         self.on_invalid_geometry = on_invalid_geometry
         self.max_geometry_validate_tries = max_geometry_validate_tries
-        self.round_fn = round_fn
+        if round_fn:
+            self._round = round_fn
+        else:
+            self._round = self._round_quantize
 
-    def _round(self, val):
-        # Prefer provided round function.
-        if self.round_fn:
-            return self.round_fn(val)
+    def _round_quantize(self, val):
 
         # round() has different behavior in python 2/3
         # For consistency between 2 and 3 we use quantize, however
