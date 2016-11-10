@@ -54,7 +54,7 @@ class VectorTile:
         return float(rounded)
 
     def addFeatures(self, features, layer_name='',
-                    quantize_bounds=None, y_coord_down=False):
+                    quantize_bounds=None, y_coord_down=False, winding_order):
 
         self.layer = self.tile.layers.add()
         self.layer.name = layer_name
