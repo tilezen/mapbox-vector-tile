@@ -1,4 +1,4 @@
-from mapbox_vector_tile.polygon import make_it_valid, clean_multi, clean_simple
+from mapbox_vector_tile.polygon import make_it_valid, clean_multi
 from math import fabs
 from numbers import Number
 from past.builtins import long
@@ -29,13 +29,7 @@ def on_invalid_geometry_make_valid(shape):
 
 
 def on_invalid_geometry_make_valid_and_clean(shape):
-    #if shape.type == 'MultiPolygon':
-    #    shape = clean_multi(shape)
-    #elif shape.type == 'Polygon':
-    #    shape = clean_simple(shape) 
-    #else:
     shape = make_it_valid(shape, asserted=False)
-    #print("######################## Shape {} validity : {}".format(shape.type, shape.is_valid))
     if not shape.is_valid and shape.type == 'MultiPolygon':
         shape = clean_multi(shape)
     assert shape.is_valid, \
