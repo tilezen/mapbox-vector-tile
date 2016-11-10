@@ -178,7 +178,7 @@ def make_valid_polygon(shape, asserted):
     assert shape.geom_type == 'Polygon'
 
     shape = make_valid_pyclipper(shape, asserted)
-    if asserted: 
+    if asserted:
         assert shape.is_valid
     return shape
 
@@ -204,7 +204,7 @@ def make_it_valid(shape, asserted=True):
     """
     Attempt to make any polygon or multipolygon valid.
     """
-    
+
     if shape.is_empty:
         return shape
 
@@ -221,7 +221,7 @@ def clean_multi(shape):
     """
     Remove self- and ring-selfintersections from input Polygon geometries
     """
-    polygons= []
+    polygons = []
     for p in polygons:
         exterior_lines = []
         interior_lines = []
@@ -236,11 +236,11 @@ def clean_multi(shape):
                 else:
                     interior_lines.append(ls)
                 lnum += 1
-        if len(interior_lines) == 0 : # no interior line
+        if len(interior_lines) == 0:
             polygons.append(Polygon(exterior_lines).buffer(0))
         else:
             polygons.append(Polygon(exterior_lines, interior_lines).buffer(0))
-    poly = MultiPolygon(polygons) 
+    poly = MultiPolygon(polygons)
     assert poly.is_valid, \
         "Not valid multipolygon %s because %s" \
         % (poly.wkt, explain_validity(poly))
