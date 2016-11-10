@@ -217,115 +217,31 @@ def make_it_valid(shape, asserted=True):
     return shape
 
 
-def split_multi(shape):
-    """
-    Separate multipolygon into 1 polygon per row
-    """
-    polygons = []
-    pnum = 1 # polygon number
-    for p in shape:
-        polygons.append( (p, pnum) )
-        pnum += 1
-    return polygons 
-
-
-def split_line(polygons):
-    """
-    Break each polygon into linestrings
-    """
-    linestrings = []
-    for p, pnum in polygons:
-        lnum = 0 # line number
-        boundary = p.boundary
-        if boundary.type == 'LineString':
-            linestrings.append( (boundary, pnum, lnum) )
-        else:
-            for ls in boundary:
-                linestrings.append( (ls, pnum, lnum) )
-                lnum += 1
-    return linestrings
-
-
-def line_exterior(linestrings):
-    """
-    Get the linestrings that make up the exterior of each 
-    """
-    exterior_lines = []
-    for l, pnum, lnum in linestrings:
-        if lnum == 0: 
-           exterior_lines.append( (l, pnum) )
-    return exterior_lines
-
-
-def line_interior(linestrings):
-    """
-    Get an array of all the linestrings that make up the
-    interior of each polygon
-    """
-    interior_lines = []
-    for l, pnum, lnum in linestrings:
-        if lnum > 0: 
-           interior_lines.append( (l, pnum) )
-    return interior_lines
-
-
-def get_line_polygon(p_linestrings, p_num):
-    lines = []
-    for l, pnum in p_linestrings:
-        if pnum == p_num:
-            lines.append(l)
-    return lines
-
-
-def poly_geom(exterior_linestrings, interior_linestrings):
-    """
-    Rebuild the polygons
-    """
-    polygons = []
-    for el, pnum in exterior_linestrings :
-        lines = get_line_polygon(interior_linestrings, pnum)
-        if len(lines) == 0 : # no interior line
-            polygons.append(Polygon(el).buffer(0))
-        else:
-            for l in lines:
-                polygons.append(Polygon(el, Polygon(l).interiors).buffer(0)) 
-    return MultiPolygon(polygons)
-
-
 def clean_multi(shape):
     """
     Remove self- and ring-selfintersections from input Polygon geometries
     """
-    polygons = split_multi(shape)
-    linestrings = split_line(polygons)
-    exterior_lines = line_exterior(linestrings)
-    interior_lines = line_interior(linestrings)
-    poly = poly_geom(interior_lines, exterior_lines)
+    polygons= []
+    for p in polygons:
+        exterior_lines = []
+        interior_lines = []
+        lnum = 0
+        boundary = p.boundary
+        if boundary.type == 'LineString':
+            exterior_lines.append(boundary)
+        else:
+            for ls in boundary:
+                if lnum == 0:
+                    exterior_lines.append(ls)
+                else:
+                    interior_lines.append(ls)
+                lnum += 1
+        if len(interior_lines) == 0 : # no interior line
+            polygons.append(Polygon(exterior_lines).buffer(0))
+        else:
+            polygons.append(Polygon(exterior_lines, interior_lines).buffer(0))
+    poly = MultiPolygon(polygons) 
     assert poly.is_valid, \
         "Not valid multipolygon %s because %s" \
-        % (poly.wkt, explain_validity(poly))
-    return poly
-
-
-def clean_simple(shape):
-    """
-    Remove self- and ring-selfintersections from input Polygon geometries
-    """
-    linestrings = []
-    lnum = 0 # line number
-    boundary = shape.boundary
-    if boundary.type == 'LineString':
-        linestrings.append( (boundary, lnum) )
-    else:
-        for ls in boundary:
-            linestrings.append( (ls, lnum) )
-            lnum += 1
-    exterior_lines = []
-    for l, lnum in linestrings:
-        if lnum == 0: 
-           exterior_lines.append(l)
-    poly = Polygon(exterior_lines[0]).buffer(0)
-    assert poly.is_valid, \
-        "Not valid polygon %s because %s" \
         % (poly.wkt, explain_validity(poly))
     return poly
