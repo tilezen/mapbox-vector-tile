@@ -237,7 +237,7 @@ def clean_multi(shape):
                 if lnum == 0:
                     exterior_lines.append(ls)
                 else:
-                     interior_lines.append(ls)
+                    interior_lines.append(ls)
                 lnum += 1
     for el in exterior_lines:
         if len(interior_lines) == 0:
