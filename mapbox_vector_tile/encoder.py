@@ -33,11 +33,11 @@ class VectorTile:
 
     def __init__(self, extents, on_invalid_geometry=None,
                  max_geometry_validate_tries=5, round_fn=None,
-                 winding_order=True):
+                 check_winding_order=True):
         self.tile = vector_tile.tile()
         self.extents = extents
         self.on_invalid_geometry = on_invalid_geometry
-        self.winding_order = winding_order
+        self.check_winding_order = check_winding_order
         self.max_geometry_validate_tries = max_geometry_validate_tries
         if round_fn:
             self._round = round_fn
@@ -53,7 +53,7 @@ class VectorTile:
         rounded = d.quantize(1, rounding=decimal.ROUND_HALF_EVEN)
         return float(rounded)
 
-    def addFeatures(self, features, winding_order, layer_name='',
+    def addFeatures(self, features, layer_name='',
                     quantize_bounds=None, y_coord_down=False):
 
         self.layer = self.tile.layers.add()
@@ -84,7 +84,7 @@ class VectorTile:
 
             if quantize_bounds:
                 shape = self.quantize(shape, quantize_bounds)
-            if winding_order:
+            if self.check_winding_order:
                 shape = self.enforce_winding_order(shape, y_coord_down)
 
             if shape is not None and not shape.is_empty:
