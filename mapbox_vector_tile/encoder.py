@@ -53,8 +53,8 @@ class VectorTile:
         rounded = d.quantize(1, rounding=decimal.ROUND_HALF_EVEN)
         return float(rounded)
 
-    def addFeatures(self, features, layer_name='',
-                    quantize_bounds=None, y_coord_down=False, winding_order):
+    def addFeatures(self, features, winding_order, layer_name='',
+                    quantize_bounds=None, y_coord_down=False):
 
         self.layer = self.tile.layers.add()
         self.layer.name = layer_name
@@ -84,7 +84,6 @@ class VectorTile:
 
             if quantize_bounds:
                 shape = self.quantize(shape, quantize_bounds)
-
             if winding_order:
                 shape = self.enforce_winding_order(shape, y_coord_down)
 
