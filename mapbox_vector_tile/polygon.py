@@ -222,24 +222,29 @@ def clean_multi(shape):
     Remove self- and ring-selfintersections from input Polygon geometries
     """
     polygons = []
-    for p in polygons:
+    exterior_lines = []
+    interior_lines = []
+    for p in shape:
         exterior_lines = []
         interior_lines = []
         lnum = 0
         boundary = p.boundary
         if boundary.type == 'LineString':
-            exterior_lines.append(boundary)
+            if lnum == 0:
+                exterior_lines.append(boundary)
         else:
             for ls in boundary:
                 if lnum == 0:
                     exterior_lines.append(ls)
                 else:
-                    interior_lines.append(ls)
+                     interior_lines.append(ls)
                 lnum += 1
+    for el in exterior_lines:
         if len(interior_lines) == 0:
-            polygons.append(Polygon(exterior_lines).buffer(0))
+            polygons.append(Polygon(el).buffer(0))
         else:
-            polygons.append(Polygon(exterior_lines, interior_lines).buffer(0))
+            for il in interior_lines:
+                polygons.append(Polygon(el, Polygon(il).interiors).buffer(0))
     poly = MultiPolygon(polygons)
     assert poly.is_valid, \
         "Not valid multipolygon %s because %s" \
