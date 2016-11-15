@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import cProfile
-from itertools import islice
-from mapbox_vector_tile.encoder import VectorTile, on_invalid_geometry_ignore
+from mapbox_vector_tile.encoder import on_invalid_geometry_ignore
 from mapbox_vector_tile import encode
 from shapely.wkt import loads as loads_wkt
 import sys
@@ -28,17 +27,19 @@ def make_layers(shapes):
             pass
     return layers
 
+
 def run_test(layers):
     print ("Running perf test")
     i = 0
     profiler = cProfile.Profile()
     for layer in layers:
         layer_description = {
-            'features' : layer,
+            'features': layer,
             'name': 'bar'
         }
         profiler.enable()
-        res = encode(layer_description, on_invalid_geometry=on_invalid_geometry_ignore, round_fn=round)
+        encode(layer_description,
+               on_invalid_geometry=on_invalid_geometry_ignore, round_fn=round)
         profiler.disable()
         if i % 100 == 0:
             print "{} tiles produced".format(i)

@@ -10,7 +10,7 @@ def decode(tile, y_coord_down=False):
 
 def encode(layers, quantize_bounds=None, y_coord_down=False, extents=4096,
            on_invalid_geometry=None, round_fn=None,
-           check_winding_order=check_winding_order,
+           check_winding_order=True,
            max_geometry_validate_tries=5):
     vector_tile = encoder.VectorTile(
                      extents,
