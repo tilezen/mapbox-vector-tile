@@ -26,7 +26,6 @@ def make_layers(shapes):
             i += 1
         except:
             pass
-    layers.append(features)
     return layers
 
 def run_test(layers):
@@ -50,10 +49,7 @@ def run_test(layers):
 
 
 if __name__ == '__main__':
-    print "Usage : "
-    print "wget https://gist.githubusercontent.com/lexman/c759d1007e520040cb9f1e41b7af85c2/raw/fgeoms.wkt.zip"
-    print "zcat fgeoms.wkt.zip | head -10000 | python bench_encode.py"
+    print "Usage : zcat fgeoms.wkt.zip | head -10000 | python bench_encode.py"
     shapes = sys.stdin
-    if not shapes.isatty():
-        layers = make_layers(shapes)
-        run_test(layers)
+    layers = make_layers(shapes)
+    run_test(layers)
