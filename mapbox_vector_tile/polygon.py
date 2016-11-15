@@ -178,7 +178,11 @@ def make_valid_polygon(shape, asserted):
     assert shape.geom_type == 'Polygon'
 
     shape = make_valid_pyclipper(shape, asserted)
+<<<<<<< HEAD
     if asserted: 
+=======
+    if asserted:
+>>>>>>> on_invalid_geometry_make_valid_and_clean
         assert shape.is_valid
     return shape
 
@@ -217,6 +221,7 @@ def make_it_valid(shape, asserted=True):
     return shape
 
 
+<<<<<<< HEAD
 def split_multi(shape):
     """
     Separate multipolygon into 1 polygon per row
@@ -303,5 +308,38 @@ def clean_multi(shape):
     poly = poly_geom(interior_lines, exterior_lines)
     assert poly.is_valid, \
         "Not valid polygon %s because %s" \
+=======
+def clean_multi(shape):
+    """
+    Remove self- and ring-selfintersections from input Polygon geometries
+    """
+    polygons = []
+    exterior_lines = []
+    interior_lines = []
+    for p in shape:
+        exterior_lines = []
+        interior_lines = []
+        lnum = 0
+        boundary = p.boundary
+        if boundary.type == 'LineString':
+            if lnum == 0:
+                exterior_lines.append(boundary)
+        else:
+            for ls in boundary:
+                if lnum == 0:
+                    exterior_lines.append(ls)
+                else:
+                    interior_lines.append(ls)
+                lnum += 1
+    for el in exterior_lines:
+        if len(interior_lines) == 0:
+            polygons.append(Polygon(el).buffer(0))
+        else:
+            for il in interior_lines:
+                polygons.append(Polygon(el, Polygon(il).interiors).buffer(0))
+    poly = MultiPolygon(polygons)
+    assert poly.is_valid, \
+        "Not valid multipolygon %s because %s" \
+>>>>>>> on_invalid_geometry_make_valid_and_clean
         % (poly.wkt, explain_validity(poly))
     return poly

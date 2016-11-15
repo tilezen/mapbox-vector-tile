@@ -10,6 +10,7 @@ from shapely.geometry.polygon import Polygon
 from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
+from shapely.validation import explain_validity
 import decimal
 from .compat import PY3, vector_tile, apply_map
 from .geom_encoder import GeometryEncoder
@@ -32,8 +33,13 @@ def on_invalid_geometry_make_valid_and_clean(shape):
     if not shape.is_valid and shape.type == 'MultiPolygon':
         shape = clean_multi(shape)
     assert shape.is_valid, \
+<<<<<<< HEAD
             "Not valid %s %s because %s" \
             % (shape.type, shape.wkt, explain_validity(shape))
+=======
+        "Not valid %s %s because %s" \
+        % (shape.type, shape.wkt, explain_validity(shape))
+>>>>>>> on_invalid_geometry_make_valid_and_clean
     return shape
 
 
