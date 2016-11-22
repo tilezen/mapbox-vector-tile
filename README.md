@@ -302,7 +302,7 @@ Here's how you might decode a tile from a file.
   >>>     f.write(repr(decoded_data))
 ```
 
-Use native potobuf library for performance
+Use native protobuf library for performance
 ------------------------------------------
 
 The c++ implementation of the underlying protobuf library is more performant than the pure python one. Depending on your operating system, you might need to [compile the C++ library](https://github.com/google/protobuf/tree/master/python#c-implementation) or install it.
