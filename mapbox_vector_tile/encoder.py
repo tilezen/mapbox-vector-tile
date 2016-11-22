@@ -29,9 +29,10 @@ def on_invalid_geometry_make_valid(shape):
 
 
 def on_invalid_geometry_make_valid_and_clean(shape):
-    shape = make_it_valid(shape, asserted=False)
     if not shape.is_valid and shape.type == 'MultiPolygon':
         shape = clean_multi(shape)
+    if not shape.is_valid:
+        shape = make_it_valid(shape, asserted=False)
     assert shape.is_valid, \
         "Not valid %s %s because %s" \
         % (shape.type, shape.wkt, explain_validity(shape))
