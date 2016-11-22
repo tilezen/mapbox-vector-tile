@@ -29,7 +29,7 @@ def on_invalid_geometry_make_valid(shape):
 
 
 def on_invalid_geometry_make_valid_and_clean(shape):
-    if not shape.is_valid and shape.type == 'MultiPolygon':
+    if shape.type == 'MultiPolygon':
         shape = clean_multi(shape)
     if not shape.is_valid:
         shape = make_it_valid(shape, asserted=False)
