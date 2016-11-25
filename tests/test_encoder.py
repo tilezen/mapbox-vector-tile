@@ -186,6 +186,14 @@ class TestDifferentGeomFormats(BaseTestCase):
             input_geometry=geometry,
             expected_geometry=[[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]])
 
+    def test_encode_multipoint(self):
+        geometry = 'MULTIPOINT((10 10), (20 20), (10 40), (40 40), (30 30), (40 20), (30 10))'  # noqa
+        self.assertRoundTrip(input_geometry=geometry,
+                             expected_geometry=[
+                                 [10, 10], [20, 20], [10, 40],
+                                 [40, 40], [30, 30], [40, 20], [30, 10],
+                             ])
+
     def test_encode_multilinestring(self):
         geometry = 'MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))'  # noqa
         self.assertRoundTrip(input_geometry=geometry,
