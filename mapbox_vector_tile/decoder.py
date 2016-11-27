@@ -140,14 +140,20 @@ class TileData:
                     coords.append([x, y])
 
         if ftype == POINT:
-            return coords
+            if len(coords) == 1:
+                return {'type': 'Point', 'coordinates': coords[0]}
+            else:
+                return {'type': 'MultiPoint', 'coordinates': coords}
         elif ftype == LINESTRING:
             if parts:
                 if coords:
                     parts.append(coords)
-                return parts[0] if len(parts) == 1 else parts
+                if len(parts) == 1:
+                    return {'type': 'LineString', 'coordinates': parts[0]}
+                else:
+                    return {'type': 'MultiLineString', 'coordinates': parts}
             else:
-                return coords
+                return {'type': 'LineString', 'coordinates': coords}
         elif ftype == POLYGON:
             if coords:
                 parts.append(coords)
@@ -177,7 +183,10 @@ class TileData:
             if polygon:
                 polygons.append(polygon)
 
-            return polygons[0] if len(polygons) == 1 else polygons
+            if len(polygons) == 1:
+                return {'type': 'Polygon', 'coordinates': polygons[0]}
+            else:
+                return {'type': 'MultiPolygon', 'coordinates': polygons}
 
         else:
             raise ValueError('Unknown geometry type: %s' % ftype)
