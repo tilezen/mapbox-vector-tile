@@ -21,7 +21,7 @@ class BaseTestCase(unittest.TestCase):
                 'version': 2,
                 'extent': 4096,
                 'features': [{
-                    'geometry': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+                    'geometry': {'type': 'Polygon', 'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]},
                     'properties': {
                         'foo': 'bar',
                         'baz': 'foo',
@@ -47,10 +47,10 @@ class BaseTestCase(unittest.TestCase):
                 'version': 2,
                 'extent': 4096,
                 'features': [{
-                    'geometry': [
+                    'geometry': {'type': 'Polygon', 'coordinates': [
                         [[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]],
                         [[1, 1], [1, 3], [3, 3], [3, 1], [1, 1]],
-                    ],
+                    ]},
                     'properties': {},
                     'id': 0,
                     'type': 3
@@ -69,7 +69,7 @@ class BaseTestCase(unittest.TestCase):
                 'version': 2,
                 'extent': 8192,
                 'features': [{
-                    'geometry': [[8000, 7000], [4000, 3500], [0, 0]],
+                    'geometry': {'type': 'LineString', 'coordinates': [[8000, 7000], [4000, 3500], [0, 0]]},
                     'id': 1,
                     'properties': {'baz': 'foo', 'foo': 'bar', 'uid': 123},
                     'type': 2
