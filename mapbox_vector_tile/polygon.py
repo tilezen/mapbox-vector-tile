@@ -178,6 +178,7 @@ def make_valid_polygon(shape, asserted):
     assert shape.geom_type == 'Polygon'
 
     shape = make_valid_pyclipper(shape, asserted)
+
     if asserted:
         assert shape.is_valid
     return shape
