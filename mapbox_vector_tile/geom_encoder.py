@@ -52,8 +52,8 @@ class GeometryEncoder:
         self._geometry = [cmd_move_to]
         last_x = 0
         last_y = 0
-        for float_x, float_y in points:
-            x, y = self.coords_on_grid(float_x, float_y)
+        for point in points:
+            x, y = self.coords_on_grid(point.x, point.y)
             dx, dy = x - last_x, y - last_y
             self._geometry.append(zigzag(dx))
             self._geometry.append(zigzag(dy))
