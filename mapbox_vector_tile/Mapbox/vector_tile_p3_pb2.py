@@ -287,26 +287,26 @@ tile = _reflection.GeneratedProtocolMessageType('tile', (_message.Message,), dic
 
   value = _reflection.GeneratedProtocolMessageType('value', (_message.Message,), dict(
     DESCRIPTOR = _TILE_VALUE,
-    __module__ = 'vector_tile_pb2_p3'
+    __module__ = 'vector_tile_p3_pb2'
     # @@protoc_insertion_point(class_scope:mapnik.vector.tile.value)
     ))
   ,
 
   feature = _reflection.GeneratedProtocolMessageType('feature', (_message.Message,), dict(
     DESCRIPTOR = _TILE_FEATURE,
-    __module__ = 'vector_tile_pb2_p3'
+    __module__ = 'vector_tile_p3_pb2'
     # @@protoc_insertion_point(class_scope:mapnik.vector.tile.feature)
     ))
   ,
 
   layer = _reflection.GeneratedProtocolMessageType('layer', (_message.Message,), dict(
     DESCRIPTOR = _TILE_LAYER,
-    __module__ = 'vector_tile_pb2_p3'
+    __module__ = 'vector_tile_p3_pb2'
     # @@protoc_insertion_point(class_scope:mapnik.vector.tile.layer)
     ))
   ,
   DESCRIPTOR = _TILE,
-  __module__ = 'vector_tile_pb2_p3'
+  __module__ = 'vector_tile_p3_pb2'
   # @@protoc_insertion_point(class_scope:mapnik.vector.tile)
   ))
 _sym_db.RegisterMessage(tile)
