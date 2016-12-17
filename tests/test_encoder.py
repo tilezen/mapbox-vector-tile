@@ -60,89 +60,144 @@ class TestDifferentGeomFormats(BaseTestCase):
     def test_encoder(self):
         self.assertRoundTrip(
             input_geometry='POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))',
-            expected_geometry={'type': 'Polygon', 'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]})
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [
+                    [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]
+                ]
+            }
+        )
 
     def test_encoder_point(self):
         self.assertRoundTrip(
             input_geometry="POINT (1 2)",
-            expected_geometry={'type': 'Point', 'coordinates':[1, 2]})
+            expected_geometry={
+                'type': 'Point',
+                'coordinates': [1, 2]
+            }
+        )
 
     def test_encoder_multipoint(self):
         self.assertRoundTrip(
             input_geometry="MULTIPOINT (1 2, 3 4)",
-            expected_geometry= {'type': 'MultiPoint', 'coordinates':[[1, 2], [3, 4]]})
+            expected_geometry={
+                'type': 'MultiPoint',
+                'coordinates': [[1, 2], [3, 4]]
+            }
+        )
 
     def test_encoder_linestring(self):
         self.assertRoundTrip(
             input_geometry="LINESTRING (30 10, 10 30, 40 40)",
-            expected_geometry={'type': 'LineString', 'coordinates': [[30, 10], [10, 30], [40, 40]]})
+            expected_geometry={
+                'type': 'LineString',
+                'coordinates': [[30, 10], [10, 30], [40, 40]]
+            }
+        )
 
     def test_encoder_multilinestring(self):
         self.assertRoundTrip(
-            input_geometry="MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))",
-            expected_geometry={'type': 'MultiLineString', 'coordinates': [[[10, 10], [20, 20], [10, 40]], [[40, 40], [30, 30], [40, 20], [30, 10]]]})
+            input_geometry="MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))",   # noqa
+            expected_geometry={
+                'type': 'MultiLineString',
+                'coordinates': [
+                    [[10, 10], [20, 20], [10, 40]],
+                    [[40, 40], [30, 30], [40, 20], [30, 10]]
+                ]
+            }
+        )
 
     def test_encoder_polygon(self):
         self.assertRoundTrip(
             input_geometry="POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))",
-            expected_geometry={'type': 'Polygon', 'coordinates': [[[30, 10], [10, 20], [20, 40], [40, 40], [30, 10]]]})
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [
+                    [[30, 10], [10, 20], [20, 40], [40, 40], [30, 10]]
+                ]
+            }
+        )
 
     def test_encoder_polygon_w_hole(self):
         self.assertRoundTrip(
-            input_geometry="POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))",
-            expected_geometry={'type': 'Polygon', 'coordinates': [
-                       [[35, 10], [10, 20], [15, 40], [45, 45], [35, 10]],
-                       [[20, 30], [30, 20], [35, 35], [20, 30]],
-                   ]})
+            input_geometry="POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))",   # noqa
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [
+                    [[35, 10], [10, 20], [15, 40], [45, 45], [35, 10]],
+                    [[20, 30], [30, 20], [35, 35], [20, 30]],
+                ]
+            }
+        )
 
     def test_encoder_multipolygon(self):
         self.assertRoundTrip(
-            input_geometry="MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))",
-            expected_geometry={'type': 'MultiPolygon', 'coordinates': [
-                       [[[30, 20], [10, 40], [45, 40], [30, 20]]],
-                       [[[15, 5], [5, 10], [10, 20], [40, 10], [15, 5]]]
-                   ]})
+            input_geometry="MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))",   # noqa
+            expected_geometry={
+                'type': 'MultiPolygon',
+                'coordinates': [
+                    [[[30, 20], [10, 40], [45, 40], [30, 20]]],
+                    [[[15, 5], [5, 10], [10, 20], [40, 10], [15, 5]]]
+                ]
+            }
+        )
 
     def test_encoder_multipolygon_w_hole(self):
         self.assertRoundTrip(
-            input_geometry="MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))",
-            expected_geometry={'type': 'MultiPolygon', 'coordinates': [
-                        [
-                            [[40, 40], [45, 30], [20, 45], [40, 40]]
-                        ],
-                        [
-                            [[20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]],
-                            [[30, 20], [20, 25], [20, 15], [30, 20]]
-                        ],
-                    ]})
-
+            input_geometry="MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))",  # noqa
+            expected_geometry={
+                'type': 'MultiPolygon',
+                'coordinates': [
+                    [
+                        [[40, 40], [45, 30], [20, 45], [40, 40]]
+                    ],
+                    [
+                        [[20, 35], [45, 20], [30, 5],
+                            [10, 10], [10, 30], [20, 35]],
+                        [[30, 20], [20, 25], [20, 15], [30, 20]]
+                    ],
+                ]
+            }
+        )
 
     def test_encoder_quantize_before_orient(self):
         self.assertRoundTrip(
             input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2, 2 2, 1 1))',  # noqa
-            expected_geometry={'type': 'Polygon', 'coordinates': [[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
-                               [[1, 1], [3, 2], [2, 2], [1, 1]]]})
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
+                               [[1, 1], [3, 2], [2, 2], [1, 1]]]
+            }
+        )
 
     def test_encoder_winding_order_polygon(self):
         # example from the spec
-        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4355-example-polygon
+        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4355-example-polygon   (# noqa)
         # the order given in the example is clockwise in a y-up coordinate
         # system, but the coordinate system given for the example is y-down!
         # therefore the y coordinate in this example is flipped negative.
         self.assertRoundTrip(
             input_geometry='POLYGON ((3 -6, 8 -12, 20 -34, 3 -6))',
-            expected_geometry={'type': 'Polygon', 'coordinates': [[[3, -6], [8, -12], [20, -34], [3, -6]]]})
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [[[3, -6], [8, -12], [20, -34], [3, -6]]]
+            }
+        )
 
     def test_encoder_winding_order_polygon_reverse(self):
         # tests that encode _corrects_ the winding order
         # example is the same as above - note the flipped coordinate system.
         self.assertRoundTrip(
             input_geometry='POLYGON ((3 -6, 20 -34, 8 -12, 3 -6))',
-            expected_geometry={'type': 'Polygon', 'coordinates': [[[3, -6], [8, -12], [20, -34], [3, -6]]]})
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [[[3, -6], [8, -12], [20, -34], [3, -6]]]
+            }
+        )
 
     def test_encoder_winding_order_multipolygon(self):
         # example from the spec
-        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon
+        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon   (# noqa)
         # the order given in the example is clockwise in a y-up coordinate
         # system, but the coordinate system given for the example is y-down!
         self.assertRoundTrip(
@@ -159,8 +214,12 @@ class TestDifferentGeomFormats(BaseTestCase):
         self.assertRoundTrip(
             input_geometry='POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 2.4, 2 1.6, 1 1))',  # noqa
             # should be single polygon with hole
-            expected_geometry={'type': 'Polygon', 'coordinates': [[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
-                               [[1, 1], [3, 2], [2, 2], [1, 1]]]})
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]],
+                               [[1, 1], [3, 2], [2, 2], [1, 1]]]
+            }
+        )
         # but becomes multi-polygon
         # expected_geometry=[[[[0, 0], [0, 4], [4, 4], [4, 0], [0, 0]]],
         #                   [[[1, 1], [2, 2], [3, 2], [1, 1]]]])
@@ -168,19 +227,31 @@ class TestDifferentGeomFormats(BaseTestCase):
     def test_with_wkt(self):
         self.assertRoundTrip(
             input_geometry="LINESTRING(-71.160281 42.258729,-71.160837 43.259113,-71.161144 42.25932)",  # noqa
-            expected_geometry={'type': 'LineString', 'coordinates': [[-71, 42], [-71, 43], [-71, 42]]})
+            expected_geometry={
+                'type': 'LineString',
+                'coordinates': [[-71, 42], [-71, 43], [-71, 42]]
+            }
+        )
 
     def test_with_wkb(self):
         self.assertRoundTrip(
             input_geometry=b"\001\003\000\000\000\001\000\000\000\005\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000",  # noqa
-            expected_geometry={'type': 'Polygon', 'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]})
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
+            }
+        )
 
     def test_with_shapely(self):
         geometry = "LINESTRING(-71.160281 42.258729,-71.160837 43.259113,-71.161144 42.25932)"  # noqa
         geometry = wkt.loads(geometry)
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry={'type': 'LineString', 'coordinates': [[-71, 42], [-71, 43], [-71, 42]]})
+            expected_geometry={
+                'type': 'LineString',
+                'coordinates': [[-71, 42], [-71, 43], [-71, 42]]
+            }
+        )
 
     def test_with_invalid_geometry(self):
         expected_result = ('Can\'t do geometries that are not wkt, wkb, or '
@@ -207,7 +278,10 @@ class TestDifferentGeomFormats(BaseTestCase):
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry={'type': 'LineString', 'coordinates': [[-71, 42], [-71, 43], [-71, 42]]},
+            expected_geometry={
+                'type': 'LineString',
+                'coordinates': [[-71, 42], [-71, 43], [-71, 42]]
+            },
             properties=properties)
 
     def test_encode_unicode_property_key(self):
@@ -217,7 +291,10 @@ class TestDifferentGeomFormats(BaseTestCase):
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry={'type': 'LineString', 'coordinates': [[-71, 42], [-71, 43], [-71, 42]]},
+            expected_geometry={
+                'type': 'LineString',
+                'coordinates': [[-71, 42], [-71, 43], [-71, 42]]
+            },
             properties=properties)
 
     def test_encode_float_little_endian(self):
@@ -227,24 +304,38 @@ class TestDifferentGeomFormats(BaseTestCase):
         }
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry={'type': 'LineString', 'coordinates': [[-71, 42], [-71, 43], [-71, 42]]},
+            expected_geometry={
+                'type': 'LineString',
+                'coordinates': [[-71, 42], [-71, 43], [-71, 42]]
+            },
             properties=properties)
 
     def test_encode_feature_with_id(self):
         geometry = 'POINT(1 1)'
         self.assertRoundTrip(input_geometry=geometry,
-                             expected_geometry={'type': 'Point', 'coordinates': [1, 1]}, id=42)
+                             expected_geometry={
+                                 'type': 'Point',
+                                 'coordinates': [1, 1]
+                             },
+                             id=42)
 
-    def test_encode_multipoint(self):
+    def test_encode_point(self):
         geometry = 'POINT(1 1)'
         self.assertRoundTrip(input_geometry=geometry,
-                             expected_geometry={'type': 'Point', 'coordinates': [1, 1]}, id=42)
+                             expected_geometry={
+                                 'type': 'Point',
+                                 'coordinates': [1, 1]
+                             },
+                             id=42)
 
     def test_encode_polygon_reverse_winding_order(self):
         geometry = 'POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))'
         self.assertRoundTrip(
             input_geometry=geometry,
-            expected_geometry={'type': 'Polygon', 'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]})
+            expected_geometry={
+                'type': 'Polygon',
+                'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
+            })
 
     def test_encode_multipoint(self):
         geometry = 'MULTIPOINT((10 10), (20 20), (10 40), (40 40), (30 30), (40 20), (30 10))'  # noqa
@@ -257,20 +348,27 @@ class TestDifferentGeomFormats(BaseTestCase):
     def test_encode_multilinestring(self):
         geometry = 'MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))'  # noqa
         self.assertRoundTrip(input_geometry=geometry,
-                             expected_geometry={'type': 'MultiLineString', 'coordinates': [
-                                 [[10, 10], [20, 20], [10, 40]],
-                                 [[40, 40], [30, 30], [40, 20], [30, 10]],
-                             ]})
+                             expected_geometry={
+                                 'type': 'MultiLineString',
+                                 'coordinates': [
+                                     [[10, 10], [20, 20], [10, 40]],
+                                     [[40, 40], [30, 30], [40, 20], [30, 10]],
+                                 ]
+                             })
 
     def test_encode_multipolygon_normal_winding_order(self):
         geometry = 'MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))'  # noqa
         self.assertRoundTrip(
             input_geometry=geometry,
             expected_geometry={'type': 'MultiPolygon',
-                               'coordinates': [[[[40, 40], [45, 30], [20, 45], [40, 40]]],
-                                               [[[20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]],
-                                                [[30, 20], [20, 25], [20, 15], [30, 20]]] ]
-                              },
+                               'coordinates': [
+                                   [[[40, 40], [45, 30], [20, 45], [40, 40]]],
+                                   [
+                                       [[20, 35], [45, 20], [30, 5],
+                                        [10, 10], [10, 30], [20, 35]],
+                                       [[30, 20], [20, 25], [20, 15], [30, 20]]
+                                   ]
+                               ]},
             expected_len=1)
 
     def test_encode_multipolygon_normal_winding_order_zero_area(self):
@@ -279,9 +377,11 @@ class TestDifferentGeomFormats(BaseTestCase):
         self.assertRoundTrip(
             input_geometry=geometry,
             expected_geometry={'type': 'Polygon',
-                               'coordinates': [[[20, 35], [45, 20], [30, 5], [10, 10], [10, 30], [20, 35]],
-                                               [[30, 20], [20, 25], [20, 15], [30, 20]] ]
-                              },
+                               'coordinates': [
+                                   [[20, 35], [45, 20], [30, 5],
+                                    [10, 10], [10, 30], [20, 35]],
+                                   [[30, 20], [20, 25], [20, 15], [30, 20]]
+                               ]},
             expected_len=1)
 
     def test_encode_multipolygon_reverse_winding_order(self):
@@ -290,9 +390,11 @@ class TestDifferentGeomFormats(BaseTestCase):
         self.assertRoundTrip(
             input_geometry=geometry,
             expected_geometry={'type': 'Polygon',
-                               'coordinates': [[[10, 10], [10, 0], [0, 0], [0, 10], [10, 10]],
-                                               [[8, 8], [2, 8], [2, 0], [8, 0], [8, 8]]]
-                              },
+                               'coordinates': [
+                                   [[10, 10], [10, 0], [0, 0],
+                                    [0, 10], [10, 10]],
+                                   [[8, 8], [2, 8], [2, 0], [8, 0], [8, 8]]
+                               ]},
             expected_len=1)
 
     def test_encode_property_bool(self):
@@ -363,7 +465,10 @@ class TestDifferentGeomFormats(BaseTestCase):
 
     def test_encode_rounding_floats(self):
         geometry = 'LINESTRING(1.1 1.1, 41.5 41.8)'
-        exp_geoemtry = {'type': 'LineString', 'coordinates': [[1, 1], [42, 42]]}
+        exp_geoemtry = {
+            'type': 'LineString',
+            'coordinates': [[1, 1], [42, 42]]
+        }
         self.assertRoundTrip(
             input_geometry=geometry,
             expected_geometry=exp_geoemtry,
@@ -719,7 +824,7 @@ class LowLevelEncodingTestCase(unittest.TestCase):
     def test_example_multi_polygon(self):
         from mapbox_vector_tile.encoder import VectorTile
         # example from spec:
-        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon
+        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon  (# noqa)
         # note that examples are in **tile local coordinates** which are
         # y-down.
         input_geometry = 'MULTIPOLYGON (' + \
@@ -761,7 +866,7 @@ class LowLevelEncodingTestCase(unittest.TestCase):
     def test_example_multi_polygon_y_up(self):
         from mapbox_vector_tile.encoder import VectorTile
         # example from spec:
-        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon
+        # https://github.com/mapbox/vector-tile-spec/tree/master/2.1#4356-example-multi-polygon    # noqa
         # in this example, we transform the coordinates to their equivalents
         # in a y-up coordinate system.
         input_geometry = 'MULTIPOLYGON (' + \
