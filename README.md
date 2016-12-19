@@ -261,7 +261,7 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
       'extent': 4096,
       'version': 2,
       'features': [{
-          'geometry': [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
+          'geometry': {'type': 'Polygon', 'coordinates': [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]},
           'properties': {
             'foo': 'bar',
             'uid': 123,
@@ -276,7 +276,7 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
       'extent': 4096,
       'version': 2,
       'features': [{
-          'geometry': [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
+          'geometry': {'type': 'Polygon', 'coordinates': [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]},
           'properties': {
             'foo': 'bar',
             'uid': 1234,
