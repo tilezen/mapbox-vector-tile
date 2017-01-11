@@ -6,10 +6,11 @@ from itertools import islice
 from mapbox_vector_tile.encoder import VectorTile, on_invalid_geometry_ignore
 from mapbox_vector_tile import encode
 from shapely.wkt import loads as loads_wkt
+from shapely.geometry import mapping
 import sys
 
 
-def make_layers(shapes):
+def make_layers(shapes, geom_dicts=False):
     print ("Creating layers with 10 shapes each")
     layers = []
     i = 0
@@ -17,7 +18,10 @@ def make_layers(shapes):
     for shape in shapes:
         try:
             geom = loads_wkt(shape.strip())
-            feature = {"geometry": geom, "properties": {}}
+            if geom_dicts:
+                feature = {"geometry": mapping(geom), "properties": {}}
+            else:
+                feature = {"geometry": geom, "properties": {}}
             features.append(feature)
             if i >= 10:
                 layers.append(features)
@@ -55,5 +59,5 @@ if __name__ == '__main__':
     print "zcat fgeoms.wkt.zip | head -10000 | python bench_encode.py"
     shapes = sys.stdin
     if not shapes.isatty():
-        layers = make_layers(shapes)
+        layers = make_layers(shapes, geom_dicts=False)
         run_test(layers)
