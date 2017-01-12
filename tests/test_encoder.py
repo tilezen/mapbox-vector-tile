@@ -491,6 +491,99 @@ class TestDifferentGeomFormats(BaseTestCase):
         self.assertEqual(0, len(features))
 
 
+class TestDictGeometries(BaseTestCase):
+
+    def _test_encoder_dict(self, geometry):
+        self.assertRoundTrip(
+            input_geometry=geometry,
+            expected_geometry=geometry
+        )
+
+    def test_encoder_point(self):
+        self._test_encoder_dict(
+            {
+                'type': 'Point',
+                'coordinates': [1, 2]
+            }
+        )
+
+    def test_encoder_multipoint(self):
+        self._test_encoder_dict(
+            {
+                'type': 'MultiPoint',
+                'coordinates': [[1, 2], [3, 4]]
+            }
+        )
+
+    def test_encoder_linestring(self):
+        self._test_encoder_dict(
+            {
+                'type': 'LineString',
+                'coordinates': [[30, 10], [10, 30], [40, 40]]
+            }
+        )
+
+    def test_encoder_multilinestring(self):
+        self._test_encoder_dict(
+            {
+                'type': 'MultiLineString',
+                'coordinates': [
+                    [[10, 10], [20, 20], [10, 40]],
+                    [[40, 40], [30, 30], [40, 20], [30, 10]]
+                ]
+            }
+        )
+
+    def test_encoder_polygon(self):
+        self._test_encoder_dict(
+            {
+                'type': 'Polygon',
+                'coordinates': [
+                    [[30, 10], [10, 20], [20, 40], [40, 40], [30, 10]]
+                ]
+            }
+        )
+
+    def test_encoder_polygon_w_hole(self):
+        self._test_encoder_dict(
+            {
+                'type': 'Polygon',
+                'coordinates': [
+                    [[35, 10], [10, 20], [15, 40], [45, 45], [35, 10]],
+                    [[20, 30], [30, 20], [35, 35], [20, 30]],
+                ]
+            }
+        )
+
+    def test_encoder_multipolygon(self):
+        self._test_encoder_dict(
+            {
+                'type': 'MultiPolygon',
+                'coordinates': [
+                    [[[30, 20], [10, 40], [45, 40], [30, 20]]],
+                    [[[15, 5], [5, 10], [10, 20], [40, 10], [15, 5]]]
+                ]
+            }
+        )
+
+    def test_encoder_multipolygon_w_hole(self):
+        self._test_encoder_dict(
+            {
+                'type': 'MultiPolygon',
+                'coordinates': [
+                    [
+                        [[40, 40], [45, 30], [20, 45], [40, 40]]
+                    ],
+                    [
+                        [[20, 35], [45, 20], [30, 5],
+                            [10, 10], [10, 30], [20, 35]],
+                        [[30, 20], [20, 25], [20, 15], [30, 20]]
+                    ],
+                ]
+            }
+        )
+
+
 class QuantizeTest(unittest.TestCase):
 
     def test_quantize(self):
