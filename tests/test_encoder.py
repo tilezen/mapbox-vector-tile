@@ -490,6 +490,7 @@ class TestDifferentGeomFormats(BaseTestCase):
         features = result['foo']['features']
         self.assertEqual(0, len(features))
 
+
 class TestDictGeometries(BaseTestCase):
 
     def _test_encoder_dict(self, geometry):
@@ -581,6 +582,7 @@ class TestDictGeometries(BaseTestCase):
                 ]
             }
         )
+
 
 class QuantizeTest(unittest.TestCase):
 

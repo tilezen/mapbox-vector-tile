@@ -201,7 +201,8 @@ class VectorTile:
             return geometry_spec
 
         if isinstance(geometry_spec, dict):
-            return SimpleShape(geometry_spec['coordinates'], type=geometry_spec["type"])
+            return SimpleShape(geometry_spec['coordinates'],
+                               geometry_spec["type"])
 
         try:
             return load_wkb(geometry_spec)
