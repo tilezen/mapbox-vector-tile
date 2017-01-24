@@ -16,13 +16,13 @@ def test_suite():
     return suite
 
 setup(name='mapbox-vector-tile',
-      version='1.0.0',
+      version='1.1.0',
       description=u"Mapbox Vector Tile",
       long_description=long_description,
       classifiers=[],
       keywords='',
-      author=u"Harish Krishna",
-      author_email='harish.krsn@gmail.com',
+      author=u"Rob Marianski",
+      author_email='hello@mapzen.com',
       url='https://github.com/tilezen/mapbox-vector-tile',
       license='MIT',
       packages=find_packages(),
