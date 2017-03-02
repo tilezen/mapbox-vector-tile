@@ -173,3 +173,19 @@ class TestPolygonMakeValid(unittest.TestCase):
         fixed = make_it_valid(geom)
         self.assertTrue(fixed.is_valid)
         self.assertEquals(22, fixed.area)
+
+    def test_polygon_inners_crossing_outer(self):
+        geom = wkt.loads("""POLYGON (
+          (2325 1015, 2329 1021, 2419 1057, 2461 944, 2369 907, 2325 1015),
+          (2329 1012, 2370 909, 2457 944, 2417 1050, 2329 1012),
+          (2410 1053, 2410 1052, 2412 1053, 2411 1054, 2410 1053),
+          (2378 1040, 2378 1039, 2379 1040, 2379 1041, 2378 1040),
+          (2369 1037, 2370 1036, 2371 1036, 2371 1038, 2369 1037),
+          (2361 1034, 2362 1033, 2363 1033, 2363 1034, 2361 1034),
+          (2353 1031, 2354 1029, 2355 1030, 2354 1031, 2353 1031),
+          (2337 1024, 2338 1023, 2339 1023, 2338 1025, 2337 1024)
+        )""")
+        self.assertFalse(geom.is_valid)
+        fixed = make_it_valid(geom)
+        self.assertTrue(fixed.is_valid)
+        self.assertAlmostEqual(1548.08, fixed.area, delta=0.01)

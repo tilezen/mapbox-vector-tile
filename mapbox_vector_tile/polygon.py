@@ -79,7 +79,17 @@ def _polytree_node_to_shapely(node):
         poly = _contour_to_poly(node.Contour)
         for ch in children:
             inner = _contour_to_poly(ch)
-            diff = poly.difference(inner)
+
+            # the difference of two valid polygons may fail, and in this
+            # situation we'd like to be able to display the polygon anyway.
+            # so we discard the bad inner and continue.
+            #
+            # see test_polygon_inners_crossing_outer for a test case.
+            try:
+                diff = poly.difference(inner)
+            except:
+                continue
+
             if not diff.is_valid:
                 diff = diff.buffer(0)
 
