@@ -188,4 +188,12 @@ class TestPolygonMakeValid(unittest.TestCase):
         self.assertFalse(geom.is_valid)
         fixed = make_it_valid(geom)
         self.assertTrue(fixed.is_valid)
-        self.assertAlmostEqual(1548.08, fixed.area, delta=0.01)
+        # different versions of GEOS hit this bug in slightly different ways,
+        # meaning that some inners get included and some don't, depending on
+        # the version. therefore, we need quite a wide range of acceptable
+        # answers.
+        #
+        # the main part of this polygon (outer - largest inner) has area 1551,
+        # and the smaller inners sum up to area 11, so we'll take +/-6 from
+        # 1545.
+        self.assertAlmostEqual(1545, fixed.area, delta=6)
