@@ -11,7 +11,7 @@ import sys
 
 
 def make_layers(shapes, geom_dicts=False):
-    print ("Creating layers with 10 shapes each")
+    print("Creating layers with 10 shapes each")
     layers = []
     i = 0
     features = []
@@ -34,7 +34,7 @@ def make_layers(shapes, geom_dicts=False):
     return layers
 
 def run_test(layers):
-    print ("Running perf test")
+    print("Running perf test")
     i = 0
     profiler = cProfile.Profile()
     for layer in layers:
@@ -46,7 +46,7 @@ def run_test(layers):
         res = encode(layer_description, on_invalid_geometry=on_invalid_geometry_ignore, round_fn=round)
         profiler.disable()
         if i % 100 == 0:
-            print "{} tiles produced".format(i)
+            print("{} tiles produced".format(i))
         i += 1
 
     print ("Perf result :")
@@ -54,9 +54,9 @@ def run_test(layers):
 
 
 if __name__ == '__main__':
-    print "Usage : "
-    print "wget https://gist.githubusercontent.com/lexman/c759d1007e520040cb9f1e41b7af85c2/raw/fgeoms.wkt.zip"
-    print "zcat fgeoms.wkt.zip | head -10000 | python bench_encode.py"
+    print("Usage : ")
+    print("wget https://gist.githubusercontent.com/lexman/c759d1007e520040cb9f1e41b7af85c2/raw/fgeoms.wkt.zip")
+    print("zcat fgeoms.wkt.zip | head -10000 | python bench_encode.py")
     shapes = sys.stdin
     if not shapes.isatty():
         layers = make_layers(shapes, geom_dicts=False)
