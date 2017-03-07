@@ -2,6 +2,13 @@ from . import encoder
 from . import decoder
 
 
+# Enable Shapely "speedups" if available
+# http://toblerity.org/shapely/manual.html#performance
+from shapely import speedups
+if speedups.available:
+    speedups.enable()
+
+
 def decode(tile, y_coord_down=False):
     vector_tile = decoder.TileData()
     message = vector_tile.getMessage(tile, y_coord_down)
