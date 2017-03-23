@@ -1,3 +1,12 @@
+Version 1.2.0
+-------------
+
+* Skip inners which cause exceptions.
+* Fix test to support different versions of GEOS.
+* Make benchmark script python3 compatible.
+* Enable Shapely speedups when available.
+* Union inners in blocks when making valid.
+
 Version 1.1.0
 -------------
 
