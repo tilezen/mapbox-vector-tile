@@ -1,3 +1,13 @@
+Version 1.2.0
+-------------
+
+* Performance focused release, including:
+* Enable Shapely speedups, when available
+* Skip inners which cause exceptions
+* Union inners in blocks when making valid
+* Make benchmark script python3 compatible
+* Fix test to support different versions of GEOS
+
 Version 1.1.0
 -------------
 
