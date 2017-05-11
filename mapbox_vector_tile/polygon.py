@@ -40,7 +40,7 @@ def _drop_degenerate_inners(shape):
     return Polygon(shape.exterior, new_inners)
 
 
-def _contour_to_poly(contour, asserted):
+def _contour_to_poly(contour, asserted=True):
     poly = Polygon(contour)
     if not poly.is_valid:
         poly = poly.buffer(0)
