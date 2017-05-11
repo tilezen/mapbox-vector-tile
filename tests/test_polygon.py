@@ -281,4 +281,3 @@ class TestPolygonMakeValid(unittest.TestCase):
         # and the smaller inners sum up to area 11, so we'll take +/-6 from
         # 1545.
         self.assertAlmostEqual(1545, fixed.area, delta=6)
-
