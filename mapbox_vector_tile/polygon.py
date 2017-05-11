@@ -1,6 +1,6 @@
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
-from shapely.ops import cascaded_union
+from shapely.ops import cascaded_union, unary_union
 from shapely.validation import explain_validity
 import pyclipper
 
@@ -51,6 +51,40 @@ def _contour_to_poly(contour, asserted):
     return poly
 
 
+def _union_in_blocks(contours, block_size):
+    """
+    Generator which yields a valid shape for each block_size multiple of
+    input contours. This merges together the contours for each block before
+    yielding them.
+    """
+
+    n_contours = len(contours)
+    for i in range(0, n_contours, block_size):
+        j = min(i + block_size, n_contours)
+
+        inners = []
+        for c in contours[i:j]:
+            p = _contour_to_poly(c)
+            if p.type == 'Polygon':
+                inners.append(p)
+            elif p.type == 'MultiPolygon':
+                inners.extend(p.geoms)
+        holes = unary_union(inners)
+        assert holes.is_valid
+
+        yield holes
+
+
+def _generate_polys(contours):
+    """
+    Generator which yields a valid polygon for each contour input.
+    """
+
+    for c in contours:
+        p = _contour_to_poly(c)
+        yield p
+
+
 def _polytree_node_to_shapely(node, asserted):
     """
     Recurses down a Clipper PolyTree, extracting the results as Shapely
@@ -81,6 +115,30 @@ def _polytree_node_to_shapely(node, asserted):
         for ch in children:
             inner = _contour_to_poly(ch, asserted)
             diff = poly.difference(inner)
+
+        # we add each inner one-by-one so that we can reject them individually
+        # if they cause the polygon to become invalid. if the shape has lots
+        # of inners, then this can mean a proportional amount of work, and may
+        # take 1,000s of seconds. instead, we can group inners together, which
+        # reduces the number of times we call the expensive 'difference'
+        # method.
+        block_size = 200
+        if len(children) > block_size:
+            inners = _union_in_blocks(children, block_size)
+        else:
+            inners = _generate_polys(children)
+
+        for inner in inners:
+            # the difference of two valid polygons may fail, and in this
+            # situation we'd like to be able to display the polygon anyway.
+            # so we discard the bad inner and continue.
+            #
+            # see test_polygon_inners_crossing_outer for a test case.
+            try:
+                diff = poly.difference(inner)
+            except:
+                continue
+
             if not diff.is_valid:
                 diff = diff.buffer(0)
 

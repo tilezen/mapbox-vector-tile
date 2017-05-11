@@ -1,3 +1,23 @@
+Version 1.2.0
+-------------
+
+* Performance focused release, including:
+* Enable Shapely speedups, when available
+* Skip inners which cause exceptions
+* Union inners in blocks when making valid
+* Make benchmark script python3 compatible
+* Fix test to support different versions of GEOS
+
+Version 1.1.0
+-------------
+
+* Include LICENSE & CHANGELOG.md in sdist tarballs
+* Refactor geometry encoding logic, including skipping tiny geometries
+* Decoded geometry is now geojson-ish dict
+* Winding order is now optional
+* Add benchmarking around round function and document how to improve performance
+* Document performance tip for protobuf encoding with C bindings for Debian
+
 Version 1.0.0
 -------------
 
@@ -97,7 +117,7 @@ Version 0.0.5
 Version 0.0.4
 -------------
 
-* Bug fix - does not try to load wkt geom if wkb succeeds 
+* Bug fix - does not try to load wkt geom if wkb succeeds
 
 Version 0.0.3
 -------------

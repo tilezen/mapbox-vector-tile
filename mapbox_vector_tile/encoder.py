@@ -14,6 +14,7 @@ from shapely.validation import explain_validity
 import decimal
 from .compat import PY3, vector_tile, apply_map
 from .geom_encoder import GeometryEncoder
+from .simple_shape import SimpleShape
 
 
 def on_invalid_geometry_raise(shape):
@@ -209,6 +210,10 @@ class VectorTile:
     def _load_geometry(self, geometry_spec):
         if isinstance(geometry_spec, BaseGeometry):
             return geometry_spec
+
+        if isinstance(geometry_spec, dict):
+            return SimpleShape(geometry_spec['coordinates'],
+                               geometry_spec["type"])
 
         try:
             return load_wkb(geometry_spec)
