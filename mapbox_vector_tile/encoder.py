@@ -207,10 +207,10 @@ class VectorTile:
 
         try:
             return load_wkb(geometry_spec)
-        except:
+        except Exception:
             try:
                 return load_wkt(geometry_spec)
-            except:
+            except Exception:
                 return None
 
     def addFeature(self, feature, shape, y_coord_down):
