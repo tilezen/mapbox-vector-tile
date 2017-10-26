@@ -490,6 +490,29 @@ class TestDifferentGeomFormats(BaseTestCase):
         features = result['foo']['features']
         self.assertEqual(0, len(features))
 
+    def test_encode_1_True_values(self):
+        geometry = 'POINT(0 0)'
+        properties = {
+            'foo': True,
+            'bar': 1,
+        }
+        source = [{
+            'name': 'layer',
+            'features': [{
+                'geometry': geometry,
+                'properties': properties
+            }]
+        }]
+        encoded = encode(source)
+        decoded = decode(encoded)
+        layer = decoded['layer']
+        features = layer['features']
+        act_props = features[0]['properties']
+        self.assertEquals(act_props['foo'], True)
+        self.assertEquals(act_props['bar'], 1)
+        self.assertTrue(isinstance(act_props['foo'], bool))
+        self.assertFalse(isinstance(act_props['bar'], bool))
+
 
 class TestDictGeometries(BaseTestCase):
 

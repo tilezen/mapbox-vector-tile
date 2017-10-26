@@ -66,6 +66,7 @@ class VectorTile:
         self.val_idx = 0
         self.seen_keys_idx = {}
         self.seen_values_idx = {}
+        self.seen_values_bool_idx = {}
 
         for feature in features:
 
@@ -284,8 +285,13 @@ class VectorTile:
 
                 feature.tags.append(self.seen_keys_idx[k])
 
-                if v not in self.seen_values_idx:
-                    self.seen_values_idx[v] = self.val_idx
+                if isinstance(v, bool):
+                    values_idx = self.seen_values_bool_idx
+                else:
+                    values_idx = self.seen_values_idx
+
+                if v not in values_idx:
+                    values_idx[v] = self.val_idx
                     self.val_idx += 1
 
                     val = layer.values.add()
@@ -303,4 +309,4 @@ class VectorTile:
                     elif isinstance(v, float):
                         val.double_value = v
 
-                feature.tags.append(self.seen_values_idx[v])
+                feature.tags.append(values_idx[v])
