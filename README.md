@@ -127,11 +127,13 @@ If you have geometries in longitude and latitude (EPSG:4326), you can convert to
       (x0, y0, x_max, y_max) = tile_bounds.extent
       x_span = x_max - x0
       y_span = y_max - y0
-      def xy_pairs():
-          for x_merc, y_merc in line:
-              yield (
-                  int((x_merc - x0) * MVT_EXTENT / x_span),
-                  int((y_merc - y0) * MVT_EXTENT / y_span),
+
+      tile_based_coords = []
+      for x_merc, y_merc in line:
+          tile_based_coord = (int((x_merc - x0) * MVT_EXTENT / x_span),
+                              int((y_merc - y0) * MVT_EXTENT / y_span))
+          tile_based_coords.append(tile_based_coord)
+      return LineString(*tile_based_coords)
 ```
 
 The tile bounds can be found with `mercantile`, so a complete usage example might look like this:
