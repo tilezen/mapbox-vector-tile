@@ -30,10 +30,17 @@ setup(name='mapbox-vector-tile',
       zip_safe=False,
       test_suite="setup.test_suite",
       install_requires=[
-          "setuptools",
-          "protobuf",
-          "shapely",
           "future",
-          "pyclipper"
-      ]
+          "mercantile",
+          "protobuf",
+          "pyclipper",
+          "setuptools",
+          "shapely"
+      ],
+      entry_points=dict(
+          console_scripts=[
+              'mvt_encode = mapbox_vector_tile.command:mvt_encode',
+              'mvt_decode = mapbox_vector_tile.command:mvt_decode',
+          ]
+      )
       )
