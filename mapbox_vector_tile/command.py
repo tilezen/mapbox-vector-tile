@@ -287,7 +287,6 @@ def write_tile(args, tile, indexed_features):
         'name': args.name,
         'features': features,
     })
-    # encoded_tile = encoded_tile.encode('utf-8')
     tile_path = os.path.join(args.directory, '{tile.z}/{tile.x}/{tile.y}.mvt'.format(tile=tile))
     tile_dir = os.path.dirname(tile_path)
     try:
