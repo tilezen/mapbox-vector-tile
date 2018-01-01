@@ -18,7 +18,7 @@ _LOG = logging.getLogger(__name__)
 
 
 def _configure_logger(logger, level, stream=None):
-    formatter = logging.Formatter('%(asctime)s - %(levelname)-8s - %(name)s:%(lineno)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(levelname)-8s - %(message)s')
     handler = logging.StreamHandler(stream)
     handler.setLevel(level)
     handler.setFormatter(formatter)
