@@ -6,6 +6,7 @@ import os
 import sys
 
 import mercantile
+from mercantile import Tile
 import shapely.affinity
 import shapely.geometry
 import shapely.ops
@@ -30,9 +31,6 @@ def mvt_decode():
     buffer = sys.stdin.buffer.read()
     layers = decode(buffer)
     print(json.dumps(layers))
-
-
-Tile = collections.namedtuple('Tile', ['x', 'y', 'z'])
 
 
 def _parse_tiles(tile_texts):
