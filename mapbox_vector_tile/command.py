@@ -93,11 +93,11 @@ def _get_ancestral_tiles(tiles, sorted_levels):
 
 
 def _generate_tile_children(tile: Tile):
-    z = tile.z + 1
-    yield Tile(x=tile.x * 2, y=tile.y * 2, z=z)
-    yield Tile(x=tile.x * 2 + 1, y=tile.y * 2, z=z)
-    yield Tile(x=tile.x * 2, y=tile.y * 2 + 1, z=z)
-    yield Tile(x=tile.x * 2 + 1, y=tile.y * 2 + 1, z=z)
+    x, y, z = tile.x * 2, tile.y * 2, tile.z + 1
+    yield Tile(x=x, y=y, z=z)
+    yield Tile(x=x + 1, y=y, z=z)
+    yield Tile(x=x, y=y + 1, z=z)
+    yield Tile(x=x + 1, y=y + 1, z=z)
 
 
 _WORLD_BOUNDS = mercantile.bounds(0, 0, 0)
