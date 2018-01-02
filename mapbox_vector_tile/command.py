@@ -150,10 +150,13 @@ def _intersected_tiles(shape_mercator, zoom_level, parent_tile=None):
     if zoom_level < parent_tile.z:
         return
 
+    if not _is_intersected(shape_mercator, parent_tile):
+        return
+
     if zoom_level == parent_tile.z:
         yield parent_tile
-
-    if _is_intersected(shape_mercator, parent_tile):
+    else:
+        assert parent_tile.z < zoom_level
         for child in _generate_tile_children(parent_tile):
             yield from _intersected_tiles(shape_mercator, zoom_level, child)
 
