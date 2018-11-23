@@ -165,10 +165,7 @@ def _reorder_lines(lines):
         min_dist = None
         min_i = None
         for i, line in enumerate(lines):
-            assert isinstance(line[0], MoveTo)
-            assert isinstance(line[-1], EndsAt)
-
-            moveto = line[0]
+            moveto, _, _ = line
 
             dist = abs(moveto.x - x) + abs(moveto.y - y)
             if min_dist is None or dist < min_dist:
@@ -177,7 +174,7 @@ def _reorder_lines(lines):
 
         assert min_i is not None
         line = lines.pop(min_i)
-        endsat = line[-1]
+        _, endsat, _ = line
         x = endsat.x
         y = endsat.y
         new_lines.append(line)
@@ -196,11 +193,7 @@ def _rewrite_geometry(geom, new_lines):
     x = 0
     y = 0
     for line in new_lines:
-        assert isinstance(line[0], MoveTo)
-        assert isinstance(line[-1], EndsAt)
-
-        moveto = line[0]
-        endsat = line[-1]
+        moveto, endsat, lineto_cmds = line
 
         dx = moveto.x - x
         dy = moveto.y - y
@@ -210,7 +203,7 @@ def _rewrite_geometry(geom, new_lines):
         new_geom.append(9)  # move to, run_length = 1
         new_geom.append(zigzag(dx))
         new_geom.append(zigzag(dy))
-        new_geom.extend(line[1:-1])
+        new_geom.extend(lineto_cmds)
 
     # write the lines back out to geom
     del geom[:]
@@ -225,7 +218,7 @@ def optimise_multilinestring(geom):
     lines = _decode_lines(geom)
 
     # can't reorder anything unless it has multiple lines.
-    if len(lines > 1):
+    if len(lines) > 1:
         lines = _reorder_lines(lines)
         _rewrite_geometry(geom, lines)
 
