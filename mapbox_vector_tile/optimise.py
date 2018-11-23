@@ -247,19 +247,16 @@ def optimise_tile(tile_bytes):
     return t.SerializeToString()
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     import argparse
     import sys
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_file', help='Input MVT file')
-    parser.add_argument('--output-file', help='Output file, default is stdout')
+    parser.add_argument('input_file', help='Input MVT file',
+                        type=argparse.FileType('r'))
+    parser.add_argument('--output-file', help='Output file, default is stdout',
+                        type=argparse.FileType('w'), default=sys.stdout)
     args = parser.parse_args()
 
-    output_bytes = optimise_tile(open(args.input_file).read())
-
-    if args.output_file:
-        with open(args.output_file, 'w') as fh:
-            fh.write(output_bytes)
-    else:
-        sys.stdout.write(output_bytes)
+    output_bytes = optimise_tile(args.input_file.read())
+    args.output_file.write(output_bytes)
