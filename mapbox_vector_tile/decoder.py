@@ -1,5 +1,5 @@
 from past.builtins import xrange
-from .compat import vector_tile
+from mapbox_vector_tile.compat import vector_tile
 
 cmd_bits = 3
 

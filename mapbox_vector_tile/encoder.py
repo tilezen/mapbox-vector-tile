@@ -1,4 +1,3 @@
-from mapbox_vector_tile.polygon import make_it_valid
 from numbers import Number
 from past.builtins import long
 from past.builtins import unicode
@@ -11,9 +10,10 @@ from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 import decimal
-from .compat import PY3, vector_tile, apply_map
-from .geom_encoder import GeometryEncoder
-from .simple_shape import SimpleShape
+from mapbox_vector_tile.compat import PY3, vector_tile, apply_map
+from mapbox_vector_tile.geom_encoder import GeometryEncoder
+from mapbox_vector_tile.simple_shape import SimpleShape
+from mapbox_vector_tile.polygon import make_it_valid
 
 
 def on_invalid_geometry_raise(shape):
