@@ -1,3 +1,8 @@
+Version 1.2.1
+-------------
+
+* Add the trove classifiers to the setup.py
+
 Version 1.2.0
 -------------
 
