@@ -7,7 +7,8 @@ Mapbox Vector Tile
 Installation
 ------------
 
-mapbox-vector-tile is compatible with Python 2.7 and 3.5. It is listed on PyPi as `mapbox-vector-tile`. The recommended way to install is via `pip`:
+mapbox-vector-tile is compatible with Python 3.7 and above. It is listed on PyPi as `mapbox-vector-tile`. The
+recommended way to install is via `pip`:
 
 ```shell
 pip install mapbox-vector-tile
@@ -18,7 +19,8 @@ Note that `mapbox-vector-tile` depends on [Shapely](https://pypi.python.org/pypi
 Encoding
 --------
 
-Encode method expects an array of layers or atleast a single valid layer. A valid layer is a dictionary with the following keys
+Encode method expects an array of layers or at least a single valid layer. A valid layer is a dictionary with the
+following keys
 
 * `name`: layer name
 * `features`: an array of features. A feature is a dictionary with the following keys:
@@ -314,8 +316,8 @@ The c++ implementation of the underlying protobuf library is more performant tha
 The version of protobuf (libprotobuf9) available on debian Jessie is [2.6.1](https://github.com/google/protobuf/tree/v2.6.1/python). You can install it with the proper python bindings from your package manager :
 
     $  sudo apt-get install libprotoc9 libprotobuf9 protobuf-compiler python-protobuf
-    
-Then, you'll have to enable two environnement variable BEFORE runing your python program :
+
+Then, you'll have to enable two environnement variable BEFORE running your python program :
 
     $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
     $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2
