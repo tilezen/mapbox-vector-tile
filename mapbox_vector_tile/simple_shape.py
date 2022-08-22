@@ -3,6 +3,7 @@ class SimpleShape:
     A simple geometry class that holds coordinates.
     Provides an alternative to using a shapely geometry when it is not needed.
     """
+
     def __init__(self, coords, type):
         self.coords = coords
         self.type = type
