@@ -1,23 +1,22 @@
-from mapbox_vector_tile.polygon import make_it_valid
+import decimal
 from numbers import Number
-from past.builtins import long
-from past.builtins import unicode
-from past.builtins import xrange
+
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
-from shapely.geometry.polygon import orient
-from shapely.geometry.polygon import Polygon
+from shapely.geometry.polygon import orient, Polygon
 from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
-import decimal
-from .compat import PY3, vector_tile, apply_map
-from .geom_encoder import GeometryEncoder
-from .simple_shape import SimpleShape
+
+from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
+from mapbox_vector_tile.geom_encoder import GeometryEncoder
+from mapbox_vector_tile.polygon import make_it_valid
+from mapbox_vector_tile.simple_shape import SimpleShape
+from mapbox_vector_tile.utils import apply_map
 
 
 def on_invalid_geometry_raise(shape):
-    raise ValueError('Invalid geometry: %s' % shape.wkt)
+    raise ValueError(f"Invalid geometry: {shape.wkt}")
 
 
 def on_invalid_geometry_ignore(shape):
@@ -29,12 +28,14 @@ def on_invalid_geometry_make_valid(shape):
 
 
 class VectorTile:
-    """
-    """
-
-    def __init__(self, extents, on_invalid_geometry=None,
-                 max_geometry_validate_tries=5, round_fn=None,
-                 check_winding_order=True):
+    def __init__(
+        self,
+        extents,
+        on_invalid_geometry=None,
+        max_geometry_validate_tries=5,
+        round_fn=None,
+        check_winding_order=True,
+    ):
         self.tile = vector_tile.tile()
         self.extents = extents
         self.on_invalid_geometry = on_invalid_geometry
@@ -49,13 +50,12 @@ class VectorTile:
 
         # round() has different behavior in python 2/3
         # For consistency between 2 and 3 we use quantize, however
-        # it is slower than the built in round function.
+        # it is slower than the built-in round function.
         d = decimal.Decimal(val)
         rounded = d.quantize(1, rounding=decimal.ROUND_HALF_EVEN)
         return float(rounded)
 
-    def addFeatures(self, features, layer_name='',
-                    quantize_bounds=None, y_coord_down=False):
+    def addFeatures(self, features, layer_name="", quantize_bounds=None, y_coord_down=False):
 
         self.layer = self.tile.layers.add()
         self.layer.name = layer_name
@@ -71,15 +71,13 @@ class VectorTile:
         for feature in features:
 
             # skip missing or empty geometries
-            geometry_spec = feature.get('geometry')
+            geometry_spec = feature.get("geometry")
             if geometry_spec is None:
                 continue
             shape = self._load_geometry(geometry_spec)
 
             if shape is None:
-                raise NotImplementedError(
-                    'Can\'t do geometries that are not wkt, wkb, or shapely '
-                    'geometries')
+                raise NotImplementedError("Can't do geometries that are not wkt, wkb, or shapely geometries")
 
             if shape.is_empty:
                 continue
@@ -93,7 +91,7 @@ class VectorTile:
                 self.addFeature(feature, shape, y_coord_down)
 
     def enforce_winding_order(self, shape, y_coord_down, n_try=1):
-        if shape.type == 'MultiPolygon':
+        if shape.type == "MultiPolygon":
             # If we are a multipolygon, we need to ensure that the
             # winding orders of the consituent polygons are
             # correct. In particular, the winding order of the
@@ -101,10 +99,9 @@ class VectorTile:
             # exterior ones, and all interior rings need to follow
             # the exterior one. This is how the end of one polygon
             # and the beginning of another are signaled.
-            shape = self.enforce_multipolygon_winding_order(
-                shape, y_coord_down, n_try)
+            shape = self.enforce_multipolygon_winding_order(shape, y_coord_down, n_try)
 
-        elif shape.type == 'Polygon':
+        elif shape.type == "Polygon":
             # Ensure that polygons are also oriented with the
             # appropriate winding order. Their exterior rings must
             # have a clockwise order, which is translated into a
@@ -113,8 +110,7 @@ class VectorTile:
             # Note that while the Y axis flips, we also invert the
             # Y coordinate to get the tile-local value, which means
             # the clockwise orientation is unchanged.
-            shape = self.enforce_polygon_winding_order(
-                shape, y_coord_down, n_try)
+            shape = self.enforce_polygon_winding_order(shape, y_coord_down, n_try)
 
         # other shapes just get passed through
         return shape
@@ -148,20 +144,18 @@ class VectorTile:
                 # altered the geometry. We'll run through the process
                 # again, but keep track of which attempt we are on to
                 # terminate the recursion.
-                shape = self.enforce_winding_order(
-                    shape, y_coord_down, n_try + 1)
+                shape = self.enforce_winding_order(shape, y_coord_down, n_try + 1)
 
         return shape
 
     def enforce_multipolygon_winding_order(self, shape, y_coord_down, n_try):
-        assert shape.type == 'MultiPolygon'
+        assert shape.type == "MultiPolygon"
 
         parts = []
         for part in shape.geoms:
-            part = self.enforce_polygon_winding_order(
-                part, y_coord_down, n_try)
+            part = self.enforce_polygon_winding_order(part, y_coord_down, n_try)
             if part is not None and not part.is_empty:
-                if part.type == 'MultiPolygon':
+                if part.type == "MultiPolygon":
                     parts.extend(part.geoms)
                 else:
                     parts.append(part)
@@ -174,12 +168,11 @@ class VectorTile:
         else:
             oriented_shape = MultiPolygon(parts)
 
-        oriented_shape = self.handle_shape_validity(
-            oriented_shape, y_coord_down, n_try)
+        oriented_shape = self.handle_shape_validity(oriented_shape, y_coord_down, n_try)
         return oriented_shape
 
     def enforce_polygon_winding_order(self, shape, y_coord_down, n_try):
-        assert shape.type == 'Polygon'
+        assert shape.type == "Polygon"
 
         def fn(point):
             x, y = point
@@ -193,8 +186,7 @@ class VectorTile:
 
         sign = 1.0 if y_coord_down else -1.0
         oriented_shape = orient(Polygon(exterior, rings), sign=sign)
-        oriented_shape = self.handle_shape_validity(
-            oriented_shape, y_coord_down, n_try)
+        oriented_shape = self.handle_shape_validity(oriented_shape, y_coord_down, n_try)
         return oriented_shape
 
     def _load_geometry(self, geometry_spec):
@@ -202,8 +194,7 @@ class VectorTile:
             return geometry_spec
 
         if isinstance(geometry_spec, dict):
-            return SimpleShape(geometry_spec['coordinates'],
-                               geometry_spec["type"])
+            return SimpleShape(geometry_spec["coordinates"], geometry_spec["type"])
 
         try:
             return load_wkb(geometry_spec)
@@ -214,8 +205,7 @@ class VectorTile:
                 return None
 
     def addFeature(self, feature, shape, y_coord_down):
-        geom_encoder = GeometryEncoder(y_coord_down, self.extents,
-                                       self._round)
+        geom_encoder = GeometryEncoder(y_coord_down, self.extents, self._round)
         geometry = geom_encoder.encode(shape)
 
         feature_type = self._get_feature_type(shape)
@@ -224,13 +214,13 @@ class VectorTile:
             return
         f = self.layer.features.add()
 
-        fid = feature.get('id')
+        fid = feature.get("id")
         if fid is not None:
             if isinstance(fid, Number) and fid >= 0:
                 f.id = fid
 
         # properties
-        properties = feature.get('properties')
+        properties = feature.get("properties")
         if properties is not None:
             self._handle_attr(self.layer, f, properties)
 
@@ -238,30 +228,29 @@ class VectorTile:
         f.geometry.extend(geometry)
 
     def _get_feature_type(self, shape):
-        if shape.type == 'Point' or shape.type == 'MultiPoint':
+        if shape.type == "Point" or shape.type == "MultiPoint":
             return self.tile.Point
-        elif shape.type == 'LineString' or shape.type == 'MultiLineString':
+        elif shape.type == "LineString" or shape.type == "MultiLineString":
             return self.tile.LineString
-        elif shape.type == 'Polygon' or shape.type == 'MultiPolygon':
+        elif shape.type == "Polygon" or shape.type == "MultiPolygon":
             return self.tile.Polygon
-        elif shape.type == 'GeometryCollection':
-            raise ValueError('Encoding geometry collections not supported')
+        elif shape.type == "GeometryCollection":
+            raise ValueError("Encoding geometry collections not supported")
         else:
-            raise ValueError('Cannot encode unknown geometry type: %s' %
-                             shape.type)
+            raise ValueError(f"Cannot encode unknown geometry type: {shape.type}")
 
     def _chunker(self, seq, size):
-        return [seq[pos:pos + size] for pos in xrange(0, len(seq), size)]
+        return [seq[pos : (pos + size)] for pos in range(0, len(seq), size)]  # noqa: E203
 
     def _can_handle_key(self, k):
-        return isinstance(k, (str, unicode))
+        return isinstance(k, str)
 
     def _can_handle_val(self, v):
-        if isinstance(v, (str, unicode)):
+        if isinstance(v, str):
             return True
         elif isinstance(v, bool):
             return True
-        elif isinstance(v, (int, long)):
+        elif isinstance(v, int):
             return True
         elif isinstance(v, float):
             return True
@@ -269,15 +258,11 @@ class VectorTile:
         return False
 
     def _can_handle_attr(self, k, v):
-        return self._can_handle_key(k) and \
-            self._can_handle_val(v)
+        return self._can_handle_key(k) and self._can_handle_val(v)
 
     def _handle_attr(self, layer, feature, props):
         for k, v in props.items():
             if self._can_handle_attr(k, v):
-                if not PY3 and isinstance(k, str):
-                    k = k.decode('utf-8')
-
                 if k not in self.seen_keys_idx:
                     layer.keys.append(k)
                     self.seen_keys_idx[k] = self.key_idx
@@ -298,13 +283,8 @@ class VectorTile:
                     if isinstance(v, bool):
                         val.bool_value = v
                     elif isinstance(v, str):
-                        if PY3:
-                            val.string_value = v
-                        else:
-                            val.string_value = unicode(v, 'utf-8')
-                    elif isinstance(v, unicode):
                         val.string_value = v
-                    elif isinstance(v, (int, long)):
+                    elif isinstance(v, int):
                         val.int_value = v
                     elif isinstance(v, float):
                         val.double_value = v

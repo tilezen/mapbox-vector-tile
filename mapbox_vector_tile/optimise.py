@@ -1,16 +1,15 @@
-from mapbox_vector_tile.Mapbox.vector_tile_pb2 import tile
 from collections import namedtuple
 
+from mapbox_vector_tile.Mapbox.vector_tile_pb2 import tile
 
-class StringTableOptimiser(object):
+
+class StringTableOptimiser:
     """
     Optimises the order of keys and values in the MVT layer string table.
 
-    Counts the number of times an entry in the MVT string table (both keys
-    and values) is used. Then reorders the string table to have the most
-    commonly used entries first and updates the features to use the
-    replacement locations in the table. This can save several percent in a
-    tile with large numbers of features.
+    Counts the number of times an entry in the MVT string table (both keys and values) is used. Then reorders the
+    string table to have the most commonly used entries first and updates the features to use the replacement
+    locations in the table. This can save several percent in a tile with large numbers of features.
     """
 
     def __init__(self):
@@ -24,12 +23,9 @@ class StringTableOptimiser(object):
             self.val_counts[v] = self.val_counts.get(v, 0) + 1
 
     def _update_table(self, counts, table):
-        # sort string table by usage, so most commonly-used values are
-        # assigned the smallest indices. since indices are encoded as
-        # varints, this should make best use of the space.
-        sort = list(sorted(
-            ((c, k) for k, c in counts.iteritems()),
-            reverse=True))
+        # Sort string table by usage, so most commonly-used values are assigned the smallest indices. since indices
+        # are encoded as  varints, this should make best use of the space.
+        sort = list(sorted(((c, k) for k, c in counts.iteritems()), reverse=True))
 
         # construct the re-ordered string table
         new_table = []
@@ -53,49 +49,47 @@ class StringTableOptimiser(object):
         new_val = self._update_table(self.val_counts, layer.values)
 
         for feature in layer.features:
-            for i in xrange(0, len(feature.tags), 2):
+            for i in range(0, len(feature.tags), 2):
                 feature.tags[i] = new_key[feature.tags[i]]
-                feature.tags[i+1] = new_val[feature.tags[i+1]]
+                feature.tags[i + 1] = new_val[feature.tags[i + 1]]
 
 
-# return the signed integer corresponding to the "zig-zag" encoded unsigned
-# input integer. this encoding is used for MVT geometry deltas.
+# Return the signed integer corresponding to the "zig-zag" encoded unsigned input integer. This encoding is used for
+# MVT geometry deltas.
 def unzigzag(n):
     return (n >> 1) ^ (-(n & 1))
 
 
-# return the "zig-zag" encoded unsigned integer corresponding to the signed
-# input integer. this encoding is used for MVT geometry deltas.
+# Return the "zig-zag" encoded unsigned integer corresponding to the signed input integer. This encoding is used for
+# MVT geometry deltas.
 def zigzag(n):
     return (n << 1) ^ (n >> 31)
 
 
-# we assume that every linestring consists of a single MoveTo command followed
-# by some number of LineTo commands, and we encode this as a Line object.
+# We assume that every linestring consists of a single MoveTo command followed by some number of LineTo commands,
+# and we encode this as a Line object.
 #
-# normally, MVT linestrings are encoded relative to the preceding linestring
-# (if any) in the geometry. however that's awkward for reodering, so we
-# construct an absolute MoveTo for each Line. we also derive a corresponding
+# Normally, MVT linestrings are encoded relative to the preceding linestring (if any) in the geometry. However, that's
+# awkward for reordering, so we construct an absolute MoveTo for each Line. We also derive a corresponding
 # EndsAt location, which isn't used in the encoding, but simplifies analysis.
-MoveTo = namedtuple('MoveTo', 'x y')
-EndsAt = namedtuple('EndsAt', 'x y')
-Line = namedtuple('Line', 'moveto endsat cmds')
+MoveTo = namedtuple("MoveTo", "x y")
+EndsAt = namedtuple("EndsAt", "x y")
+Line = namedtuple("Line", "moveto endsat cmds")
 
 
 def _decode_lines(geom):
     """
     Decode a linear MVT geometry into a list of Lines.
 
-    Each individual linestring in the MVT is extracted to a separate entry in
-    the list of lines.
+    Each individual linestring in the MVT is extracted to a separate entry in the list of lines.
     """
 
     lines = []
     current_line = []
     current_moveto = None
 
-    # to keep track of the position. we'll adapt the move-to commands to all
-    # be relative to 0,0 at the beginning of each linestring.
+    # To keep track of the position. we'll adapt the move-to commands to all be relative to 0,0 at the beginning of
+    # each linestring.
     x = 0
     y = 0
 
@@ -113,8 +107,8 @@ def _decode_lines(geom):
                 current_line = []
 
             assert run_length == 1
-            x += unzigzag(geom[i+1])
-            y += unzigzag(geom[i+2])
+            x += unzigzag(geom[i + 1])
+            y += unzigzag(geom[i + 2])
             i += 3
 
             current_moveto = MoveTo(x, y)
@@ -128,7 +122,7 @@ def _decode_lines(geom):
 
             # but we still need to decode it to figure out where each move-to
             # command is in absolute space.
-            for j in xrange(0, run_length):
+            for j in range(0, run_length):
                 dx = unzigzag(geom[i + 1 + 2 * j])
                 dy = unzigzag(geom[i + 2 + 2 * j])
                 x += dx
@@ -137,7 +131,7 @@ def _decode_lines(geom):
             i = next_i
 
         else:
-            raise ValueError('Unhandled command: %d' % cmd)
+            raise ValueError(f"Unhandled command: {cmd}")
 
     if current_line:
         assert current_moveto
@@ -148,8 +142,7 @@ def _decode_lines(geom):
 
 def _reorder_lines(lines):
     """
-    Reorder lines so that the distance from the end of one to the beginning of
-    the next is minimised.
+    Reorder lines so that the distance from the end of one to the beginning of the next is minimised.
     """
 
     x = 0
@@ -184,9 +177,8 @@ def _reorder_lines(lines):
 
 def _rewrite_geometry(geom, new_lines):
     """
-    Re-encode a list of Lines with absolute MoveTos as a continuous stream of
-    MVT geometry commands, each relative to the last. Replace geom with that
-    stream.
+    Re-encode a list of Lines with absolute MoveTos as a continuous stream of MVT geometry commands, each relative to
+    the last. Replace geom with that stream.
     """
 
     new_geom = []
@@ -211,9 +203,8 @@ def _rewrite_geometry(geom, new_lines):
 
 
 def optimise_multilinestring(geom):
-    # split the geometry into multiple lists, each starting with a move-to
-    # command and consisting otherwise of line-to commands. (perhaps with
-    # a close at the end? is that allowed for linestrings?)
+    # Split the geometry into multiple lists, each starting with a move-to command and consisting otherwise of
+    # line-to commands. (perhaps with a close at the end? Is that allowed for linestrings?)
 
     lines = _decode_lines(geom)
 
@@ -225,8 +216,8 @@ def optimise_multilinestring(geom):
 
 def optimise_tile(tile_bytes):
     """
-    Decode a sequence of bytes as an MVT tile and reorder the string table of
-    its layers and the order of its multilinestrings to save a few bytes.
+    Decode a sequence of bytes as an MVT tile and reorder the string table of its layers and the order of its
+    multilinestrings to save a few bytes.
     """
 
     t = tile()
@@ -247,15 +238,18 @@ def optimise_tile(tile_bytes):
     return t.SerializeToString()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
     import sys
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_file', help='Input MVT file',
-                        type=argparse.FileType('r'))
-    parser.add_argument('--output-file', help='Output file, default is stdout',
-                        type=argparse.FileType('w'), default=sys.stdout)
+    parser.add_argument("input_file", help="Input MVT file", type=argparse.FileType("r"))
+    parser.add_argument(
+        "--output-file",
+        help="Output file, default is stdout",
+        type=argparse.FileType("w"),
+        default=sys.stdout,
+    )
     args = parser.parse_args()
 
     output_bytes = optimise_tile(args.input_file.read())
