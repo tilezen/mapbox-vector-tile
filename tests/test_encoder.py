@@ -3,7 +3,6 @@ Tests for vector_tile/encoder.py
 """
 import unittest
 
-from past.builtins import long
 from shapely import wkt
 
 import mapbox_vector_tile
@@ -421,15 +420,6 @@ class TestDifferentGeomFormats(BaseTestCase):
     def test_encode_property_bool(self):
         geometry = "POINT(0 0)"
         properties = {"test_bool_true": True, "test_bool_false": False}
-        self.assertRoundTrip(
-            input_geometry=geometry,
-            expected_geometry={"type": "Point", "coordinates": [0, 0]},
-            properties=properties,
-        )
-
-    def test_encode_property_long(self):
-        geometry = "POINT(0 0)"
-        properties = {"test_int": int(1), "test_long": long(1)}
         self.assertRoundTrip(
             input_geometry=geometry,
             expected_geometry={"type": "Point", "coordinates": [0, 0]},
