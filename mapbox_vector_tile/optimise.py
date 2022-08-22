@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from mapbox_vector_tile.Mapbox.vector_tile_pb2 import tile
+from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
 
 
 class StringTableOptimiser:
@@ -220,7 +220,7 @@ def optimise_tile(tile_bytes):
     multilinestrings to save a few bytes.
     """
 
-    t = tile()
+    t = vector_tile.tile()
     t.ParseFromString(tile_bytes)
 
     for layer in t.layers:

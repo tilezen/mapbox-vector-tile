@@ -1,9 +1,9 @@
-# Enable Shapely "speedups" if available
-# http://toblerity.org/shapely/manual.html#performance
 from shapely import speedups
 
 from mapbox_vector_tile import decoder, encoder
 
+# Enable Shapely "speedups" if available
+# http://toblerity.org/shapely/manual.html#performance
 if speedups.available:
     speedups.enable()
 
