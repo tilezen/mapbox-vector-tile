@@ -1,38 +1,37 @@
-[project]
+[tool.poetry]
 name = "mapbox-vector-tile"
-version = "1.2.1"
-requires-python = ">=3.6"
+version = "1.3.0"
 description = "Mapbox Vector Tile"
+keywords = []
+authors = ["Rob Marianski <hello@mapzen.com>"]
+repository = "https://github.com/tilezen/mapbox-vector-tile"
+license = "MIT"
+readme = "README.md"
 classifiers = [
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
 ]
-keywords = []
-authors = [{ name = "Rob Marianski", email = "hello@mapzen.com" }]
-#url = "https://github.com/tilezen/mapbox-vector-tile"
-license = { text = "MIT" }
-dynamic = ["readme"]
-dependencies = ["setuptools", "protobuf>=4.21", "shapely", "pyclipper"]
+packages = [
+    { include = "mapbox_vector_tile" },
+]
+include = ["CHANGELOG.md", "LICENSE", "mapbox_vector_tile/Mapbox/vector_tile.proto"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+protobuf = "^4.21"
+shapely = "^1.8.0"
+pyclipper = "^1.3.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+tox = "^3.25.1"
+tox-py = "^1.3.0"
 
 [build-system]
-requires = ["setuptools", "wheel"]
-
-[tool.distutils.bdist_wheel]
-universal = true
-
-[tool.setuptools]
-zip-safe = false
-packages = ["mapbox_vector_tile"]
-include-package-data=true
-
-[tool.setuptools.dynamic]
-readme = {file = ["README.md"]}
-
-[tool.setuptools.package-data]
-"*" = ["README.md", "LICENSE", "CHANGELOG.md"]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 # Black
 [tool.black]
