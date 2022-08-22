@@ -1,7 +1,8 @@
 Mapbox Vector Tile
 ==================
 
-[![Build Status](https://travis-ci.org/tilezen/mapbox-vector-tile.svg?branch=master)](https://travis-ci.org/tilezen/mapbox-vector-tile)
+[![CI](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/ci.yml/badge.svg)](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/ci.yml)
+[![pre-commit](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/pre-commit.yml)
 [![Coverage Status](https://coveralls.io/repos/github/tilezen/mapbox-vector-tile/badge.svg?branch=master)](https://coveralls.io/github/tilezen/mapbox-vector-tile?branch=master)
 
 Installation
@@ -164,13 +165,16 @@ The tile bounds can be found with `mercantile`, so a complete usage example migh
   })
 ```
 
-Note that this example may not have anything visible within the tile when rendered. It's up to you to make sure you put the right data in the tile!
+Note that this example may not have anything visible within the tile when rendered. It's up to you to make sure you put
+the right data in the tile!
 
-Also note that the spec allows the extents to be modified, even though they are often set to 4096 by convention. `mapbox-vector-tile` assumes an extent of 4096.
+Also note that the spec allows the extents to be modified, even though they are often set to 4096 by
+convention. `mapbox-vector-tile` assumes an extent of 4096.
 
 ### Quantization
 
-The encoder also has options to quantize the data for you via the `quantize_bounds` option. When encoding, pass in the bounds in the form (minx, miny, maxx, maxy) and the coordinates will be scaled appropriately during encoding.
+The encoder also has options to quantize the data for you via the `quantize_bounds` option. When encoding, pass in the
+bounds in the form (minx, miny, maxx, maxy) and the coordinates will be scaled appropriately during encoding.
 
 ```python
 mapbox_vector_tile.encode([
@@ -190,11 +194,13 @@ mapbox_vector_tile.encode([
 
 In this example, the coordinate that would get encoded would be (2048, 2048)
 
-Additionally, if the data is already in a cooridnate system with y values going down, the encoder supports an option, `y_coord_down`, that can be set to True. This will suppress flipping the y coordinate values during encoding.
+Additionally, if the data is already in a cooridnate system with y values going down, the encoder supports an
+option, `y_coord_down`, that can be set to True. This will suppress flipping the y coordinate values during encoding.
 
 ### Custom extents
 
-The encoder also supports passing in custom extents. These will be passed through to the layer in the pbf, and honored during any quantization or y coordinate flipping.
+The encoder also supports passing in custom extents. These will be passed through to the layer in the pbf, and honored
+during any quantization or y coordinate flipping.
 
 ```python
 mapbox_vector_tile.encode([
@@ -214,7 +220,7 @@ mapbox_vector_tile.encode([
 
 ### Custom rounding functions
 
-In order to maintain consistency between Python 2 and 3, the `decimal` module is used to explictly define `ROUND_HALF_EVEN` as the rounding method. This can be slower than the built-in `round()` function. Encode takes an optional `round_fn` where you can specify the round function to be used.
+In order to maintain consistency between Python 2 and 3, the `decimal` module is used to explicitly define `ROUND_HALF_EVEN` as the rounding method. This can be slower than the built-in `round()` function. Encode takes an optional `round_fn` where you can specify the round function to be used.
 
  ```python
 mapbox_vector_tile.encode([
@@ -311,19 +317,22 @@ Use native protobuf library for performance
 
 The c++ implementation of the underlying protobuf library is more performant than the pure python one. Depending on your operating system, you might need to [compile the C++ library](https://github.com/google/protobuf/tree/master/python#c-implementation) or install it.
 
-### on debian Jessie
+Since May 6, 2022, the Python `profobuf` library is based on the udp library and thus, the generated Python code
+requires `protoc` 3.19.0 or newer. Cf. [here](https://developers.google.com/protocol-buffers/docs/news/2022-05-06). On
+debian Bullseye, the version of `protoc` available in the package registry is too old. Please install it from [protobuf
+GitHub repository](https://github.com/protocolbuffers/protobuf/releases).
 
-The version of protobuf (libprotobuf9) available on debian Jessie is [2.6.1](https://github.com/google/protobuf/tree/v2.6.1/python). You can install it with the proper python bindings from your package manager :
-
-    $  sudo apt-get install libprotoc9 libprotobuf9 protobuf-compiler python-protobuf
-
-Then, you'll have to enable two environnement variable BEFORE running your python program :
+To compile the `proto` file, you have to enable two environnement variables BEFORE running your python program :
 
     $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
     $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2
 
+and then:
+
+    $ protoc -I=mapbox_vector_tile/Mapbox/ --python_out=mapbox_vector_tile/Mapbox/ mapbox_vector_tile/Mapbox/vector_tile.proto
 
 Changelog
 ---------
 
-Click [here](https://github.com/tilezen/mapbox-vector-tile/blob/master/CHANGELOG.md) to see what changed over time in various versions.
+Click [here](https://github.com/tilezen/mapbox-vector-tile/blob/master/CHANGELOG.md) to see what changed over time in
+various versions.

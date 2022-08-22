@@ -1,3 +1,13 @@
+Version 1.3.0
+-------------
+
+* Drop Python 2 support
+* Regenerate the vector tile protobuf Python code to
+  solve [#113](https://github.com/tilezen/mapbox-vector-tile/issues/113)
+* Use of GitHub Actions with `tox`
+* Use of Poetry
+* Use of Pre-commit (black, isort, flake8, ...)
+
 Version 1.2.1
 -------------
 
