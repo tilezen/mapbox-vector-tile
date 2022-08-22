@@ -1,0 +1,55 @@
+[project]
+name = "mapbox-vector-tile"
+version = "1.2.1"
+requires-python = ">=3.6"
+description = "Mapbox Vector Tile"
+classifiers = [
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+keywords = []
+authors = [{ name = "Rob Marianski", email = "hello@mapzen.com" }]
+#url = "https://github.com/tilezen/mapbox-vector-tile"
+license = { text = "MIT" }
+dynamic = ["readme"]
+dependencies = ["setuptools", "protobuf>=4.21", "shapely", "pyclipper"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+[tool.setuptools]
+zip-safe = false
+packages = ["mapbox_vector_tile"]
+include-package-data=true
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"]}
+
+[tool.setuptools.package-data]
+"*" = ["README.md", "LICENSE", "CHANGELOG.md"]
+
+# Black
+[tool.black]
+line-length = 120
+fast = true
+extend-exclude = '''
+(
+  /(
+    mapbox_vector_tile\/Mapbox
+  )/
+)
+'''
+target-version = ["py36", "py37", "py38", "py39", "py310"]
+
+# Isort
+[tool.isort]
+profile = "black"
+line_length = 120
+force_alphabetical_sort_within_sections = true
+case_sensitive = true
