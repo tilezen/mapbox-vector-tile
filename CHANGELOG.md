@@ -1,3 +1,12 @@
+Version 1.3.0
+-------------
+
+*In development*
+
+* Usage of `tox` for tests
+* Add GitHub Actions
+
+
 Version 1.2.1
 -------------
 
