@@ -136,7 +136,7 @@ def _decode_lines(geom):
             i = next_i
 
         else:
-            raise ValueError("Unhandled command: %d" % cmd)
+            raise ValueError(f"Unhandled command: {cmd}")
 
     if current_line:
         assert current_moveto

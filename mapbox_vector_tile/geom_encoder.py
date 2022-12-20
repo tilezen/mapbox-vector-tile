@@ -131,5 +131,5 @@ class GeometryEncoder:
         elif shape.type == "MultiPolygon":
             self.encode_multipolygon(shape)
         else:
-            raise NotImplementedError("Can't do %s geometries" % shape.type)
+            raise NotImplementedError(f"Can't do {shape.type} geometries")
         return self._geometry

@@ -19,7 +19,7 @@ def apply_map(fn, x):
 
 
 def on_invalid_geometry_raise(shape):
-    raise ValueError("Invalid geometry: %s" % shape.wkt)
+    raise ValueError(f"Invalid geometry: {shape.wkt}")
 
 
 def on_invalid_geometry_ignore(shape):
@@ -235,7 +235,7 @@ class VectorTile:
         elif shape.type == "GeometryCollection":
             raise ValueError("Encoding geometry collections not supported")
         else:
-            raise ValueError("Cannot encode unknown geometry type: %s" % shape.type)
+            raise ValueError(f"Cannot encode unknown geometry type: {shape.type}")
 
     def _chunker(self, seq, size):
 

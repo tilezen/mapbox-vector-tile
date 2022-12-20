@@ -61,7 +61,7 @@ class TileData:
         ):
             if val.HasField(candidate):
                 return getattr(val, candidate)
-        raise ValueError("%s is an unknown value")
+        raise ValueError(f"{val} is an unknown value")
 
     def zig_zag_decode(self, n):
         return (n >> 1) ^ (-(n & 1))
@@ -181,4 +181,4 @@ class TileData:
                 return {"type": "MultiPolygon", "coordinates": polygons}
 
         else:
-            raise ValueError("Unknown geometry type: %s" % ftype)
+            raise ValueError(f"Unknown geometry type: {ftype}")
