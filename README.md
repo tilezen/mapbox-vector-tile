@@ -314,7 +314,7 @@ The c++ implementation of the underlying protobuf library is more performant tha
 The version of protobuf (libprotobuf9) available on debian Jessie is [2.6.1](https://github.com/google/protobuf/tree/v2.6.1/python). You can install it with the proper python bindings from your package manager :
 
     $  sudo apt-get install libprotoc9 libprotobuf9 protobuf-compiler python-protobuf
-    
+
 Then, you'll have to enable two environnement variable BEFORE runing your python program :
 
     $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp

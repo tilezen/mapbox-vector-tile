@@ -1,0 +1,22 @@
+[tool.distutils.bdist_wheel]
+universal = true
+
+# Black
+[tool.black]
+line-length = 120
+fast = true
+extend-exclude = '''
+(
+  /(
+    mapbox_vector_tile\/Mapbox\/vector_tile_pb2.py
+  )/
+)
+'''
+target-version = ["py36", "py37", "py38", "py39", "py310", "py311"]
+
+# Isort
+[tool.isort]
+profile = "black"
+line_length = 120
+force_alphabetical_sort_within_sections = true
+case_sensitive = true

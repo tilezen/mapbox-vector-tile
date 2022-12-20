@@ -6,6 +6,7 @@ Version 1.3.0
 * Drop Python 2 support
 * Usage of `tox` for tests
 * Add GitHub Actions
+* Add pre-commit tool
 
 Version 1.2.1
 -------------

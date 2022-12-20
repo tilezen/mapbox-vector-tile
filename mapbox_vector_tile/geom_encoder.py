@@ -1,4 +1,3 @@
-
 cmd_bits = 3
 
 CMD_MOVE_TO = 1
@@ -27,8 +26,6 @@ def zigzag(delta):
 
 
 class GeometryEncoder:
-    """
-    """
     def __init__(self, y_coord_down, extents, round_fn):
         self._geometry = []
         self._y_coord_down = y_coord_down
@@ -37,7 +34,7 @@ class GeometryEncoder:
         self._last_x, self._last_y = 0, 0
 
     def coords_on_grid(self, x, y):
-        """ Snap coordinates on the grid with integer coordinates """
+        """Snap coordinates on the grid with integer coordinates"""
 
         if isinstance(x, float):
             x = int(self._round(x))
@@ -61,21 +58,17 @@ class GeometryEncoder:
             last_y = y
 
     def encode_arc(self, coords):
-        """ Appends commands to _geometry to create an arc.
-            - Returns False if nothing was added
-            - Returns True and moves _last_x, _last_y if
-                some points where added
+        """Appends commands to _geometry to create an arc.
+        - Returns False if nothing was added
+        - Returns True and moves _last_x, _last_y if
+            some points where added
         """
         last_x, last_y = self._last_x, self._last_y
         float_x, float_y = next(coords)
         x, y = self.coords_on_grid(float_x, float_y)
         dx, dy = x - last_x, y - last_y
         cmd_encoded = encode_cmd_length(CMD_MOVE_TO, 1)
-        commands = [cmd_encoded,
-                    zigzag(dx),
-                    zigzag(dy),
-                    CMD_FAKE
-                    ]
+        commands = [cmd_encoded, zigzag(dx), zigzag(dy), CMD_FAKE]
         pairs_added = 0
         last_x, last_y = x, y
         for float_x, float_y in coords:
@@ -119,25 +112,23 @@ class GeometryEncoder:
             self.encode_polygon(polygon)
 
     def encode(self, shape):
-        if shape.type == 'GeometryCollection':
+        if shape.type == "GeometryCollection":
             # do nothing
             pass
-        elif shape.type == 'Point':
+        elif shape.type == "Point":
             x, y = self.coords_on_grid(shape.x, shape.y)
             cmd_encoded = encode_cmd_length(CMD_MOVE_TO, 1)
-            self._geometry = [cmd_encoded,
-                              zigzag(x),
-                              zigzag(y)]
-        elif shape.type == 'MultiPoint':
+            self._geometry = [cmd_encoded, zigzag(x), zigzag(y)]
+        elif shape.type == "MultiPoint":
             self.encode_multipoint(shape.geoms)
-        elif shape.type == 'LineString':
+        elif shape.type == "LineString":
             coords = iter(shape.coords)
             self.encode_arc(coords)
-        elif shape.type == 'MultiLineString':
+        elif shape.type == "MultiLineString":
             self.encode_multilinestring(shape)
-        elif shape.type == 'Polygon':
+        elif shape.type == "Polygon":
             self.encode_polygon(shape)
-        elif shape.type == 'MultiPolygon':
+        elif shape.type == "MultiPolygon":
             self.encode_multipolygon(shape)
         else:
             raise NotImplementedError("Can't do %s geometries" % shape.type)

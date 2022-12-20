@@ -1,8 +1,9 @@
-from mapbox_vector_tile.Mapbox.vector_tile_pb2 import tile
 from collections import namedtuple
 
+from mapbox_vector_tile.Mapbox.vector_tile_pb2 import tile
 
-class StringTableOptimiser(object):
+
+class StringTableOptimiser:
     """
     Optimises the order of keys and values in the MVT layer string table.
 
@@ -27,9 +28,7 @@ class StringTableOptimiser(object):
         # sort string table by usage, so most commonly-used values are
         # assigned the smallest indices. since indices are encoded as
         # varints, this should make best use of the space.
-        sort = list(sorted(
-            ((c, k) for k, c in counts.iteritems()),
-            reverse=True))
+        sort = list(sorted(((c, k) for k, c in counts.iteritems()), reverse=True))
 
         # construct the re-ordered string table
         new_table = []
@@ -53,9 +52,9 @@ class StringTableOptimiser(object):
         new_val = self._update_table(self.val_counts, layer.values)
 
         for feature in layer.features:
-            for i in xrange(0, len(feature.tags), 2):
+            for i in range(0, len(feature.tags), 2):
                 feature.tags[i] = new_key[feature.tags[i]]
-                feature.tags[i+1] = new_val[feature.tags[i+1]]
+                feature.tags[i + 1] = new_val[feature.tags[i + 1]]
 
 
 # return the signed integer corresponding to the "zig-zag" encoded unsigned
@@ -77,9 +76,9 @@ def zigzag(n):
 # (if any) in the geometry. however that's awkward for reodering, so we
 # construct an absolute MoveTo for each Line. we also derive a corresponding
 # EndsAt location, which isn't used in the encoding, but simplifies analysis.
-MoveTo = namedtuple('MoveTo', 'x y')
-EndsAt = namedtuple('EndsAt', 'x y')
-Line = namedtuple('Line', 'moveto endsat cmds')
+MoveTo = namedtuple("MoveTo", "x y")
+EndsAt = namedtuple("EndsAt", "x y")
+Line = namedtuple("Line", "moveto endsat cmds")
 
 
 def _decode_lines(geom):
@@ -113,8 +112,8 @@ def _decode_lines(geom):
                 current_line = []
 
             assert run_length == 1
-            x += unzigzag(geom[i+1])
-            y += unzigzag(geom[i+2])
+            x += unzigzag(geom[i + 1])
+            y += unzigzag(geom[i + 2])
             i += 3
 
             current_moveto = MoveTo(x, y)
@@ -128,7 +127,7 @@ def _decode_lines(geom):
 
             # but we still need to decode it to figure out where each move-to
             # command is in absolute space.
-            for j in xrange(0, run_length):
+            for j in range(0, run_length):
                 dx = unzigzag(geom[i + 1 + 2 * j])
                 dy = unzigzag(geom[i + 2 + 2 * j])
                 x += dx
@@ -137,7 +136,7 @@ def _decode_lines(geom):
             i = next_i
 
         else:
-            raise ValueError('Unhandled command: %d' % cmd)
+            raise ValueError("Unhandled command: %d" % cmd)
 
     if current_line:
         assert current_moveto
@@ -247,15 +246,15 @@ def optimise_tile(tile_bytes):
     return t.SerializeToString()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
     import sys
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_file', help='Input MVT file',
-                        type=argparse.FileType('r'))
-    parser.add_argument('--output-file', help='Output file, default is stdout',
-                        type=argparse.FileType('w'), default=sys.stdout)
+    parser.add_argument("input_file", help="Input MVT file", type=argparse.FileType("r"))
+    parser.add_argument(
+        "--output-file", help="Output file, default is stdout", type=argparse.FileType("w"), default=sys.stdout
+    )
     args = parser.parse_args()
 
     output_bytes = optimise_tile(args.input_file.read())

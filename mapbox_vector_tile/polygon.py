@@ -1,8 +1,8 @@
+import pyclipper
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
 from shapely.ops import cascaded_union, unary_union
 from shapely.validation import explain_validity
-import pyclipper
 
 
 def _coords(shape):
@@ -12,7 +12,7 @@ def _coords(shape):
     of any interior coordinates.
     """
 
-    assert shape.geom_type == 'Polygon'
+    assert shape.geom_type == "Polygon"
     coords = [list(shape.exterior.coords)]
     for interior in shape.interiors:
         coords.append(list(interior.coords))
@@ -28,7 +28,7 @@ def _drop_degenerate_inners(shape):
     triangle with height and width 1.
     """
 
-    assert shape.geom_type == 'Polygon'
+    assert shape.geom_type == "Polygon"
 
     new_inners = []
     for inner in shape.interiors:
@@ -44,9 +44,11 @@ def _contour_to_poly(contour):
     poly = Polygon(contour)
     if not poly.is_valid:
         poly = poly.buffer(0)
-    assert poly.is_valid, \
-        "Contour %r did not make valid polygon %s because %s" \
-        % (contour, poly.wkt, explain_validity(poly))
+    assert poly.is_valid, "Contour {!r} did not make valid polygon {} because {}".format(
+        contour,
+        poly.wkt,
+        explain_validity(poly),
+    )
     return poly
 
 
@@ -64,9 +66,9 @@ def _union_in_blocks(contours, block_size):
         inners = []
         for c in contours[i:j]:
             p = _contour_to_poly(c)
-            if p.type == 'Polygon':
+            if p.type == "Polygon":
                 inners.append(p)
-            elif p.type == 'MultiPolygon':
+            elif p.type == "MultiPolygon":
                 inners.extend(p.geoms)
         holes = unary_union(inners)
         assert holes.is_valid
@@ -132,7 +134,7 @@ def _polytree_node_to_shapely(node):
             # see test_polygon_inners_crossing_outer for a test case.
             try:
                 diff = poly.difference(inner)
-            except:
+            except Exception:
                 continue
 
             if not diff.is_valid:
@@ -153,7 +155,7 @@ def _polytree_node_to_shapely(node):
                 poly = diff
 
         assert poly.is_valid
-        if poly.type == 'MultiPolygon':
+        if poly.type == "MultiPolygon":
             polygons.extend(poly.geoms)
         else:
             polygons.append(poly)
@@ -227,7 +229,7 @@ def make_valid_polygon(shape):
     to remove any remaining degeneracies.
     """
 
-    assert shape.geom_type == 'Polygon'
+    assert shape.geom_type == "Polygon"
 
     shape = make_valid_pyclipper(shape)
     assert shape.is_valid
@@ -243,7 +245,7 @@ def make_valid_multipolygon(shape):
 
         valid_g = make_valid_polygon(g)
 
-        if valid_g.type == 'MultiPolygon':
+        if valid_g.type == "MultiPolygon":
             new_g.extend(valid_g.geoms)
         else:
             new_g.append(valid_g)
@@ -259,10 +261,10 @@ def make_it_valid(shape):
     if shape.is_empty:
         return shape
 
-    elif shape.type == 'MultiPolygon':
+    elif shape.type == "MultiPolygon":
         shape = make_valid_multipolygon(shape)
 
-    elif shape.type == 'Polygon':
+    elif shape.type == "Polygon":
         shape = make_valid_polygon(shape)
 
     return shape

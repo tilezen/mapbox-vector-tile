@@ -1,4 +1,4 @@
-from .Mapbox import vector_tile_pb2 as vector_tile
+from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
 
 cmd_bits = 3
 
@@ -13,9 +13,6 @@ POLYGON = 3
 
 
 class TileData:
-    """
-    """
-
     def __init__(self):
         self.tile = vector_tile.tile()
 
@@ -31,21 +28,15 @@ class TileData:
             for feature in layer.features:
                 tags = feature.tags
                 props = {}
-                assert len(tags) % 2 == 0, 'Unexpected number of tags'
+                assert len(tags) % 2 == 0, "Unexpected number of tags"
                 for key_idx, val_idx in zip(tags[::2], tags[1::2]):
                     key = keys[key_idx]
                     val = vals[val_idx]
                     value = self.parse_value(val)
                     props[key] = value
 
-                geometry = self.parse_geometry(feature.geometry, feature.type,
-                                               layer.extent, y_coord_down)
-                new_feature = {
-                    "geometry": geometry,
-                    "properties": props,
-                    "id": feature.id,
-                    "type": feature.type
-                }
+                geometry = self.parse_geometry(feature.geometry, feature.type, layer.extent, y_coord_down)
+                new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": feature.type}
                 features.append(new_feature)
 
             tile[layer.name] = {
@@ -56,24 +47,26 @@ class TileData:
         return tile
 
     def zero_pad(self, val):
-        return '0' + val if val[0] == 'b' else val
+        return "0" + val if val[0] == "b" else val
 
     def parse_value(self, val):
-        for candidate in ('bool_value',
-                          'double_value',
-                          'float_value',
-                          'int_value',
-                          'sint_value',
-                          'string_value',
-                          'uint_value'):
+        for candidate in (
+            "bool_value",
+            "double_value",
+            "float_value",
+            "int_value",
+            "sint_value",
+            "string_value",
+            "uint_value",
+        ):
             if val.HasField(candidate):
                 return getattr(val, candidate)
-        raise ValueError('%s is an unknown value')
+        raise ValueError("%s is an unknown value")
 
     def zig_zag_decode(self, n):
         return (n >> 1) ^ (-(n & 1))
 
-    def parse_geometry(self, geom, ftype, extent, y_coord_down):
+    def parse_geometry(self, geom, ftype, extent, y_coord_down):  # noqa:C901
         # [9 0 8192 26 0 10 2 0 0 2 15]
         i = 0
         coords = []
@@ -84,8 +77,8 @@ class TileData:
         while i != len(geom):
             item = bin(geom[i])
             ilen = len(item)
-            cmd = int(self.zero_pad(item[(ilen - cmd_bits):ilen]), 2)
-            cmd_len = int(self.zero_pad(item[:ilen - cmd_bits]), 2)
+            cmd = int(self.zero_pad(item[(ilen - cmd_bits) : ilen]), 2)
+            cmd_len = int(self.zero_pad(item[: ilen - cmd_bits]), 2)
 
             i = i + 1
 
@@ -140,25 +133,25 @@ class TileData:
 
         if ftype == POINT:
             if len(coords) == 1:
-                return {'type': 'Point', 'coordinates': coords[0]}
+                return {"type": "Point", "coordinates": coords[0]}
             else:
-                return {'type': 'MultiPoint', 'coordinates': coords}
+                return {"type": "MultiPoint", "coordinates": coords}
         elif ftype == LINESTRING:
             if parts:
                 if coords:
                     parts.append(coords)
                 if len(parts) == 1:
-                    return {'type': 'LineString', 'coordinates': parts[0]}
+                    return {"type": "LineString", "coordinates": parts[0]}
                 else:
-                    return {'type': 'MultiLineString', 'coordinates': parts}
+                    return {"type": "MultiLineString", "coordinates": parts}
             else:
-                return {'type': 'LineString', 'coordinates': coords}
+                return {"type": "LineString", "coordinates": coords}
         elif ftype == POLYGON:
             if coords:
                 parts.append(coords)
 
             def _area_sign(ring):
-                a = sum(ring[i][0]*ring[i+1][1] - ring[i+1][0]*ring[i][1] for i in range(0, len(ring)-1))  # noqa
+                a = sum(ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1] for i in range(0, len(ring) - 1))
                 return -1 if a < 0 else 1 if a > 0 else 0
 
             polygon = []
@@ -183,9 +176,9 @@ class TileData:
                 polygons.append(polygon)
 
             if len(polygons) == 1:
-                return {'type': 'Polygon', 'coordinates': polygons[0]}
+                return {"type": "Polygon", "coordinates": polygons[0]}
             else:
-                return {'type': 'MultiPolygon', 'coordinates': polygons}
+                return {"type": "MultiPolygon", "coordinates": polygons}
 
         else:
-            raise ValueError('Unknown geometry type: %s' % ftype)
+            raise ValueError("Unknown geometry type: %s" % ftype)
