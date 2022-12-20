@@ -1,11 +1,4 @@
-# Enable Shapely "speedups" if available
-# http://toblerity.org/shapely/manual.html#performance
-from shapely import speedups
-
 from mapbox_vector_tile import decoder, encoder
-
-if speedups.available:
-    speedups.enable()
 
 
 def decode(tile, y_coord_down=False):

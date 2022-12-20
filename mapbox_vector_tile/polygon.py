@@ -66,9 +66,9 @@ def _union_in_blocks(contours, block_size):
         inners = []
         for c in contours[i:j]:
             p = _contour_to_poly(c)
-            if p.type == "Polygon":
+            if p.geom_type == "Polygon":
                 inners.append(p)
-            elif p.type == "MultiPolygon":
+            elif p.geom_type == "MultiPolygon":
                 inners.extend(p.geoms)
         holes = unary_union(inners)
         assert holes.is_valid
@@ -155,7 +155,7 @@ def _polytree_node_to_shapely(node):
                 poly = diff
 
         assert poly.is_valid
-        if poly.type == "MultiPolygon":
+        if poly.geom_type == "MultiPolygon":
             polygons.extend(poly.geoms)
         else:
             polygons.append(poly)
@@ -245,7 +245,7 @@ def make_valid_multipolygon(shape):
 
         valid_g = make_valid_polygon(g)
 
-        if valid_g.type == "MultiPolygon":
+        if valid_g.geom_type == "MultiPolygon":
             new_g.extend(valid_g.geoms)
         else:
             new_g.append(valid_g)
@@ -261,10 +261,10 @@ def make_it_valid(shape):
     if shape.is_empty:
         return shape
 
-    elif shape.type == "MultiPolygon":
+    elif shape.geom_type == "MultiPolygon":
         shape = make_valid_multipolygon(shape)
 
-    elif shape.type == "Polygon":
+    elif shape.geom_type == "Polygon":
         shape = make_valid_polygon(shape)
 
     return shape
