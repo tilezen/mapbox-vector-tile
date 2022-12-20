@@ -34,7 +34,7 @@ setup(name='mapbox-vector-tile',
       test_suite="setup.test_suite",
       install_requires=[
           "setuptools",
-          "protobuf<4.20",
+          "protobuf>=4.21",
           "shapely<2; python_version<'3.8'",
           "shapely; python_version>='3.8'",
           "future",

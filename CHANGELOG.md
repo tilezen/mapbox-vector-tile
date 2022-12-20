@@ -6,6 +6,8 @@ Version 1.3.0
 * Drop Python 2 support
 * Usage of `tox` for tests
 * Add GitHub Actions
+* Regenerate the vector tile protobuf Python code to solve
+  [#113](https://github.com/tilezen/mapbox-vector-tile/issues/113)
 
 Version 1.2.1
 -------------
