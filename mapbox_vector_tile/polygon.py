@@ -40,13 +40,14 @@ def _drop_degenerate_inners(shape):
     return Polygon(shape.exterior, new_inners)
 
 
-def _contour_to_poly(contour):
+def _contour_to_poly(contour, asserted=True):
     poly = Polygon(contour)
     if not poly.is_valid:
         poly = poly.buffer(0)
-    assert poly.is_valid, \
-        "Contour %r did not make valid polygon %s because %s" \
-        % (contour, poly.wkt, explain_validity(poly))
+    if asserted:
+        assert poly.is_valid, \
+            "Contour %r did not make valid polygon %s because %s" \
+            % (contour, poly.wkt, explain_validity(poly))
     return poly
 
 
@@ -84,7 +85,7 @@ def _generate_polys(contours):
         yield p
 
 
-def _polytree_node_to_shapely(node):
+def _polytree_node_to_shapely(node, asserted):
     """
     Recurses down a Clipper PolyTree, extracting the results as Shapely
     objects.
@@ -95,7 +96,7 @@ def _polytree_node_to_shapely(node):
     polygons = []
     children = []
     for ch in node.Childs:
-        p, c = _polytree_node_to_shapely(ch)
+        p, c = _polytree_node_to_shapely(ch, asserted)
         polygons.extend(p)
         children.extend(c)
 
@@ -110,7 +111,10 @@ def _polytree_node_to_shapely(node):
             children = []
 
     elif node.Contour:
-        poly = _contour_to_poly(node.Contour)
+        poly = _contour_to_poly(node.Contour, asserted)
+        for ch in children:
+            inner = _contour_to_poly(ch, asserted)
+            diff = poly.difference(inner)
 
         # we add each inner one-by-one so that we can reject them individually
         # if they cause the polygon to become invalid. if the shape has lots
@@ -152,7 +156,8 @@ def _polytree_node_to_shapely(node):
             if diff.is_valid:
                 poly = diff
 
-        assert poly.is_valid
+        if asserted:
+            assert poly.is_valid
         if poly.type == 'MultiPolygon':
             polygons.extend(poly.geoms)
         else:
@@ -169,19 +174,20 @@ def _polytree_node_to_shapely(node):
     return (polygons, children)
 
 
-def _polytree_to_shapely(tree):
-    polygons, children = _polytree_node_to_shapely(tree)
+def _polytree_to_shapely(tree, asserted):
+    polygons, children = _polytree_node_to_shapely(tree, asserted)
 
     # expect no left over children - should all be incorporated into polygons
     # by the time recursion returns to the root.
     assert len(children) == 0
 
     union = cascaded_union(polygons)
-    assert union.is_valid
+    if asserted:
+        assert union.is_valid
     return union
 
 
-def make_valid_pyclipper(shape):
+def make_valid_pyclipper(shape, asserted):
     """
     Use the pyclipper library to "union" a polygon on its own. This operation
     uses the even-odd rule to determine which points are in the interior of
@@ -208,10 +214,10 @@ def make_valid_pyclipper(shape):
     except pyclipper.ClipperException:
         return MultiPolygon([])
 
-    return _polytree_to_shapely(result)
+    return _polytree_to_shapely(result, asserted)
 
 
-def make_valid_polygon(shape):
+def make_valid_polygon(shape, asserted):
     """
     Make a polygon valid. Polygons can be invalid in many ways, such as
     self-intersection, self-touching and degeneracy. This process attempts to
@@ -229,19 +235,21 @@ def make_valid_polygon(shape):
 
     assert shape.geom_type == 'Polygon'
 
-    shape = make_valid_pyclipper(shape)
-    assert shape.is_valid
+    shape = make_valid_pyclipper(shape, asserted)
+
+    if asserted:
+        assert shape.is_valid
     return shape
 
 
-def make_valid_multipolygon(shape):
+def make_valid_multipolygon(shape, asserted):
     new_g = []
 
     for g in shape.geoms:
         if g.is_empty:
             continue
 
-        valid_g = make_valid_polygon(g)
+        valid_g = make_valid_polygon(g, asserted)
 
         if valid_g.type == 'MultiPolygon':
             new_g.extend(valid_g.geoms)
@@ -251,7 +259,7 @@ def make_valid_multipolygon(shape):
     return MultiPolygon(new_g)
 
 
-def make_it_valid(shape):
+def make_it_valid(shape, asserted=True):
     """
     Attempt to make any polygon or multipolygon valid.
     """
@@ -260,9 +268,44 @@ def make_it_valid(shape):
         return shape
 
     elif shape.type == 'MultiPolygon':
-        shape = make_valid_multipolygon(shape)
+        shape = make_valid_multipolygon(shape, asserted)
 
     elif shape.type == 'Polygon':
-        shape = make_valid_polygon(shape)
+        shape = make_valid_polygon(shape, asserted)
 
     return shape
+
+
+def clean_multi(shape):
+    """
+    Remove self- and ring-selfintersections from input Polygon geometries
+    """
+    polygons = []
+    exterior_lines = []
+    interior_lines = []
+    for p in shape:
+        exterior_lines = []
+        interior_lines = []
+        lnum = 0
+        boundary = p.boundary
+        if boundary.type == 'LineString':
+            if lnum == 0:
+                exterior_lines.append(boundary)
+        else:
+            for ls in boundary:
+                if lnum == 0:
+                    exterior_lines.append(ls)
+                else:
+                    interior_lines.append(ls)
+                lnum += 1
+    for el in exterior_lines:
+        if len(interior_lines) == 0:
+            polygons.append(Polygon(el).buffer(0))
+        else:
+            for il in interior_lines:
+                polygons.append(Polygon(el, Polygon(il).interiors).buffer(0))
+    poly = MultiPolygon(polygons)
+    assert poly.is_valid, \
+        "Not valid multipolygon %s because %s" \
+        % (poly.wkt, explain_validity(poly))
+    return poly

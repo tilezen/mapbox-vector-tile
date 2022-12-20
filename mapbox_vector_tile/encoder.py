@@ -1,4 +1,4 @@
-from mapbox_vector_tile.polygon import make_it_valid
+from mapbox_vector_tile.polygon import make_it_valid, clean_multi
 from numbers import Number
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
@@ -7,6 +7,7 @@ from shapely.geometry.polygon import Polygon
 from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
+from shapely.validation import explain_validity
 import decimal
 from .geom_encoder import GeometryEncoder
 from .simple_shape import SimpleShape
@@ -27,6 +28,16 @@ def on_invalid_geometry_ignore(shape):
 
 def on_invalid_geometry_make_valid(shape):
     return make_it_valid(shape)
+
+
+def on_invalid_geometry_make_valid_and_clean(shape):
+    shape = make_it_valid(shape, asserted=False)
+    if not shape.is_valid and shape.type == 'MultiPolygon':
+        shape = clean_multi(shape)
+    assert shape.is_valid, \
+        "Not valid %s %s because %s" \
+        % (shape.type, shape.wkt, explain_validity(shape))
+    return shape
 
 
 class VectorTile:
