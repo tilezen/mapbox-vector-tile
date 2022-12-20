@@ -1,5 +1,4 @@
-from past.builtins import xrange
-from .compat import vector_tile
+from .Mapbox import vector_tile_pb2 as vector_tile
 
 cmd_bits = 3
 
@@ -117,7 +116,7 @@ class TileData:
                         parts.append(coords)
                         coords = []
 
-                for point in xrange(0, cmd_len):
+                for point in range(0, cmd_len):
                     x = geom[i]
                     i = i + 1
 

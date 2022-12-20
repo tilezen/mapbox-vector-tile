@@ -1,8 +1,5 @@
 from mapbox_vector_tile.polygon import make_it_valid
 from numbers import Number
-from past.builtins import long
-from past.builtins import unicode
-from past.builtins import xrange
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import orient
@@ -11,9 +8,13 @@ from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 import decimal
-from .compat import PY3, vector_tile, apply_map
 from .geom_encoder import GeometryEncoder
 from .simple_shape import SimpleShape
+from .Mapbox import vector_tile_pb2 as vector_tile
+
+
+def apply_map(fn, x):
+    return list(map(fn, x))
 
 
 def on_invalid_geometry_raise(shape):
@@ -251,17 +252,17 @@ class VectorTile:
                              shape.type)
 
     def _chunker(self, seq, size):
-        return [seq[pos:pos + size] for pos in xrange(0, len(seq), size)]
+        return [seq[pos:pos + size] for pos in range(0, len(seq), size)]
 
     def _can_handle_key(self, k):
-        return isinstance(k, (str, unicode))
+        return isinstance(k, str)
 
     def _can_handle_val(self, v):
-        if isinstance(v, (str, unicode)):
+        if isinstance(v, str):
             return True
         elif isinstance(v, bool):
             return True
-        elif isinstance(v, (int, long)):
+        elif isinstance(v, int):
             return True
         elif isinstance(v, float):
             return True
@@ -275,9 +276,6 @@ class VectorTile:
     def _handle_attr(self, layer, feature, props):
         for k, v in props.items():
             if self._can_handle_attr(k, v):
-                if not PY3 and isinstance(k, str):
-                    k = k.decode('utf-8')
-
                 if k not in self.seen_keys_idx:
                     layer.keys.append(k)
                     self.seen_keys_idx[k] = self.key_idx
@@ -298,13 +296,8 @@ class VectorTile:
                     if isinstance(v, bool):
                         val.bool_value = v
                     elif isinstance(v, str):
-                        if PY3:
-                            val.string_value = v
-                        else:
-                            val.string_value = unicode(v, 'utf-8')
-                    elif isinstance(v, unicode):
                         val.string_value = v
-                    elif isinstance(v, (int, long)):
+                    elif isinstance(v, int):
                         val.int_value = v
                     elif isinstance(v, float):
                         val.double_value = v

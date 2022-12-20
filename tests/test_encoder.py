@@ -6,8 +6,6 @@ import unittest
 
 import mapbox_vector_tile
 from mapbox_vector_tile import encode, decode
-from mapbox_vector_tile.compat import PY3
-from past.builtins import long, unicode
 
 from shapely import wkt
 
@@ -267,14 +265,10 @@ class TestDifferentGeomFormats(BaseTestCase):
         self.assertEqual(str(ex.exception), expected_result)
 
     def test_encode_unicode_property(self):
-        if PY3:
-            func = str
-        else:
-            func = unicode
         geometry = "LINESTRING(-71.160281 42.258729,-71.160837 43.259113,-71.161144 42.25932)"  # noqa
         properties = {
-            "foo": func(self.feature_properties["foo"]),
-            "baz": func(self.feature_properties["baz"]),
+            "foo": str(self.feature_properties["foo"]),
+            "baz": str(self.feature_properties["baz"]),
         }
         self.assertRoundTrip(
             input_geometry=geometry,
@@ -411,11 +405,10 @@ class TestDifferentGeomFormats(BaseTestCase):
             expected_geometry={'type': 'Point', 'coordinates': [0, 0]},
             properties=properties)
 
-    def test_encode_property_long(self):
+    def test_encode_property_int(self):
         geometry = 'POINT(0 0)'
         properties = {
             'test_int': int(1),
-            'test_long': long(1)
         }
         self.assertRoundTrip(
             input_geometry=geometry,

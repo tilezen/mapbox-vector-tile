@@ -20,7 +20,6 @@ setup(name='mapbox-vector-tile',
       description=u"Mapbox Vector Tile",
       long_description=long_description,
       classifiers=[
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
       ],
       keywords='',
