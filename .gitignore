@@ -2,3 +2,6 @@ dist/
 build/
 *.pyc
 mapbox_vector_tile.egg-info/
+.tox/
+.coverage
+bench/fgeoms.wkt.zip
