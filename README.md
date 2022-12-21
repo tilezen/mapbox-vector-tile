@@ -1,7 +1,8 @@
 Mapbox Vector Tile
 ==================
 
-[![Build Status](https://travis-ci.org/tilezen/mapbox-vector-tile.svg?branch=master)](https://travis-ci.org/tilezen/mapbox-vector-tile)
+[![CI](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/ci.yml/badge.svg)](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/ci.yml)
+[![pre-commit](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/pre-commit.yml)
 [![Coverage Status](https://coveralls.io/repos/github/tilezen/mapbox-vector-tile/badge.svg?branch=master)](https://coveralls.io/github/tilezen/mapbox-vector-tile?branch=master)
 
 Installation
