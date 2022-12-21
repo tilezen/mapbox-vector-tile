@@ -13,10 +13,6 @@ from mapbox_vector_tile.polygon import make_it_valid
 from mapbox_vector_tile.simple_shape import SimpleShape
 
 
-def apply_map(fn, x):
-    return list(map(fn, x))
-
-
 def on_invalid_geometry_raise(shape):
     raise ValueError(f"Invalid geometry: {shape.wkt}")
 
@@ -165,18 +161,23 @@ class VectorTile:
             x, y = point
             return round(x), round(y)
 
-        exterior = apply_map(fn, shape.exterior.coords)
+        exterior = self.apply_map(fn, shape.exterior.coords)
         rings = None
 
         if len(shape.interiors) > 0:
-            rings = [apply_map(fn, ring.coords) for ring in shape.interiors]
+            rings = [self.apply_map(fn, ring.coords) for ring in shape.interiors]
 
         sign = 1.0 if y_coord_down else -1.0
         oriented_shape = orient(Polygon(exterior, rings), sign=sign)
         oriented_shape = self.handle_shape_validity(oriented_shape, y_coord_down, n_try)
         return oriented_shape
 
-    def _load_geometry(self, geometry_spec):
+    @staticmethod
+    def apply_map(fn, x):
+        return list(map(fn, x))
+
+    @staticmethod
+    def _load_geometry(geometry_spec):
         if isinstance(geometry_spec, BaseGeometry):
             return geometry_spec
 
@@ -226,27 +227,21 @@ class VectorTile:
         else:
             raise ValueError(f"Cannot encode unknown geometry type: {shape.type}")
 
-    def _chunker(self, seq, size):
-
+    @staticmethod
+    def _chunker(seq, size):
         return [seq[pos : pos + size] for pos in range(0, len(seq), size)]
 
-    def _can_handle_key(self, k):
+    @staticmethod
+    def _can_handle_key(k):
         return isinstance(k, str)
 
-    def _can_handle_val(self, v):
-        if isinstance(v, str):
-            return True
-        elif isinstance(v, bool):
-            return True
-        elif isinstance(v, int):
-            return True
-        elif isinstance(v, float):
-            return True
+    @staticmethod
+    def _can_handle_val(v):
+        return isinstance(v, (str, bool, int, float))
 
-        return False
-
-    def _can_handle_attr(self, k, v):
-        return self._can_handle_key(k) and self._can_handle_val(v)
+    @classmethod
+    def _can_handle_attr(cls, k, v):
+        return cls._can_handle_key(k) and cls._can_handle_val(v)
 
     def _handle_attr(self, layer, feature, props):
         for k, v in props.items():

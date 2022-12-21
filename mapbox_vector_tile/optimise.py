@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from mapbox_vector_tile.Mapbox.vector_tile_pb2 import tile
+from mapbox_vector_tile.utils import CMD_LINE_TO, CMD_MOVE_TO, zig_zag_decode, zig_zag_encode
 
 
 class StringTableOptimiser:
@@ -24,11 +25,12 @@ class StringTableOptimiser:
             self.key_counts[k] = self.key_counts.get(k, 0) + 1
             self.val_counts[v] = self.val_counts.get(v, 0) + 1
 
-    def _update_table(self, counts, table):
-        # sort string table by usage, so most commonly-used values are
-        # assigned the smallest indices. since indices are encoded as
+    @staticmethod
+    def _update_table(counts, table):
+        # Sort string table by usage, so most commonly-used values are
+        # assigned the smallest indices. Since indices are encoded as
         # varints, this should make best use of the space.
-        sort = list(sorted(((c, k) for k, c in counts.iteritems()), reverse=True))
+        sort = list(sorted(((c, k) for k, c in counts.items()), reverse=True))
 
         # construct the re-ordered string table
         new_table = []
@@ -57,24 +59,11 @@ class StringTableOptimiser:
                 feature.tags[i + 1] = new_val[feature.tags[i + 1]]
 
 
-# return the signed integer corresponding to the "zig-zag" encoded unsigned
-# input integer. this encoding is used for MVT geometry deltas.
-def unzigzag(n):
-    return (n >> 1) ^ (-(n & 1))
-
-
-# return the "zig-zag" encoded unsigned integer corresponding to the signed
-# input integer. this encoding is used for MVT geometry deltas.
-def zigzag(n):
-    return (n << 1) ^ (n >> 31)
-
-
-# we assume that every linestring consists of a single MoveTo command followed
-# by some number of LineTo commands, and we encode this as a Line object.
+# We assume that every linestring consists of a single MoveTo command followed by some number of LineTo commands,
+# and we encode this as a Line object.
 #
-# normally, MVT linestrings are encoded relative to the preceding linestring
-# (if any) in the geometry. however that's awkward for reodering, so we
-# construct an absolute MoveTo for each Line. we also derive a corresponding
+# Normally, MVT linestrings are encoded relative to the preceding linestring (if any) in the geometry. However,
+# that's awkward for reordering, so we construct an absolute MoveTo for each Line. We also derive a corresponding
 # EndsAt location, which isn't used in the encoding, but simplifies analysis.
 MoveTo = namedtuple("MoveTo", "x y")
 EndsAt = namedtuple("EndsAt", "x y")
@@ -105,31 +94,30 @@ def _decode_lines(geom):
         cmd = header & 7
         run_length = header // 8
 
-        if cmd == 1:  # move to
+        if cmd == CMD_MOVE_TO:
             # flush previous line.
             if current_moveto:
                 lines.append(Line(current_moveto, EndsAt(x, y), current_line))
                 current_line = []
 
             assert run_length == 1
-            x += unzigzag(geom[i + 1])
-            y += unzigzag(geom[i + 2])
+            x += zig_zag_decode(geom[i + 1])
+            y += zig_zag_decode(geom[i + 2])
             i += 3
 
             current_moveto = MoveTo(x, y)
 
-        elif cmd == 2:  # line to
+        elif cmd == CMD_LINE_TO:
             assert current_moveto
 
             # we just copy this run, since it's encoding isn't going to change
             next_i = i + 1 + run_length * 2
             current_line.extend(geom[i:next_i])
 
-            # but we still need to decode it to figure out where each move-to
-            # command is in absolute space.
+            # but we still need to decode it to figure out where each move-to command is in absolute space.
             for j in range(0, run_length):
-                dx = unzigzag(geom[i + 1 + 2 * j])
-                dy = unzigzag(geom[i + 2 + 2 * j])
+                dx = zig_zag_decode(geom[i + 1 + 2 * j])
+                dy = zig_zag_decode(geom[i + 2 + 2 * j])
                 x += dx
                 y += dy
 
@@ -200,8 +188,8 @@ def _rewrite_geometry(geom, new_lines):
         y = endsat.y
 
         new_geom.append(9)  # move to, run_length = 1
-        new_geom.append(zigzag(dx))
-        new_geom.append(zigzag(dy))
+        new_geom.append(zig_zag_encode(dx))
+        new_geom.append(zig_zag_encode(dy))
         new_geom.extend(lineto_cmds)
 
     # write the lines back out to geom

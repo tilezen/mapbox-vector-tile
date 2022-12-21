@@ -1,15 +1,14 @@
 from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
-
-cmd_bits = 3
-
-CMD_MOVE_TO = 1
-CMD_LINE_TO = 2
-CMD_SEG_END = 7
-
-UNKNOWN = 0
-POINT = 1
-LINESTRING = 2
-POLYGON = 3
+from mapbox_vector_tile.utils import (
+    CMD_BITS,
+    CMD_LINE_TO,
+    CMD_MOVE_TO,
+    CMD_SEG_END,
+    LINESTRING,
+    POINT,
+    POLYGON,
+    zig_zag_decode,
+)
 
 
 class TileData:
@@ -42,10 +41,12 @@ class TileData:
             tile[layer.name] = {"extent": layer.extent, "version": layer.version, "features": features}
         return tile
 
-    def zero_pad(self, val):
+    @staticmethod
+    def zero_pad(val):
         return "0" + val if val[0] == "b" else val
 
-    def parse_value(self, val):
+    @staticmethod
+    def parse_value(val):
         for candidate in (
             "bool_value",
             "double_value",
@@ -59,10 +60,18 @@ class TileData:
                 return getattr(val, candidate)
         raise ValueError(f"{val} is an unknown value")
 
-    def zig_zag_decode(self, n):
-        return (n >> 1) ^ (-(n & 1))
+    @staticmethod
+    def _area_sign(ring):
+        a = sum(ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1] for i in range(0, len(ring) - 1))
+        return -1 if a < 0 else 1 if a > 0 else 0
 
-    def parse_geometry(self, geom, ftype, extent, y_coord_down):  # noqa:C901
+    @staticmethod
+    def _ensure_polygon_closed(coords):
+        if coords and coords[0] != coords[-1]:
+            coords.append(coords[0])
+
+    @classmethod
+    def parse_geometry(cls, geom, ftype, extent, y_coord_down):  # noqa:C901
         # [9 0 8192 26 0 10 2 0 0 2 15]
         i = 0
         coords = []
@@ -73,18 +82,14 @@ class TileData:
         while i != len(geom):
             item = bin(geom[i])
             ilen = len(item)
-            cmd = int(self.zero_pad(item[(ilen - cmd_bits) : ilen]), 2)
-            cmd_len = int(self.zero_pad(item[: ilen - cmd_bits]), 2)
+            cmd = int(cls.zero_pad(item[(ilen - CMD_BITS) : ilen]), 2)
+            cmd_len = int(cls.zero_pad(item[: ilen - CMD_BITS]), 2)
 
             i = i + 1
 
-            def _ensure_polygon_closed(coords):
-                if coords and coords[0] != coords[-1]:
-                    coords.append(coords[0])
-
             if cmd == CMD_SEG_END:
                 if ftype == POLYGON:
-                    _ensure_polygon_closed(coords)
+                    cls._ensure_polygon_closed(coords)
                 parts.append(coords)
                 coords = []
 
@@ -101,7 +106,7 @@ class TileData:
                         # for polygons, we want to ensure that it is
                         # closed
                         if ftype == POLYGON:
-                            _ensure_polygon_closed(coords)
+                            cls._ensure_polygon_closed(coords)
                         parts.append(coords)
                         coords = []
 
@@ -112,9 +117,9 @@ class TileData:
                     y = geom[i]
                     i = i + 1
 
-                    # zipzag decode
-                    x = self.zig_zag_decode(x)
-                    y = self.zig_zag_decode(y)
+                    # zigzag decode
+                    x = zig_zag_decode(x)
+                    y = zig_zag_decode(y)
 
                     x = x + dx
                     y = y + dy
@@ -146,16 +151,12 @@ class TileData:
             if coords:
                 parts.append(coords)
 
-            def _area_sign(ring):
-                a = sum(ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1] for i in range(0, len(ring) - 1))
-                return -1 if a < 0 else 1 if a > 0 else 0
-
             polygon = []
             polygons = []
             winding = 0
 
             for ring in parts:
-                a = _area_sign(ring)
+                a = cls._area_sign(ring)
                 if a == 0:
                     continue
                 if winding == 0:
