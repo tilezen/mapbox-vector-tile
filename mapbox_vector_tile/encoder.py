@@ -1,4 +1,3 @@
-import decimal
 from numbers import Number
 
 from shapely.geometry.base import BaseGeometry
@@ -31,30 +30,21 @@ def on_invalid_geometry_make_valid(shape):
 
 
 class VectorTile:
-    def __init__(
-        self, extents, on_invalid_geometry=None, max_geometry_validate_tries=5, round_fn=None, check_winding_order=True
-    ):
+    def __init__(self, extents, on_invalid_geometry=None, max_geometry_validate_tries=5, check_winding_order=True):
         self.tile = vector_tile.tile()
         self.extents = extents
         self.on_invalid_geometry = on_invalid_geometry
         self.check_winding_order = check_winding_order
         self.max_geometry_validate_tries = max_geometry_validate_tries
-        if round_fn:
-            self._round = round_fn
-        else:
-            self._round = self._round_quantize
 
-    def _round_quantize(self, val):
-
-        # round() has different behavior in python 2/3
-        # For consistency between 2 and 3 we use quantize, however
-        # it is slower than the built in round function.
-        d = decimal.Decimal(val)
-        rounded = d.quantize(1, rounding=decimal.ROUND_HALF_EVEN)
-        return float(rounded)
+        self.layer = None
+        self.key_idx = 0
+        self.val_idx = 0
+        self.seen_keys_idx = {}
+        self.seen_values_idx = {}
+        self.seen_values_bool_idx = {}
 
     def addFeatures(self, features, layer_name="", quantize_bounds=None, y_coord_down=False):
-
         self.layer = self.tile.layers.add()
         self.layer.name = layer_name
         self.layer.version = 1
@@ -67,7 +57,6 @@ class VectorTile:
         self.seen_values_bool_idx = {}
 
         for feature in features:
-
             # skip missing or empty geometries
             geometry_spec = feature.get("geometry")
             if geometry_spec is None:
@@ -121,7 +110,7 @@ class VectorTile:
             yfac = self.extents / (maxy - miny)
             x = xfac * (x - minx)
             y = yfac * (y - miny)
-            return self._round(x), self._round(y)
+            return round(x), round(y)
 
         return transform(fn, shape)
 
@@ -174,7 +163,7 @@ class VectorTile:
 
         def fn(point):
             x, y = point
-            return self._round(x), self._round(y)
+            return round(x), round(y)
 
         exterior = apply_map(fn, shape.exterior.coords)
         rings = None
@@ -203,7 +192,7 @@ class VectorTile:
                 return None
 
     def addFeature(self, feature, shape, y_coord_down):
-        geom_encoder = GeometryEncoder(y_coord_down, self.extents, self._round)
+        geom_encoder = GeometryEncoder(y_coord_down, self.extents)
         geometry = geom_encoder.encode(shape)
 
         feature_type = self._get_feature_type(shape)

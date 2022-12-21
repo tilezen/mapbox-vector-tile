@@ -13,12 +13,9 @@ def encode(
     y_coord_down=False,
     extents=4096,
     on_invalid_geometry=None,
-    round_fn=None,
     check_winding_order=True,
 ):
-    vector_tile = encoder.VectorTile(
-        extents, on_invalid_geometry, round_fn=round_fn, check_winding_order=check_winding_order
-    )
+    vector_tile = encoder.VectorTile(extents, on_invalid_geometry, check_winding_order=check_winding_order)
     if isinstance(layers, list):
         for layer in layers:
             vector_tile.addFeatures(layer["features"], layer["name"], quantize_bounds, y_coord_down)

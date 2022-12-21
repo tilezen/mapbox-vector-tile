@@ -80,7 +80,6 @@ def _generate_polys(contours):
     """
     Generator which yields a valid polygon for each contour input.
     """
-
     for c in contours:
         p = _contour_to_poly(c)
         yield p
@@ -88,12 +87,10 @@ def _generate_polys(contours):
 
 def _polytree_node_to_shapely(node):
     """
-    Recurses down a Clipper PolyTree, extracting the results as Shapely
-    objects.
+    Recurses down a Clipper PolyTree, extracting the results as Shapely objects.
 
     Returns a tuple of (list of polygons, list of children)
     """
-
     polygons = []
     children = []
     for ch in node.Childs:
@@ -257,7 +254,6 @@ def make_it_valid(shape):
     """
     Attempt to make any polygon or multipolygon valid.
     """
-
     if shape.is_empty:
         return shape
 

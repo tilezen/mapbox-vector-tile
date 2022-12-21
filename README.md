@@ -210,26 +210,6 @@ mapbox_vector_tile.encode([
     ], quantize_bounds=(0.0, 0.0, 10.0, 10.0), extents=50)
 ```
 
-### Custom rounding functions
-
-In order to maintain consistency between Python 2 and 3, the `decimal` module is used to explictly define `ROUND_HALF_EVEN` as the rounding method. This can be slower than the built-in `round()` function. Encode takes an optional `round_fn` where you can specify the round function to be used.
-
- ```python
-mapbox_vector_tile.encode([
-      {
-        "name": "water",
-        "features": [
-          {
-            "geometry":"POINT(15 15)",
-            "properties":{
-              "foo":"bar",
-            }
-          }
-        ]
-      }
-    ], quantize_bounds=(0.0, 0.0, 10.0, 10.0), round_fn=round)
-```
-
 Decoding
 --------
 

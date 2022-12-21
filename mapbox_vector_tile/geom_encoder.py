@@ -26,20 +26,19 @@ def zigzag(delta):
 
 
 class GeometryEncoder:
-    def __init__(self, y_coord_down, extents, round_fn):
+    def __init__(self, y_coord_down, extents):
         self._geometry = []
         self._y_coord_down = y_coord_down
         self._extents = extents
-        self._round = round_fn
         self._last_x, self._last_y = 0, 0
 
     def coords_on_grid(self, x, y):
         """Snap coordinates on the grid with integer coordinates"""
 
         if isinstance(x, float):
-            x = int(self._round(x))
+            x = int(round(x))
         if isinstance(y, float):
-            y = int(self._round(y))
+            y = int(round(y))
         if not self._y_coord_down:
             y = self._extents - y
         return x, y
