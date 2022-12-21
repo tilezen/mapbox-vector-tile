@@ -17,10 +17,14 @@ def test_suite():
 
 setup(name='mapbox-vector-tile',
       version='1.2.1',
-      description=u"Mapbox Vector Tile",
+      description="Mapbox Vector Tile",
       long_description=long_description,
       classifiers=[
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
       ],
       keywords='',
       author=u"Rob Marianski",

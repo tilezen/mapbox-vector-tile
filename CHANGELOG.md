@@ -8,6 +8,7 @@ Version 2.0.0
 * Add GitHub Actions
 * Regenerate the vector tile protobuf Python code to solve
   [#113](https://github.com/tilezen/mapbox-vector-tile/issues/113)
+* Support for Python 3.11
 
 Version 1.2.1
 -------------
