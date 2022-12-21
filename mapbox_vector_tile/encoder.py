@@ -75,24 +75,17 @@ class VectorTile:
 
     def enforce_winding_order(self, shape, y_coord_down, n_try=1):
         if shape.type == "MultiPolygon":
-            # If we are a multipolygon, we need to ensure that the
-            # winding orders of the consituent polygons are
-            # correct. In particular, the winding order of the
-            # interior rings need to be the opposite of the
-            # exterior ones, and all interior rings need to follow
-            # the exterior one. This is how the end of one polygon
-            # and the beginning of another are signaled.
+            # If we are a multipolygon, we need to ensure that the winding orders of the constituent polygons are
+            # correct. In particular, the winding order of the interior rings need to be the opposite of the exterior
+            # ones, and all interior rings need to follow the exterior one. This is how the end of one polygon and
+            # the beginning of another are signaled.
             shape = self.enforce_multipolygon_winding_order(shape, y_coord_down, n_try)
 
         elif shape.type == "Polygon":
-            # Ensure that polygons are also oriented with the
-            # appropriate winding order. Their exterior rings must
-            # have a clockwise order, which is translated into a
-            # clockwise order in MVT's tile-local coordinates with
-            # the Y axis in "screen" (i.e: +ve down) configuration.
-            # Note that while the Y axis flips, we also invert the
-            # Y coordinate to get the tile-local value, which means
-            # the clockwise orientation is unchanged.
+            # Ensure that polygons are also oriented with the appropriate winding order. Their exterior rings must
+            # have a clockwise order, which is translated into a clockwise order in MVT's tile-local coordinates with
+            # the Y axis in "screen" (i.e: +ve down) configuration. Note that while the Y axis flips, we also invert
+            # the Y coordinate to get the tile-local value, which means the clockwise orientation is unchanged.
             shape = self.enforce_polygon_winding_order(shape, y_coord_down, n_try)
 
         # other shapes just get passed through
@@ -115,18 +108,15 @@ class VectorTile:
             return shape
 
         if n_try >= self.max_geometry_validate_tries:
-            # ensure that we don't recurse indefinitely with an
-            # invalid geometry handler that doesn't validate
+            # ensure that we don't recurse indefinitely with an invalid geometry handler that doesn't validate
             # geometries
             return None
 
         if self.on_invalid_geometry:
             shape = self.on_invalid_geometry(shape)
             if shape is not None and not shape.is_empty:
-                # this means that we have a handler that might have
-                # altered the geometry. We'll run through the process
-                # again, but keep track of which attempt we are on to
-                # terminate the recursion.
+                # This means that we have a handler that might have altered the geometry. We'll run through the process
+                # again, but keep track of which attempt we are on to terminate the recursion.
                 shape = self.enforce_winding_order(shape, y_coord_down, n_try + 1)
 
         return shape

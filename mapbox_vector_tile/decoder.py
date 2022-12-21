@@ -97,14 +97,11 @@ class TileData:
 
                 if coords and cmd == CMD_MOVE_TO:
                     if ftype in (LINESTRING, POLYGON):
-                        # multi line string or polygon
-                        # our encoder includes CMD_SEG_END to denote
-                        # the end of a polygon ring, but this path
-                        # would also handle the case where we receive
-                        # a move without a previous close on polygons
+                        # multi line string or polygon our encoder includes CMD_SEG_END to denote the end of a
+                        # polygon ring, but this path would also handle the case where we receive a move without a
+                        # previous close on polygons
 
-                        # for polygons, we want to ensure that it is
-                        # closed
+                        # for polygons, we want to ensure that it is closed
                         if ftype == POLYGON:
                             cls._ensure_polygon_closed(coords)
                         parts.append(coords)

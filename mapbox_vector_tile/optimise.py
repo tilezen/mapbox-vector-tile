@@ -6,13 +6,11 @@ from mapbox_vector_tile.utils import CMD_LINE_TO, CMD_MOVE_TO, zig_zag_decode, z
 
 class StringTableOptimiser:
     """
-    Optimises the order of keys and values in the MVT layer string table.
+    Optimizes the order of keys and values in the MVT layer string table.
 
-    Counts the number of times an entry in the MVT string table (both keys
-    and values) is used. Then reorders the string table to have the most
-    commonly used entries first and updates the features to use the
-    replacement locations in the table. This can save several percent in a
-    tile with large numbers of features.
+    Counts the number of times an entry in the MVT string table (both keys and values) is used. Then reorders the
+    string table to have the most commonly used entries first and updates the features to use the replacement
+    locations in the table. This can save several percent in a tile with large numbers of features.
     """
 
     def __init__(self):
@@ -74,16 +72,15 @@ def _decode_lines(geom):
     """
     Decode a linear MVT geometry into a list of Lines.
 
-    Each individual linestring in the MVT is extracted to a separate entry in
-    the list of lines.
+    Each individual linestring in the MVT is extracted to a separate entry in the list of lines.
     """
 
     lines = []
     current_line = []
     current_moveto = None
 
-    # to keep track of the position. we'll adapt the move-to commands to all
-    # be relative to 0,0 at the beginning of each linestring.
+    # To keep track of the position. We'll adapt the move-to commands to all be relative to 0,0 at the beginning of
+    # each linestring.
     x = 0
     y = 0
 
@@ -135,20 +132,17 @@ def _decode_lines(geom):
 
 def _reorder_lines(lines):
     """
-    Reorder lines so that the distance from the end of one to the beginning of
-    the next is minimised.
+    Reorder lines so that the distance from the end of one to the beginning of the next is minimized.
     """
 
     x = 0
     y = 0
     new_lines = []
 
-    # treat the list of lines as a stack, off which we keep popping the best
-    # one to add next.
+    # treat the list of lines as a stack, off which we keep popping the best one to add next.
     while lines:
-        # looping over all the lines like this isn't terribly efficient, but
-        # in local tests seems to handle a few thousand lines without a
-        # problem.
+        # looping over all the lines like this isn't terribly efficient, but in local tests seems to handle a few
+        # thousand lines without a problem.
         min_dist = None
         min_i = None
         for i, line in enumerate(lines):
@@ -171,9 +165,8 @@ def _reorder_lines(lines):
 
 def _rewrite_geometry(geom, new_lines):
     """
-    Re-encode a list of Lines with absolute MoveTos as a continuous stream of
-    MVT geometry commands, each relative to the last. Replace geom with that
-    stream.
+    Re-encode a list of Lines with absolute MoveTos as a continuous stream of MVT geometry commands, each relative to
+    the last. Replace geom with that stream.
     """
 
     new_geom = []
@@ -198,9 +191,8 @@ def _rewrite_geometry(geom, new_lines):
 
 
 def optimise_multilinestring(geom):
-    # split the geometry into multiple lists, each starting with a move-to
-    # command and consisting otherwise of line-to commands. (perhaps with
-    # a close at the end? is that allowed for linestrings?)
+    # Split the geometry into multiple lists, each starting with a move-to command and consisting otherwise of
+    # line-to commands. (perhaps with a close at the end? Is that allowed for linestrings?)
 
     lines = _decode_lines(geom)
 
@@ -212,8 +204,8 @@ def optimise_multilinestring(geom):
 
 def optimise_tile(tile_bytes):
     """
-    Decode a sequence of bytes as an MVT tile and reorder the string table of
-    its layers and the order of its multilinestrings to save a few bytes.
+    Decode a sequence of bytes as an MVT tile and reorder the string table of its layers and the order of its
+    multilinestrings to save a few bytes.
     """
 
     t = tile()
