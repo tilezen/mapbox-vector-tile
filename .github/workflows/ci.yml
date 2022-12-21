@@ -21,22 +21,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install poetry
+        run: pipx install poetry
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: 'setup.py'
+          cache: 'poetry'
 
       - name: Install dependencies
         run: |
-          pip install -U pip setuptools tox tox-py coverage
-          python setup.py install
+          poetry env use "${{ matrix.python-version }}"
+          poetry install
 
       - name: Run tox targets for ${{ matrix.python-version }}
         run: |
-          tox --py current
-          coverage lcov
+          poetry run tox -f py$(echo ${{ matrix.python-version }} | tr -d .)
+          poetry run coverage lcov
 
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@1.1.3

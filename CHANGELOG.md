@@ -11,6 +11,7 @@ Version 2.0.0
   [#113](https://github.com/tilezen/mapbox-vector-tile/issues/113)
 * Support for Python 3.11
 * Delete the `round_fn` argument as Python 2 has been dropped
+* Use `pyproject.toml` and Poetry to replace the `setup.py` file
 
 Version 1.2.1
 -------------
