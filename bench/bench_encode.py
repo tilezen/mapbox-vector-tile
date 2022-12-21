@@ -1,13 +1,13 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 import cProfile
-from itertools import islice
-from mapbox_vector_tile.encoder import VectorTile, on_invalid_geometry_ignore
-from mapbox_vector_tile import encode
-from shapely.wkt import loads as loads_wkt
-from shapely.geometry import mapping
 import sys
+
+from shapely.geometry import mapping
+from shapely.wkt import loads as loads_wkt
+
+from mapbox_vector_tile import encode
+from mapbox_vector_tile.encoder import on_invalid_geometry_ignore
 
 
 def make_layers(shapes, geom_dicts=False):
@@ -28,32 +28,30 @@ def make_layers(shapes, geom_dicts=False):
                 features = []
                 i = 0
             i += 1
-        except:
+        except Exception:
             pass
     layers.append(features)
     return layers
+
 
 def run_test(layers):
     print("Running perf test")
     i = 0
     profiler = cProfile.Profile()
     for layer in layers:
-        layer_description = {
-            'features' : layer,
-            'name': 'bar'
-        }
+        layer_description = {"features": layer, "name": "bar"}
         profiler.enable()
-        res = encode(layer_description, on_invalid_geometry=on_invalid_geometry_ignore, round_fn=round)
+        encode(layer_description, on_invalid_geometry=on_invalid_geometry_ignore, round_fn=round)
         profiler.disable()
         if i % 100 == 0:
-            print("{} tiles produced".format(i))
+            print(f"{i} tiles produced")
         i += 1
 
-    print ("Perf result :")
+    print("Perf result :")
     profiler.print_stats()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Usage : ")
     print("wget https://gist.githubusercontent.com/lexman/c759d1007e520040cb9f1e41b7af85c2/raw/fgeoms.wkt.zip")
     print("zcat fgeoms.wkt.zip | head -10000 | python bench_encode.py")

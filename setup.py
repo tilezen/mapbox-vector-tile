@@ -1,15 +1,13 @@
-import io
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-
-with io.open('README.md') as readme_file:
+with open("README.md") as readme_file:
     long_description = readme_file.read()
 
 
 def test_suite():
     try:
         import unittest2 as unittest
-    except:
+    except Exception:
         import unittest
 
     suite = unittest.TestLoader().discover("tests")
@@ -44,4 +42,4 @@ setup(name='mapbox-vector-tile',
           "future",
           "pyclipper"
       ]
-      )
+)

@@ -316,6 +316,10 @@ debian Bullseye, the version of `protoc` available in the package registry is to
 
 To compile the `proto` file, you have to enable two environnement variables BEFORE running your python program :
 
+    $  sudo apt-get install libprotoc9 libprotobuf9 protobuf-compiler python-protobuf
+
+Then, you'll have to enable two environnement variable BEFORE runing your python program :
+
      $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
      $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2
 
