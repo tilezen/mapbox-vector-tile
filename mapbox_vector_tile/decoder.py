@@ -16,7 +16,7 @@ class TileData:
     def __init__(self):
         self.tile = vector_tile.tile()
 
-    def getMessage(self, pbf_data, y_coord_down=False):
+    def get_message(self, pbf_data, y_coord_down=False):
         self.tile.ParseFromString(pbf_data)
 
         tile = {}
@@ -39,11 +39,7 @@ class TileData:
                 new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": feature.type}
                 features.append(new_feature)
 
-            tile[layer.name] = {
-                "extent": layer.extent,
-                "version": layer.version,
-                "features": features,
-            }
+            tile[layer.name] = {"extent": layer.extent, "version": layer.version, "features": features}
         return tile
 
     def zero_pad(self, val):

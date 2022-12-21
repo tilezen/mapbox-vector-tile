@@ -44,7 +44,7 @@ class VectorTile:
         self.seen_values_idx = {}
         self.seen_values_bool_idx = {}
 
-    def addFeatures(self, features, layer_name="", quantize_bounds=None, y_coord_down=False):
+    def add_features(self, features, layer_name="", quantize_bounds=None, y_coord_down=False):
         self.layer = self.tile.layers.add()
         self.layer.name = layer_name
         self.layer.version = 1
@@ -75,7 +75,7 @@ class VectorTile:
                 shape = self.enforce_winding_order(shape, y_coord_down)
 
             if shape is not None and not shape.is_empty:
-                self.addFeature(feature, shape, y_coord_down)
+                self.add_feature(feature, shape, y_coord_down)
 
     def enforce_winding_order(self, shape, y_coord_down, n_try=1):
         if shape.type == "MultiPolygon":
@@ -191,7 +191,7 @@ class VectorTile:
             except Exception:
                 return None
 
-    def addFeature(self, feature, shape, y_coord_down):
+    def add_feature(self, feature, shape, y_coord_down):
         geom_encoder = GeometryEncoder(y_coord_down, self.extents)
         geometry = geom_encoder.encode(shape)
 

@@ -883,7 +883,7 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         ]
 
         tile = VectorTile(4096)
-        tile.addFeatures([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
+        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -938,7 +938,7 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         ]
 
         tile = VectorTile(20)
-        tile.addFeatures([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=False)
+        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=False)
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -962,7 +962,7 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         ]
 
         tile = VectorTile(4096)
-        tile.addFeatures([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
+        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
