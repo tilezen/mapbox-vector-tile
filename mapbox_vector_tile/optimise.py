@@ -1,17 +1,16 @@
 from collections import namedtuple
 
 from mapbox_vector_tile.Mapbox.vector_tile_pb2 import tile
+from mapbox_vector_tile.utils import CMD_LINE_TO, CMD_MOVE_TO, zig_zag_decode, zig_zag_encode
 
 
 class StringTableOptimiser:
     """
-    Optimises the order of keys and values in the MVT layer string table.
+    Optimizes the order of keys and values in the MVT layer string table.
 
-    Counts the number of times an entry in the MVT string table (both keys
-    and values) is used. Then reorders the string table to have the most
-    commonly used entries first and updates the features to use the
-    replacement locations in the table. This can save several percent in a
-    tile with large numbers of features.
+    Counts the number of times an entry in the MVT string table (both keys and values) is used. Then reorders the
+    string table to have the most commonly used entries first and updates the features to use the replacement
+    locations in the table. This can save several percent in a tile with large numbers of features.
     """
 
     def __init__(self):
@@ -24,11 +23,12 @@ class StringTableOptimiser:
             self.key_counts[k] = self.key_counts.get(k, 0) + 1
             self.val_counts[v] = self.val_counts.get(v, 0) + 1
 
-    def _update_table(self, counts, table):
-        # sort string table by usage, so most commonly-used values are
-        # assigned the smallest indices. since indices are encoded as
+    @staticmethod
+    def _update_table(counts, table):
+        # Sort string table by usage, so most commonly-used values are
+        # assigned the smallest indices. Since indices are encoded as
         # varints, this should make best use of the space.
-        sort = list(sorted(((c, k) for k, c in counts.iteritems()), reverse=True))
+        sort = list(sorted(((c, k) for k, c in counts.items()), reverse=True))
 
         # construct the re-ordered string table
         new_table = []
@@ -57,24 +57,11 @@ class StringTableOptimiser:
                 feature.tags[i + 1] = new_val[feature.tags[i + 1]]
 
 
-# return the signed integer corresponding to the "zig-zag" encoded unsigned
-# input integer. this encoding is used for MVT geometry deltas.
-def unzigzag(n):
-    return (n >> 1) ^ (-(n & 1))
-
-
-# return the "zig-zag" encoded unsigned integer corresponding to the signed
-# input integer. this encoding is used for MVT geometry deltas.
-def zigzag(n):
-    return (n << 1) ^ (n >> 31)
-
-
-# we assume that every linestring consists of a single MoveTo command followed
-# by some number of LineTo commands, and we encode this as a Line object.
+# We assume that every linestring consists of a single MoveTo command followed by some number of LineTo commands,
+# and we encode this as a Line object.
 #
-# normally, MVT linestrings are encoded relative to the preceding linestring
-# (if any) in the geometry. however that's awkward for reodering, so we
-# construct an absolute MoveTo for each Line. we also derive a corresponding
+# Normally, MVT linestrings are encoded relative to the preceding linestring (if any) in the geometry. However,
+# that's awkward for reordering, so we construct an absolute MoveTo for each Line. We also derive a corresponding
 # EndsAt location, which isn't used in the encoding, but simplifies analysis.
 MoveTo = namedtuple("MoveTo", "x y")
 EndsAt = namedtuple("EndsAt", "x y")
@@ -85,16 +72,15 @@ def _decode_lines(geom):
     """
     Decode a linear MVT geometry into a list of Lines.
 
-    Each individual linestring in the MVT is extracted to a separate entry in
-    the list of lines.
+    Each individual linestring in the MVT is extracted to a separate entry in the list of lines.
     """
 
     lines = []
     current_line = []
     current_moveto = None
 
-    # to keep track of the position. we'll adapt the move-to commands to all
-    # be relative to 0,0 at the beginning of each linestring.
+    # To keep track of the position. We'll adapt the move-to commands to all be relative to 0,0 at the beginning of
+    # each linestring.
     x = 0
     y = 0
 
@@ -105,31 +91,30 @@ def _decode_lines(geom):
         cmd = header & 7
         run_length = header // 8
 
-        if cmd == 1:  # move to
+        if cmd == CMD_MOVE_TO:
             # flush previous line.
             if current_moveto:
                 lines.append(Line(current_moveto, EndsAt(x, y), current_line))
                 current_line = []
 
             assert run_length == 1
-            x += unzigzag(geom[i + 1])
-            y += unzigzag(geom[i + 2])
+            x += zig_zag_decode(geom[i + 1])
+            y += zig_zag_decode(geom[i + 2])
             i += 3
 
             current_moveto = MoveTo(x, y)
 
-        elif cmd == 2:  # line to
+        elif cmd == CMD_LINE_TO:
             assert current_moveto
 
             # we just copy this run, since it's encoding isn't going to change
             next_i = i + 1 + run_length * 2
             current_line.extend(geom[i:next_i])
 
-            # but we still need to decode it to figure out where each move-to
-            # command is in absolute space.
+            # but we still need to decode it to figure out where each move-to command is in absolute space.
             for j in range(0, run_length):
-                dx = unzigzag(geom[i + 1 + 2 * j])
-                dy = unzigzag(geom[i + 2 + 2 * j])
+                dx = zig_zag_decode(geom[i + 1 + 2 * j])
+                dy = zig_zag_decode(geom[i + 2 + 2 * j])
                 x += dx
                 y += dy
 
@@ -147,20 +132,17 @@ def _decode_lines(geom):
 
 def _reorder_lines(lines):
     """
-    Reorder lines so that the distance from the end of one to the beginning of
-    the next is minimised.
+    Reorder lines so that the distance from the end of one to the beginning of the next is minimized.
     """
 
     x = 0
     y = 0
     new_lines = []
 
-    # treat the list of lines as a stack, off which we keep popping the best
-    # one to add next.
+    # treat the list of lines as a stack, off which we keep popping the best one to add next.
     while lines:
-        # looping over all the lines like this isn't terribly efficient, but
-        # in local tests seems to handle a few thousand lines without a
-        # problem.
+        # looping over all the lines like this isn't terribly efficient, but in local tests seems to handle a few
+        # thousand lines without a problem.
         min_dist = None
         min_i = None
         for i, line in enumerate(lines):
@@ -183,9 +165,8 @@ def _reorder_lines(lines):
 
 def _rewrite_geometry(geom, new_lines):
     """
-    Re-encode a list of Lines with absolute MoveTos as a continuous stream of
-    MVT geometry commands, each relative to the last. Replace geom with that
-    stream.
+    Re-encode a list of Lines with absolute MoveTos as a continuous stream of MVT geometry commands, each relative to
+    the last. Replace geom with that stream.
     """
 
     new_geom = []
@@ -200,8 +181,8 @@ def _rewrite_geometry(geom, new_lines):
         y = endsat.y
 
         new_geom.append(9)  # move to, run_length = 1
-        new_geom.append(zigzag(dx))
-        new_geom.append(zigzag(dy))
+        new_geom.append(zig_zag_encode(dx))
+        new_geom.append(zig_zag_encode(dy))
         new_geom.extend(lineto_cmds)
 
     # write the lines back out to geom
@@ -210,9 +191,8 @@ def _rewrite_geometry(geom, new_lines):
 
 
 def optimise_multilinestring(geom):
-    # split the geometry into multiple lists, each starting with a move-to
-    # command and consisting otherwise of line-to commands. (perhaps with
-    # a close at the end? is that allowed for linestrings?)
+    # Split the geometry into multiple lists, each starting with a move-to command and consisting otherwise of
+    # line-to commands. (perhaps with a close at the end? Is that allowed for linestrings?)
 
     lines = _decode_lines(geom)
 
@@ -224,8 +204,8 @@ def optimise_multilinestring(geom):
 
 def optimise_tile(tile_bytes):
     """
-    Decode a sequence of bytes as an MVT tile and reorder the string table of
-    its layers and the order of its multilinestrings to save a few bytes.
+    Decode a sequence of bytes as an MVT tile and reorder the string table of its layers and the order of its
+    multilinestrings to save a few bytes.
     """
 
     t = tile()

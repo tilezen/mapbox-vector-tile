@@ -41,7 +41,7 @@ def run_test(layers):
     for layer in layers:
         layer_description = {"features": layer, "name": "bar"}
         profiler.enable()
-        encode(layer_description, on_invalid_geometry=on_invalid_geometry_ignore, round_fn=round)
+        encode(layer_description, on_invalid_geometry=on_invalid_geometry_ignore)
         profiler.disable()
         if i % 100 == 0:
             print(f"{i} tiles produced")

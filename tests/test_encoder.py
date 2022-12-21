@@ -561,26 +561,6 @@ class ExtentTest(unittest.TestCase):
         self.assertEqual(exp_geom, act_geom)
 
 
-class RoundTest(unittest.TestCase):
-    def test_custom_rounding_function(self):
-        from mapbox_vector_tile import decode, encode
-
-        props = dict(foo="bar")
-        shape = "POINT(10 10)"
-        feature = dict(geometry=shape, properties=props)
-        features = [feature]
-        source = dict(name="layername", features=features)
-        bounds = 0.0, 0.0, 10.0, 10.0
-        # A really bad, custom "rounding" function
-        pbf = encode(source, quantize_bounds=bounds, round_fn=lambda x: 5)
-        result = decode(pbf)
-
-        act_feature = result["layername"]["features"][0]
-        act_geom = act_feature["geometry"]
-        exp_geom = {"type": "Point", "coordinates": [5, 5]}
-        self.assertEqual(exp_geom, act_geom)
-
-
 class InvalidGeometryTest(unittest.TestCase):
     def test_invalid_geometry_ignore(self):
         import shapely.wkt
@@ -903,7 +883,7 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         ]
 
         tile = VectorTile(4096)
-        tile.addFeatures([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
+        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -958,7 +938,7 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         ]
 
         tile = VectorTile(20)
-        tile.addFeatures([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=False)
+        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=False)
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -982,7 +962,7 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         ]
 
         tile = VectorTile(4096)
-        tile.addFeatures([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
+        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
