@@ -309,17 +309,19 @@ Use native protobuf library for performance
 
 The c++ implementation of the underlying protobuf library is more performant than the pure python one. Depending on your operating system, you might need to [compile the C++ library](https://github.com/google/protobuf/tree/master/python#c-implementation) or install it.
 
-### on debian Jessie
+Since May 6, 2022, the Python `profobuf` library is based on the udp library and thus, the generated Python code
+requires `protoc` 3.19.0 or newer. Cf. [here](https://developers.google.com/protocol-buffers/docs/news/2022-05-06). On
+debian Bullseye, the version of `protoc` available in the package registry is too old. Please install it from [protobuf
++GitHub repository](https://github.com/protocolbuffers/protobuf/releases).
 
-The version of protobuf (libprotobuf9) available on debian Jessie is [2.6.1](https://github.com/google/protobuf/tree/v2.6.1/python). You can install it with the proper python bindings from your package manager :
+To compile the `proto` file, you have to enable two environnement variables BEFORE running your python program :
 
-    $  sudo apt-get install libprotoc9 libprotobuf9 protobuf-compiler python-protobuf
-    
-Then, you'll have to enable two environnement variable BEFORE runing your python program :
+     $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
+     $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2
 
-    $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
-    $ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2
+and then:
 
+    $ protoc -I=mapbox_vector_tile/Mapbox/ --python_out=mapbox_vector_tile/Mapbox/ mapbox_vector_tile/Mapbox/vector_tile.proto
 
 Changelog
 ---------
