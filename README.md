@@ -8,7 +8,8 @@ Mapbox Vector Tile
 Installation
 ------------
 
-mapbox-vector-tile is compatible with Python 2.7 and 3.5. It is listed on PyPi as `mapbox-vector-tile`. The recommended way to install is via `pip`:
+mapbox-vector-tile is compatible with Python 3.7 or newer. It is listed on PyPi as `mapbox-vector-tile`. The
+recommended way to install is via `pip`:
 
 ```shell
 pip install mapbox-vector-tile
@@ -19,7 +20,8 @@ Note that `mapbox-vector-tile` depends on [Shapely](https://pypi.python.org/pypi
 Encoding
 --------
 
-Encode method expects an array of layers or atleast a single valid layer. A valid layer is a dictionary with the following keys
+Encode method expects an array of layers or at least a single valid layer. A valid layer is a dictionary with the
+following keys
 
 * `name`: layer name
 * `features`: an array of features. A feature is a dictionary with the following keys:
@@ -189,7 +191,8 @@ mapbox_vector_tile.encode([
 
 In this example, the coordinate that would get encoded would be (2048, 2048)
 
-Additionally, if the data is already in a cooridnate system with y values going down, the encoder supports an option, `y_coord_down`, that can be set to True. This will suppress flipping the y coordinate values during encoding.
+Additionally, if the data is already in a coordinate system with y values going down, the encoder supports an
+option, `y_coord_down`, that can be set to True. This will suppress flipping the y coordinate values during encoding.
 
 ### Custom extents
 
