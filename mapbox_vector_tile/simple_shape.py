@@ -4,26 +4,26 @@ class SimpleShape:
     Provides an alternative to using a shapely geometry when it is not needed.
     """
 
-    def __init__(self, coords, type):
+    def __init__(self, coords, geom_type):
         self.coords = coords
-        self.type = type
+        self.geom_type = geom_type
         self.is_empty = len(coords) == 0
 
     @property
     def exterior(self):
-        return SimpleShape(self.coords[0], type="Polygon")
+        return SimpleShape(self.coords[0], geom_type="Polygon")
 
     @property
     def interiors(self):
-        return [SimpleShape(c, type="Polygon") for c in self.coords[1:]]
+        return [SimpleShape(c, geom_type="Polygon") for c in self.coords[1:]]
 
     @property
     def geoms(self):
-        if self.type == "MultiPolygon":
+        if self.geom_type == "MultiPolygon":
             return [SimpleShape(c, "Polygon") for c in self.coords]
-        elif self.type == "MultiLineString":
+        elif self.geom_type == "MultiLineString":
             return [SimpleShape(c, "Linestring") for c in self.coords]
-        elif self.type == "MultiPoint":
+        elif self.geom_type == "MultiPoint":
             return [SimpleShape(c, "Point") for c in self.coords]
 
     @property
