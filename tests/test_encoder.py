@@ -966,3 +966,61 @@ class LowLevelEncodingTestCase(unittest.TestCase):
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
+
+
+class InvalidVectorTileTest(unittest.TestCase):
+    def test_duplicate_layer_name(self):
+        from mapbox_vector_tile import encode
+
+        props = dict(foo="bar")
+        shape = "POINT(10 10)"
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = [dict(name="layername", features=features), dict(name="layername", features=features)]
+        with self.assertRaises(ValueError) as ex:
+            encode(source, extents=4096)
+        self.assertEqual(str(ex.exception), "The layer name 'layername' already exists in the vector tile.")
+
+    def test_empty_layer_name(self):
+        from mapbox_vector_tile import encode
+
+        props = dict(foo="bar")
+        shape = "POINT(10 10)"
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = [dict(name="", features=features)]
+        with self.assertRaises(ValueError) as ex:
+            encode(source, extents=4096)
+        self.assertEqual(str(ex.exception), "A layer name can not be empty. '' was provided.")
+
+        source = [dict(name=None, features=features)]
+        with self.assertRaises(ValueError) as ex:
+            encode(source, extents=4096)
+        self.assertEqual(str(ex.exception), "A layer name can not be empty. None was provided.")
+
+    def test_empty_layer(self):
+        from mapbox_vector_tile import encode
+
+        # No content
+        res = encode([], extents=4096)
+        self.assertEqual(res, b"")
+
+        # Layer without feature
+        res = encode(dict(name="layer", features=[]), extents=4096)
+        self.assertEqual(res, b"\x1a\x0c\n\x05layer(\x80 x\x02")
+
+    def test_invalid_extent(self):
+        from mapbox_vector_tile import encode
+
+        props = dict(foo="bar")
+        shape = "POINT(10 10)"
+        feature = dict(geometry=shape, properties=props)
+        features = [feature]
+        source = [dict(name="layername", features=features)]
+        with self.assertRaises(ValueError) as ex:
+            encode(source, extents=0)
+        self.assertEqual(str(ex.exception), "The extents must be positive. 0 provided.")
+
+        with self.assertRaises(ValueError) as ex:
+            encode(source, extents=-2.3)
+        self.assertEqual(str(ex.exception), "The extents must be positive. -2.3 provided.")
