@@ -1,5 +1,6 @@
 from numbers import Number
 
+from shapely.geometry import shape as shapely_shape
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import orient, Polygon
@@ -10,7 +11,6 @@ from shapely.wkt import loads as load_wkt
 from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
 from mapbox_vector_tile.geom_encoder import GeometryEncoder
 from mapbox_vector_tile.polygon import make_it_valid
-from mapbox_vector_tile.simple_shape import SimpleShape
 
 
 def on_invalid_geometry_raise(shape):
@@ -172,7 +172,7 @@ class VectorTile:
             return geometry_spec
 
         if isinstance(geometry_spec, dict):
-            return SimpleShape(geometry_spec["coordinates"], geometry_spec["type"])
+            return shapely_shape(geometry_spec)
 
         try:
             return load_wkb(geometry_spec)
