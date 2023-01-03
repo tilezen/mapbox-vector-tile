@@ -12,12 +12,13 @@ from mapbox_vector_tile.utils import (
 
 
 class TileData:
-    def __init__(self):
+    def __init__(self, pbf_data, y_coord_down=False, transformer=None):
         self.tile = vector_tile.tile()
-
-    def get_message(self, pbf_data, y_coord_down=False):
         self.tile.ParseFromString(pbf_data)
+        self.y_coord_down = y_coord_down
+        self.transformer = transformer
 
+    def get_message(self):
         tile = {}
         for layer in self.tile.layers:
             keys = layer.keys
@@ -34,11 +35,16 @@ class TileData:
                     value = self.parse_value(val)
                     props[key] = value
 
-                geometry = self.parse_geometry(feature.geometry, feature.type, layer.extent, y_coord_down)
-                new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": feature.type}
+                geometry = self.parse_geometry(geom=feature.geometry, ftype=feature.type, extent=layer.extent)
+                new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": "Feature"}
                 features.append(new_feature)
 
-            tile[layer.name] = {"extent": layer.extent, "version": layer.version, "features": features}
+            tile[layer.name] = {
+                "extent": layer.extent,
+                "version": layer.version,
+                "features": features,
+                "type": "FeatureCollection",
+            }
         return tile
 
     @staticmethod
@@ -70,8 +76,7 @@ class TileData:
         if coords and coords[0] != coords[-1]:
             coords.append(coords[0])
 
-    @classmethod
-    def parse_geometry(cls, geom, ftype, extent, y_coord_down):  # noqa:C901
+    def parse_geometry(self, geom, ftype, extent):  # noqa:C901
         # [9 0 8192 26 0 10 2 0 0 2 15]
         i = 0
         coords = []
@@ -82,19 +87,18 @@ class TileData:
         while i != len(geom):
             item = bin(geom[i])
             ilen = len(item)
-            cmd = int(cls.zero_pad(item[(ilen - CMD_BITS) : ilen]), 2)
-            cmd_len = int(cls.zero_pad(item[: ilen - CMD_BITS]), 2)
+            cmd = int(self.zero_pad(item[(ilen - CMD_BITS) : ilen]), 2)
+            cmd_len = int(self.zero_pad(item[: ilen - CMD_BITS]), 2)
 
             i = i + 1
 
             if cmd == CMD_SEG_END:
                 if ftype == POLYGON:
-                    cls._ensure_polygon_closed(coords)
+                    self._ensure_polygon_closed(coords)
                 parts.append(coords)
                 coords = []
 
-            elif cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO:
-
+            elif cmd in (CMD_MOVE_TO, CMD_LINE_TO):
                 if coords and cmd == CMD_MOVE_TO:
                     if ftype in (LINESTRING, POLYGON):
                         # multi line string or polygon our encoder includes CMD_SEG_END to denote the end of a
@@ -103,7 +107,7 @@ class TileData:
 
                         # for polygons, we want to ensure that it is closed
                         if ftype == POLYGON:
-                            cls._ensure_polygon_closed(coords)
+                            self._ensure_polygon_closed(coords)
                         parts.append(coords)
                         coords = []
 
@@ -124,10 +128,13 @@ class TileData:
                     dx = x
                     dy = y
 
-                    if not y_coord_down:
+                    if not self.y_coord_down:
                         y = extent - y
 
-                    coords.append([x, y])
+                    if self.transformer is None:
+                        coords.append([x, y])
+                    else:
+                        coords.append([*self.transformer(x, y)])
 
         if ftype == POINT:
             if len(coords) == 1:
@@ -153,7 +160,7 @@ class TileData:
             winding = 0
 
             for ring in parts:
-                a = cls._area_sign(ring)
+                a = self._area_sign(ring)
                 if a == 0:
                     continue
                 if winding == 0:

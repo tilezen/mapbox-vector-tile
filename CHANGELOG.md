@@ -13,6 +13,8 @@ Version 2.0.0
 * Delete the `round_fn` argument as Python 2 has been dropped
 * Use `pyproject.toml` and Poetry to replace the `setup.py` file
 * Use `geom_type` property instead of deprecated `type`
+* Add the possibility to give a coordinates transformer
+
 
 Version 1.2.1
 -------------

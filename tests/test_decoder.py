@@ -16,12 +16,13 @@ class BaseTestCase(unittest.TestCase):
                 "water": {
                     "version": 2,
                     "extent": 4096,
+                    "type": "FeatureCollection",
                     "features": [
                         {
                             "geometry": {"type": "Polygon", "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]},
                             "properties": {"foo": "bar", "baz": "foo", "uid": 123},
                             "id": 1,
-                            "type": 3,
+                            "type": "Feature",
                         }
                     ],
                 },
@@ -40,6 +41,7 @@ class BaseTestCase(unittest.TestCase):
                 "water": {
                     "version": 2,
                     "extent": 4096,
+                    "type": "FeatureCollection",
                     "features": [
                         {
                             "geometry": {
@@ -51,7 +53,7 @@ class BaseTestCase(unittest.TestCase):
                             },
                             "properties": {},
                             "id": 0,
-                            "type": 3,
+                            "type": "Feature",
                         }
                     ],
                 },
@@ -66,12 +68,13 @@ class BaseTestCase(unittest.TestCase):
                 "water": {
                     "version": 2,
                     "extent": 8192,
+                    "type": "FeatureCollection",
                     "features": [
                         {
                             "geometry": {"type": "LineString", "coordinates": [[8000, 7000], [4000, 3500], [0, 0]]},
                             "id": 1,
                             "properties": {"baz": "foo", "foo": "bar", "uid": 123},
-                            "type": 2,
+                            "type": "Feature",
                         }
                     ],
                 }

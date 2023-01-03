@@ -8,14 +8,19 @@ Mapbox Vector Tile
 Installation
 ------------
 
-mapbox-vector-tile is compatible with Python 3.7 or newer. It is listed on PyPi as `mapbox-vector-tile`. The
+mapbox-vector-tile is compatible with Python 3.8 or newer. It is listed on PyPi as `mapbox-vector-tile`. The
 recommended way to install is via `pip`:
 
 ```shell
 pip install mapbox-vector-tile
 ```
 
-Note that `mapbox-vector-tile` depends on [Shapely](https://pypi.python.org/pypi/Shapely), a Python library for computational geometry which requires a library called [GEOS](https://trac.osgeo.org/geos/). Please see [Shapely's instructions](https://pypi.python.org/pypi/Shapely#installing-shapely) for information on how to install its prerequisites.
+An extra dependency has been defined to install [`pyproj`](https://pyproj4.github.io/pyproj/stable/). This is useful
+when changing the Coordinate Reference System when encoding or decoding tiles.
+
+```shell
+pip install mapbox-vector-tile[proj]
+```
 
 Encoding
 --------
@@ -72,7 +77,7 @@ following keys
         "name": "water",
         "features": [
           {
-            "geometry":"\001\003\000\000\000\001\000\000\000\005\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000",
+            "geometry":b"\x01\x03\x00\x00\x00\x01\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
             "properties":{
               "uid":123,
               "foo":"bar",
@@ -85,7 +90,7 @@ following keys
         "name": "air",
         "features": [
           {
-            "geometry":"\001\003\000\000\000\001\000\000\000\005\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\360?\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000",
+            "geometry":b"\x01\x03\x00\x00\x00\x01\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
             "properties":{
               "uid":1234,
               "foo":"bar",
@@ -96,7 +101,7 @@ following keys
       }
       ])
 
-  '\x1aJ\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aY\n\x03air\x12\x1c\x08\x01\x12\x08\x00\x00\x01\x01\x02\x02\x03\x03\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x05balls\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x05\n\x03foo"\x06\n\x04flew(\x80 x\x02'
+    b'\x1aH\n\x05water\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03uid\x1a\x03foo\x1a\x03cat"\x02 {"\x05\n\x03bar"\x06\n\x04flew(\x80 x\x01\x1aG\n\x03air\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03uid\x1a\x03foo\x1a\x03cat"\x03 \xd2\t"\x05\n\x03bar"\x06\n\x04flew(\x80 x\x01'
 ```
 
 ### Coordinate transformations for encoding
@@ -169,6 +174,56 @@ Note that this example may not have anything visible within the tile when render
 
 Also note that the spec allows the extents to be modified, even though they are often set to 4096 by convention. `mapbox-vector-tile` assumes an extent of 4096.
 
+```python
+  import mapbox_vector_tile
+  from pyproj import Transformer
+  from shapely.geometry import LineString
+
+  SRID_LNGLAT = 4326
+  SRID_SPHERICAL_MERCATOR = 3857
+  direct_transformer = Transformer.from_crs(crs_from=SRID_LNGLAT, crs_to=SRID_SPHERICAL_MERCATOR, always_xy=True)
+
+  lnglat_line = LineString(((-122.1, 45.1), (-122.2, 45.2)))
+
+  # Encode the tile
+  tile_pbf = mapbox_vector_tile.encode({
+    "name": "my-layer",
+    "features": [{
+      "geometry": lnglat_line.wkt,
+      "properties": {"stuff": "things"},
+    }]
+  },
+    transformer=direct_transformer.transform)
+
+  # Decode the tile
+  reverse_transformer = Transformer.from_crs(crs_from=SRID_SPHERICAL_MERCATOR, crs_to=SRID_LNGLAT, always_xy=True)
+  mapbox_vector_tile.decode(tile=tile_pbf, transformer=reverse_transformer.transform)
+
+  {
+      "my-layer": {
+          "extent": 4096,
+          "version": 1,
+          "features": [
+              {
+                  "geometry": {
+                      "type": "LineString",
+                      "coordinates": [
+                          [-122.10000156433787, 45.09999871982179],
+                          [-122.20000202176608, 45.20000292038091]
+                      ]
+                  },
+                  "properties": {
+                      "stuff": "things"
+                  },
+                  "id": 0,
+                  "type": "Feature"
+              }
+          ],
+          "type": "FeatureCollection"
+      }
+  }
+```
+
 ### Quantization
 
 The encoder also has options to quantize the data for you via the `quantize_bounds` option. When encoding, pass in the bounds in the form (minx, miny, maxx, maxy) and the coordinates will be scaled appropriately during encoding.
@@ -240,41 +295,52 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
 ```python
   >>> import mapbox_vector_tile
 
-  >>> mapbox_vector_tile.decode('\x1aJ\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aY\n\x03air\x12\x1c\x08\x01\x12\x08\x00\x00\x01\x01\x02\x02\x03\x03\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x05balls\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x05\n\x03foo"\x06\n\x04flew(\x80 x\x02')
+  >>> mapbox_vector_tile.decode(b'\x1aJ\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aY\n\x03air\x12\x1c\x08\x01\x12\x08\x00\x00\x01\x01\x02\x02\x03\x03\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x05balls\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x05\n\x03foo"\x06\n\x04flew(\x80 x\x02')
 
   {
-    'water': {
-      'extent': 4096,
-      'version': 2,
-      'features': [{
-          'geometry': {'type': 'Polygon', 'coordinates': [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]},
-          'properties': {
-            'foo': 'bar',
-            'uid': 123,
-            'cat': 'flew'
-          },
-          'type': 3,
-          'id': 1
-        }
-      ]
-    },
-    'air': {
-      'extent': 4096,
-      'version': 2,
-      'features': [{
-          'geometry': {'type': 'Polygon', 'coordinates': [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]},
-          'properties': {
-            'foo': 'bar',
-            'uid': 1234,
-            'balls': 'foo',
-            'cat': 'flew'
-          },
-          'type': 3,
-          'id': 1
-        }
-      ]
-    }
+      "water": {
+          "extent": 4096,
+          "version": 2,
+          "features": [
+              {
+                  "geometry": {
+                      "type": "Polygon",
+                      "coordinates": [[[0,0],[0,1],[1,1],[1,0],[0,0]]]
+                  },
+                  "properties": {
+                      "foo": "bar",
+                      "uid": 123,
+                      "cat": "flew"
+                  },
+                  "id": 1,
+                  "type": "Feature"
+              }
+          ],
+          "type": "FeatureCollection"
+      },
+      "air": {
+          "extent": 4096,
+          "version": 2,
+          "features": [
+              {
+                  "geometry": {
+                      "type": "Polygon",
+                      "coordinates": [[[0,0],[0,1],[1,1],[1,0],[0,0]]]
+                  },
+                  "properties": {
+                      "foo": "bar",
+                      "uid": 1234,
+                      "balls": "foo",
+                      "cat": "flew"
+                  },
+                  "id": 1,
+                  "type": "Feature"
+              }
+          ],
+          "type": "FeatureCollection"
+      }
   }
+
 ```
 
 Here's how you might decode a tile from a file.

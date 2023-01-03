@@ -4,6 +4,7 @@ Tests for vector_tile/encoder.py
 import unittest
 
 from shapely import wkt
+from shapely.geometry.base import BaseGeometry
 
 import mapbox_vector_tile
 from mapbox_vector_tile import decode, encode
@@ -111,7 +112,9 @@ class TestDifferentGeomFormats(BaseTestCase):
 
     def test_encoder_multipolygon_w_hole(self):
         self.assertRoundTrip(
-            input_geometry="MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))",  # noqa
+            input_geometry="MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), "
+            "((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), "
+            "(30 20, 20 15, 20 25, 30 20)))",
             expected_geometry={
                 "type": "MultiPolygon",
                 "coordinates": [
@@ -683,8 +686,6 @@ class InvalidGeometryTest(unittest.TestCase):
         result = decode(pbf)
         self.assertEqual(1, len(result["layername"]["features"]))
         valid_geometries = result["layername"]["features"][0]["geometry"]
-        geom_type = result["layername"]["features"][0]["type"]
-        self.assertEqual(3, geom_type)  # 3 means POLYGON
         self.assertEqual(valid_geometries["type"], "MultiPolygon")
         multipolygon = shapely.geometry.shape(valid_geometries)
         self.assertTrue(multipolygon.is_valid)
@@ -882,8 +883,8 @@ class LowLevelEncodingTestCase(unittest.TestCase):
             15,  # 1 x close path
         ]
 
-        tile = VectorTile(4096)
-        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
+        tile = VectorTile(extents=4096, quantize_bounds=None, y_coord_down=True)
+        tile.add_layer([dict(geometry=input_geometry)], "example_layer")
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -937,8 +938,8 @@ class LowLevelEncodingTestCase(unittest.TestCase):
             15,  # 1 x close path
         ]
 
-        tile = VectorTile(20)
-        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=False)
+        tile = VectorTile(extents=20, quantize_bounds=None, y_coord_down=False)
+        tile.add_layer([dict(geometry=input_geometry)], "example_layer")
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -961,8 +962,8 @@ class LowLevelEncodingTestCase(unittest.TestCase):
             15,  # 1 x close path
         ]
 
-        tile = VectorTile(4096)
-        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
+        tile = VectorTile(extents=4096, quantize_bounds=None, y_coord_down=True)
+        tile.add_layer([dict(geometry=input_geometry)], "example_layer")
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -1024,3 +1025,43 @@ class InvalidVectorTileTest(unittest.TestCase):
         with self.assertRaises(ValueError) as ex:
             encode(source, extents=-2.3)
         self.assertEqual(str(ex.exception), "The extents must be positive. -2.3 provided.")
+
+
+class TransformerTestCase(unittest.TestCase):
+    def test_transformer(self):
+        from shapely.geometry import shape
+        from shapely.wkt import loads
+
+        def forward_transformer(x, y):
+            return x + 5, y + 2
+
+        def backward_transformer(x, y):
+            return x - 5, y - 2
+
+        source = {
+            "name": "water",
+            "features": [
+                {
+                    "geometry": """LINESTRING (76097 5861479, 418535 6066942, 526159 5685368, 878380 5910399,"""
+                    """1514336 5900615, 1426281 5558177)""",
+                    "properties": {"uid": 123, "foo": "bar", "cat": "flew"},
+                }
+            ],
+        }
+
+        encoded = encode(source, transformer=forward_transformer, extents=4096)
+        decoded = decode(encoded, transformer=backward_transformer)
+
+        # Source data
+        layer_name = source["name"]
+        nb_features = len(source["features"])
+
+        # Output data
+        layer = decoded[layer_name]
+        features = layer["features"]
+        self.assertEqual(nb_features, len(features))
+        for source_feature, destination_feature in zip(source["features"], features):
+            self.assertEqual(source_feature["properties"], destination_feature["properties"])
+            source_geometry: BaseGeometry = loads(source_feature["geometry"])
+            destination_geometry = shape(destination_feature["geometry"])
+            self.assertTrue(source_geometry.equals_exact(destination_geometry, tolerance=1e-6))
