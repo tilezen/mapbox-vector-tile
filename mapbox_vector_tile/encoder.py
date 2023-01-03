@@ -1,5 +1,6 @@
 from numbers import Number
 
+from shapely.geometry import shape as shapely_shape
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import orient, Polygon
@@ -10,7 +11,6 @@ from shapely.wkt import loads as load_wkt
 from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
 from mapbox_vector_tile.geom_encoder import GeometryEncoder
 from mapbox_vector_tile.polygon import make_it_valid
-from mapbox_vector_tile.simple_shape import SimpleShape
 
 
 def on_invalid_geometry_raise(shape):
@@ -74,14 +74,14 @@ class VectorTile:
                 self.add_feature(feature, shape, y_coord_down)
 
     def enforce_winding_order(self, shape, y_coord_down, n_try=1):
-        if shape.type == "MultiPolygon":
+        if shape.geom_type == "MultiPolygon":
             # If we are a multipolygon, we need to ensure that the winding orders of the constituent polygons are
             # correct. In particular, the winding order of the interior rings need to be the opposite of the exterior
             # ones, and all interior rings need to follow the exterior one. This is how the end of one polygon and
             # the beginning of another are signaled.
             shape = self.enforce_multipolygon_winding_order(shape, y_coord_down, n_try)
 
-        elif shape.type == "Polygon":
+        elif shape.geom_type == "Polygon":
             # Ensure that polygons are also oriented with the appropriate winding order. Their exterior rings must
             # have a clockwise order, which is translated into a clockwise order in MVT's tile-local coordinates with
             # the Y axis in "screen" (i.e: +ve down) configuration. Note that while the Y axis flips, we also invert
@@ -122,7 +122,7 @@ class VectorTile:
         return shape
 
     def enforce_multipolygon_winding_order(self, shape, y_coord_down, n_try):
-        assert shape.type == "MultiPolygon"
+        assert shape.geom_type == "MultiPolygon"
 
         parts = []
         for part in shape.geoms:
@@ -145,7 +145,7 @@ class VectorTile:
         return oriented_shape
 
     def enforce_polygon_winding_order(self, shape, y_coord_down, n_try):
-        assert shape.type == "Polygon"
+        assert shape.geom_type == "Polygon"
 
         def fn(point):
             x, y = point
@@ -172,7 +172,7 @@ class VectorTile:
             return geometry_spec
 
         if isinstance(geometry_spec, dict):
-            return SimpleShape(geometry_spec["coordinates"], geometry_spec["type"])
+            return shapely_shape(geometry_spec)
 
         try:
             return load_wkb(geometry_spec)
@@ -206,16 +206,16 @@ class VectorTile:
         f.geometry.extend(geometry)
 
     def _get_feature_type(self, shape):
-        if shape.type == "Point" or shape.type == "MultiPoint":
+        if shape.geom_type == "Point" or shape.geom_type == "MultiPoint":
             return self.tile.Point
-        elif shape.type == "LineString" or shape.type == "MultiLineString":
+        elif shape.geom_type == "LineString" or shape.geom_type == "MultiLineString":
             return self.tile.LineString
-        elif shape.type == "Polygon" or shape.type == "MultiPolygon":
+        elif shape.geom_type == "Polygon" or shape.geom_type == "MultiPolygon":
             return self.tile.Polygon
-        elif shape.type == "GeometryCollection":
+        elif shape.geom_type == "GeometryCollection":
             raise ValueError("Encoding geometry collections not supported")
         else:
-            raise ValueError(f"Cannot encode unknown geometry type: {shape.type}")
+            raise ValueError(f"Cannot encode unknown geometry type: {shape.geom_type}")
 
     @staticmethod
     def _chunker(seq, size):

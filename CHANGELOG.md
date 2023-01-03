@@ -12,6 +12,7 @@ Version 2.0.0
 * Support for Python 3.11
 * Delete the `round_fn` argument as Python 2 has been dropped
 * Use `pyproject.toml` and Poetry to replace the `setup.py` file
+* Use `geom_type` property instead of deprecated `type`
 
 Version 1.2.1
 -------------
