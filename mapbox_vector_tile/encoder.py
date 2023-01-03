@@ -27,6 +27,9 @@ def on_invalid_geometry_make_valid(shape):
 
 class VectorTile:
     def __init__(self, extents, on_invalid_geometry=None, max_geometry_validate_tries=5, check_winding_order=True):
+        if extents <= 0:
+            raise ValueError(f"The extents must be positive. {extents} provided.")
+
         self.tile = vector_tile.tile()
         self.extents = extents
         self.on_invalid_geometry = on_invalid_geometry
@@ -39,11 +42,17 @@ class VectorTile:
         self.seen_keys_idx = {}
         self.seen_values_idx = {}
         self.seen_values_bool_idx = {}
+        self.seen_layer_names = set()
 
-    def add_features(self, features, layer_name="", quantize_bounds=None, y_coord_down=False):
+    def add_features(self, features, layer_name, quantize_bounds=None, y_coord_down=False):
+        if not layer_name:
+            raise ValueError(f"A layer name can not be empty. {layer_name!r} was provided.")
+        if layer_name in self.seen_layer_names:
+            raise ValueError(f"The layer name {layer_name!r} already exists in the vector tile.")
+        self.seen_layer_names.add(layer_name)
         self.layer = self.tile.layers.add()
         self.layer.name = layer_name
-        self.layer.version = 1
+        self.layer.version = 2
         self.layer.extent = self.extents
 
         self.key_idx = 0
