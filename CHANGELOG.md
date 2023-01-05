@@ -14,6 +14,7 @@ Version 2.0.0
 * Use `pyproject.toml` and Poetry to replace the `setup.py` file
 * Use `geom_type` property instead of deprecated `type`
 * Add the possibility to give a coordinates transformer
+* Add a `geojson` option. See [#107](https://github.com/tilezen/mapbox-vector-tile/issues/107)
 
 
 Version 1.2.1

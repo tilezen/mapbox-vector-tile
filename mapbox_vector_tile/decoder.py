@@ -12,11 +12,12 @@ from mapbox_vector_tile.utils import (
 
 
 class TileData:
-    def __init__(self, pbf_data, y_coord_down=False, transformer=None):
+    def __init__(self, pbf_data, y_coord_down=False, transformer=None, geojson=True):
         self.tile = vector_tile.tile()
         self.tile.ParseFromString(pbf_data)
         self.y_coord_down = y_coord_down
         self.transformer = transformer
+        self.geojson = geojson
 
     def get_message(self):
         tile = {}
@@ -36,15 +37,17 @@ class TileData:
                     props[key] = value
 
                 geometry = self.parse_geometry(geom=feature.geometry, ftype=feature.type, extent=layer.extent)
-                new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": "Feature"}
+                if self.geojson:
+                    new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": "Feature"}
+                else:
+                    new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": feature.type}
                 features.append(new_feature)
 
-            tile[layer.name] = {
-                "extent": layer.extent,
-                "version": layer.version,
-                "features": features,
-                "type": "FeatureCollection",
-            }
+            tile_data = {"extent": layer.extent, "version": layer.version, "features": features}
+            if self.geojson:
+                tile_data["type"] = "FeatureCollection"
+
+            tile[layer.name] = tile_data
         return tile
 
     @staticmethod

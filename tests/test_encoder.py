@@ -4,7 +4,6 @@ Tests for vector_tile/encoder.py
 import unittest
 
 from shapely import wkt
-from shapely.geometry.base import BaseGeometry
 
 import mapbox_vector_tile
 from mapbox_vector_tile import decode, encode
@@ -1062,6 +1061,6 @@ class TransformerTestCase(unittest.TestCase):
         self.assertEqual(nb_features, len(features))
         for source_feature, destination_feature in zip(source["features"], features):
             self.assertEqual(source_feature["properties"], destination_feature["properties"])
-            source_geometry: BaseGeometry = loads(source_feature["geometry"])
+            source_geometry = loads(source_feature["geometry"])
             destination_geometry = shape(destination_feature["geometry"])
             self.assertTrue(source_geometry.equals_exact(destination_geometry, tolerance=1e-6))

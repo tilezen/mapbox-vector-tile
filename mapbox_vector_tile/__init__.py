@@ -1,8 +1,8 @@
 from mapbox_vector_tile import decoder, encoder
 
 
-def decode(tile, y_coord_down=False, transformer=None):
-    vector_tile = decoder.TileData(pbf_data=tile, y_coord_down=y_coord_down, transformer=transformer)
+def decode(tile, y_coord_down=False, transformer=None, geojson=True):
+    vector_tile = decoder.TileData(pbf_data=tile, y_coord_down=y_coord_down, transformer=transformer, geojson=geojson)
     message = vector_tile.get_message()
     return message
 

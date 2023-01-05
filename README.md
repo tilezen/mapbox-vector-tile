@@ -354,6 +354,10 @@ Here's how you might decode a tile from a file.
   >>>     f.write(repr(decoded_data))
 ```
 
+The `decode` function has a `geojson` option which enforces a GeoJson RFC7946 compatible result. Its default value
+is `True`. To enforce the behaviour of versions <2.0.0, please use `geojson=False`.
+
+
 Use native protobuf library for performance
 ------------------------------------------
 
