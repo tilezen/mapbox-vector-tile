@@ -4,6 +4,7 @@ from mapbox_vector_tile.utils import (
     CMD_LINE_TO,
     CMD_MOVE_TO,
     CMD_SEG_END,
+    get_decode_options,
     LINESTRING,
     POINT,
     POLYGON,
@@ -12,16 +13,19 @@ from mapbox_vector_tile.utils import (
 
 
 class TileData:
-    def __init__(self, pbf_data, y_coord_down=False, transformer=None, geojson=True):
+    def __init__(self, pbf_data, options=None, default_options=None):
         self.tile = vector_tile.tile()
         self.tile.ParseFromString(pbf_data)
-        self.y_coord_down = y_coord_down
-        self.transformer = transformer
-        self.geojson = geojson
+        self.default_options = default_options
+        self.options = options if options is not None else dict()
 
     def get_message(self):
         tile = {}
         for layer in self.tile.layers:
+            layer_name = layer.name
+            layer_options = self.options.get(layer_name, None)
+            layer_options = get_decode_options(layer_options=layer_options, default_options=self.default_options)
+
             keys = layer.keys
             vals = layer.values
 
@@ -36,18 +40,24 @@ class TileData:
                     value = self.parse_value(val)
                     props[key] = value
 
-                geometry = self.parse_geometry(geom=feature.geometry, ftype=feature.type, extent=layer.extent)
-                if self.geojson:
+                geometry = self.parse_geometry(
+                    geom=feature.geometry,
+                    ftype=feature.type,
+                    extent=layer.extent,
+                    y_coord_down=layer_options["y_coord_down"],
+                    transformer=layer_options["transformer"],
+                )
+                if layer_options["geojson"]:
                     new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": "Feature"}
                 else:
                     new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": feature.type}
                 features.append(new_feature)
 
             tile_data = {"extent": layer.extent, "version": layer.version, "features": features}
-            if self.geojson:
+            if layer_options["geojson"]:
                 tile_data["type"] = "FeatureCollection"
 
-            tile[layer.name] = tile_data
+            tile[layer_name] = tile_data
         return tile
 
     @staticmethod
@@ -79,7 +89,7 @@ class TileData:
         if coords and coords[0] != coords[-1]:
             coords.append(coords[0])
 
-    def parse_geometry(self, geom, ftype, extent):  # noqa:C901
+    def parse_geometry(self, geom, ftype, extent, y_coord_down, transformer):  # noqa:C901
         # [9 0 8192 26 0 10 2 0 0 2 15]
         i = 0
         coords = []
@@ -131,13 +141,13 @@ class TileData:
                     dx = x
                     dy = y
 
-                    if not self.y_coord_down:
+                    if not y_coord_down:
                         y = extent - y
 
-                    if self.transformer is None:
+                    if transformer is None:
                         coords.append([x, y])
                     else:
-                        coords.append([*self.transformer(x, y)])
+                        coords.append([*transformer(x, y)])
 
         if ftype == POINT:
             if len(coords) == 1:

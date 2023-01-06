@@ -11,6 +11,7 @@ from shapely.wkt import loads as load_wkt
 from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
 from mapbox_vector_tile.geom_encoder import GeometryEncoder
 from mapbox_vector_tile.polygon import make_it_valid
+from mapbox_vector_tile.utils import get_encode_options
 
 
 def on_invalid_geometry_raise(shape):
@@ -26,29 +27,12 @@ def on_invalid_geometry_make_valid(shape):
 
 
 class VectorTile:
-    def __init__(
-        self,
-        extents,
-        on_invalid_geometry=None,
-        max_geometry_validate_tries=5,
-        check_winding_order=True,
-        quantize_bounds=None,
-        y_coord_down=False,
-        transformer=None,
-    ):
-        if extents <= 0:
-            raise ValueError(f"The extents must be positive. {extents} provided.")
-
+    def __init__(self, default_options=None):
         self.tile = vector_tile.tile()
-        self.extents = extents
-        self.on_invalid_geometry = on_invalid_geometry
-        self.check_winding_order = check_winding_order
-        self.max_geometry_validate_tries = max_geometry_validate_tries
-        self.quantize_bounds = quantize_bounds
-        self.y_coord_down = y_coord_down
-        self.transformer = transformer
+        self.default_options = default_options
 
         self.layer = None
+        self.layer_options = None
         self.key_idx = 0
         self.val_idx = 0
         self.seen_keys_idx = {}
@@ -56,16 +40,17 @@ class VectorTile:
         self.seen_values_bool_idx = {}
         self.seen_layer_names = set()
 
-    def add_layer(self, features, name):
+    def add_layer(self, name, features, options=None):
         if not name:
             raise ValueError(f"A layer name can not be empty. {name!r} was provided.")
         if name in self.seen_layer_names:
             raise ValueError(f"The layer name {name!r} already exists in the vector tile.")
         self.seen_layer_names.add(name)
         self.layer = self.tile.layers.add()
+        self.layer_options = get_encode_options(layer_options=options, default_options=self.default_options)
         self.layer.name = name
         self.layer.version = 2
-        self.layer.extent = self.extents
+        self.layer.extent = self.layer_options["extents"]
 
         self.key_idx = 0
         self.val_idx = 0
@@ -86,9 +71,9 @@ class VectorTile:
             if shape.is_empty:
                 continue
 
-            if self.quantize_bounds:
+            if self.layer_options["quantize_bounds"]:
                 shape = self.quantize(shape)
-            if self.check_winding_order:
+            if self.layer_options["check_winding_order"]:
                 shape = self.enforce_winding_order(shape)
 
             if shape is not None and not shape.is_empty:
@@ -113,11 +98,12 @@ class VectorTile:
         return shape
 
     def quantize(self, shape):
-        minx, miny, maxx, maxy = self.quantize_bounds
+        minx, miny, maxx, maxy = self.layer_options["quantize_bounds"]
+        extents = self.layer_options["extents"]
 
         def fn(x, y, z=None):
-            xfac = self.extents / (maxx - minx)
-            yfac = self.extents / (maxy - miny)
+            xfac = extents / (maxx - minx)
+            yfac = extents / (maxy - miny)
             x = xfac * (x - minx)
             y = yfac * (y - miny)
             return round(x), round(y)
@@ -128,13 +114,13 @@ class VectorTile:
         if shape.is_valid:
             return shape
 
-        if n_try >= self.max_geometry_validate_tries:
+        if n_try >= self.layer_options["max_geometry_validate_tries"]:
             # ensure that we don't recurse indefinitely with an invalid geometry handler that doesn't validate
             # geometries
             return None
 
-        if self.on_invalid_geometry:
-            shape = self.on_invalid_geometry(shape)
+        if self.layer_options["on_invalid_geometry"]:
+            shape = self.layer_options["on_invalid_geometry"](shape)
             if shape is not None and not shape.is_empty:
                 # This means that we have a handler that might have altered the geometry. We'll run through the process
                 # again, but keep track of which attempt we are on to terminate the recursion.
@@ -178,7 +164,7 @@ class VectorTile:
         if len(shape.interiors) > 0:
             rings = [self.apply_map(fn, ring.coords) for ring in shape.interiors]
 
-        sign = 1.0 if self.y_coord_down else -1.0
+        sign = 1.0 if self.layer_options["y_coord_down"] else -1.0
         oriented_shape = orient(Polygon(exterior, rings), sign=sign)
         oriented_shape = self.handle_shape_validity(oriented_shape, n_try)
         return oriented_shape
@@ -201,13 +187,13 @@ class VectorTile:
                 except Exception:
                     return None
 
-        if self.transformer is None:
+        if self.layer_options["transformer"] is None:
             return geom
         else:
-            return transform(self.transformer, geom)
+            return transform(self.layer_options["transformer"], geom)
 
     def add_feature(self, feature, shape):
-        geom_encoder = GeometryEncoder(self.y_coord_down, self.extents)
+        geom_encoder = GeometryEncoder(self.layer_options["y_coord_down"], self.layer_options["extents"])
         geometry = geom_encoder.encode(shape)
 
         feature_type = self._get_feature_type(shape)

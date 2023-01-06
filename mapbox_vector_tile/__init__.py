@@ -1,33 +1,24 @@
 from mapbox_vector_tile import decoder, encoder
 
 
-def decode(tile, y_coord_down=False, transformer=None, geojson=True):
-    vector_tile = decoder.TileData(pbf_data=tile, y_coord_down=y_coord_down, transformer=transformer, geojson=geojson)
+def decode(tile, options=None, default_options=None):
+    vector_tile = decoder.TileData(pbf_data=tile, options=options, default_options=default_options)
     message = vector_tile.get_message()
     return message
 
 
-def encode(
-    layers,
-    quantize_bounds=None,
-    y_coord_down=False,
-    extents=4096,
-    on_invalid_geometry=None,
-    check_winding_order=True,
-    transformer=None,
-):
-    vector_tile = encoder.VectorTile(
-        extents=extents,
-        on_invalid_geometry=on_invalid_geometry,
-        check_winding_order=check_winding_order,
-        quantize_bounds=quantize_bounds,
-        y_coord_down=y_coord_down,
-        transformer=transformer,
-    )
+def encode(layers, options=None, default_options=None):
+    vector_tile = encoder.VectorTile(default_options=default_options)
+    if options is None:
+        options = dict()
     if isinstance(layers, list):
         for layer in layers:
-            vector_tile.add_layer(features=layer["features"], name=layer["name"])
+            layer_name = layer["name"]
+            layer_options = options.get(layer_name, None)
+            vector_tile.add_layer(features=layer["features"], name=layer_name, options=layer_options)
     else:
-        vector_tile.add_layer(features=layers["features"], name=layers["name"])
+        layer_name = layers["name"]
+        layer_options = options.get(layer_name, None)
+        vector_tile.add_layer(features=layers["features"], name=layer_name, options=layer_options)
 
     return vector_tile.tile.SerializeToString()
