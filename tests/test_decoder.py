@@ -5,6 +5,7 @@ Tests for vector_tile/decoder.py
 import unittest
 
 import mapbox_vector_tile
+from mapbox_vector_tile.utils import DEFAULT_DECODE_OPTIONS, get_decode_options
 
 
 class BaseTestCase(unittest.TestCase):
@@ -100,3 +101,31 @@ class BaseTestCase(unittest.TestCase):
                 }
             },
         )
+
+    def test_options(self):
+        layer_options_1 = {"y_coord_down": True, "transformer": "my_function"}
+        layer_options_2 = {"geojson": True}
+        default_options = {"geojson": False}
+        self.assertEqual(
+            get_decode_options(layer_options=layer_options_1, default_options=default_options),
+            {**layer_options_1, "geojson": False},
+        )
+        self.assertEqual(
+            get_decode_options(layer_options=layer_options_2, default_options=default_options),
+            {**layer_options_2, "y_coord_down": False, "transformer": None},
+        )
+        self.assertEqual(
+            get_decode_options(layer_options=layer_options_2, default_options=None),
+            {**layer_options_2, "y_coord_down": False, "transformer": None},
+        )
+        self.assertEqual(
+            get_decode_options(layer_options=None, default_options=layer_options_1),
+            {**layer_options_1, "geojson": True},
+        )
+        self.assertEqual(get_decode_options(layer_options=None, default_options=None), DEFAULT_DECODE_OPTIONS)
+
+    def test_options_error(self):
+        expected_result = "The following options are not allowed for decoding a tile: 'opt', 'unknown'."
+        with self.assertRaises(ValueError) as ex:
+            get_decode_options(layer_options={"geojson": False, "unknown": 23}, default_options={"opt": 42})
+        self.assertEqual(str(ex.exception), expected_result)

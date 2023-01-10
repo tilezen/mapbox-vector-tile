@@ -13,17 +13,17 @@ from mapbox_vector_tile.utils import (
 
 
 class TileData:
-    def __init__(self, pbf_data, options=None, default_options=None):
+    def __init__(self, pbf_data, per_layer_options=None, default_options=None):
         self.tile = vector_tile.tile()
         self.tile.ParseFromString(pbf_data)
         self.default_options = default_options
-        self.options = options if options is not None else dict()
+        self.per_layer_options = per_layer_options if per_layer_options is not None else dict()
 
     def get_message(self):
         tile = {}
         for layer in self.tile.layers:
             layer_name = layer.name
-            layer_options = self.options.get(layer_name, None)
+            layer_options = self.per_layer_options.get(layer_name, None)
             layer_options = get_decode_options(layer_options=layer_options, default_options=self.default_options)
 
             keys = layer.keys

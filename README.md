@@ -34,6 +34,12 @@ following keys
   * `geometry`: representation of the feature geometry in WKT, WKB, or a shapely geometry. Coordinates are relative to the tile, scaled in the range `[0, 4096)`. See below for example code to perform the necessary transformation. *Note* that `GeometryCollection` types are not supported, and will trigger a `ValueError`.
   * `properties`: a dictionary with a few keys and their corresponding values.
 
+The encoding operation accepts options which can be defined per layer using the `per_layer_options` argument. If
+there is missing layer or missing options values in the `per_layer_options`, the options of `default_options` are
+taken into account. Finally, global default values are used. See the docstring of the `encode` method for more
+details about the available options and their global default values.
+
+
 ```python
 
   >>> import mapbox_vector_tile
@@ -68,7 +74,7 @@ following keys
       }
     ])
 
-  '\x1aH\n\x05water\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x02 {"\x06\n\x04flew(\x80 x\x02\x1aD\n\x03air\x12\x15\x12\x06\x00\x00\x01\x01\x02\x02\x18\x02"\t\t\xbe\x02\xb6\x03\n\x81\x1b\x00\x1a\x03foo\x1a\x03uid\x1a\x03cat"\x05\n\x03bar"\x03 \xd2\t"\x06\n\x04flew(\x80 x\x02'
+  b'\x1aH\n\x05water\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03uid\x1a\x03foo\x1a\x03cat"\x02 {"\x05\n\x03bar"\x06\n\x04flew(\x80 x\x02\x1aD\n\x03air\x12\x15\x12\x06\x00\x00\x01\x01\x02\x02\x18\x02"\t\t\xbe\x02\xb6\x03\n\x81\x1b\x00\x1a\x03uid\x1a\x03foo\x1a\x03cat"\x03 \xd2\t"\x05\n\x03bar"\x06\n\x04flew(\x80 x\x02'
 
 
   # Using WKB
@@ -101,7 +107,7 @@ following keys
       }
       ])
 
-    b'\x1aH\n\x05water\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03uid\x1a\x03foo\x1a\x03cat"\x02 {"\x05\n\x03bar"\x06\n\x04flew(\x80 x\x01\x1aG\n\x03air\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03uid\x1a\x03foo\x1a\x03cat"\x03 \xd2\t"\x05\n\x03bar"\x06\n\x04flew(\x80 x\x01'
+    b'\x1aH\n\x05water\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03uid\x1a\x03foo\x1a\x03cat"\x02 {"\x05\n\x03bar"\x06\n\x04flew(\x80 x\x02\x1aG\n\x03air\x12\x18\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03uid\x1a\x03foo\x1a\x03cat"\x03 \xd2\t"\x05\n\x03bar"\x06\n\x04flew(\x80 x\x02'
 ```
 
 ### Coordinate transformations for encoding
@@ -193,11 +199,11 @@ Also note that the spec allows the extents to be modified, even though they are 
       "properties": {"stuff": "things"},
     }]
   },
-    transformer=direct_transformer.transform)
+    default_options={"transformer": direct_transformer.transform})
 
   # Decode the tile
   reverse_transformer = Transformer.from_crs(crs_from=SRID_SPHERICAL_MERCATOR, crs_to=SRID_LNGLAT, always_xy=True)
-  mapbox_vector_tile.decode(tile=tile_pbf, transformer=reverse_transformer.transform)
+  mapbox_vector_tile.decode(tile=tile_pbf, default_options={"transformer": reverse_transformer.transform})
 
   {
       "my-layer": {
@@ -241,7 +247,7 @@ mapbox_vector_tile.encode([
           }
         ]
       }
-    ], quantize_bounds=(10.0, 10.0, 20.0, 20.0))
+    ], default_options={"quantize_bounds": (10.0, 10.0, 20.0, 20.0)})
 ```
 
 In this example, the coordinate that would get encoded would be (2048, 2048)
@@ -266,7 +272,7 @@ mapbox_vector_tile.encode([
           }
         ]
       }
-    ], quantize_bounds=(0.0, 0.0, 10.0, 10.0), extents=50)
+    ], default_options={"quantize_bounds": (0.0, 0.0, 10.0, 10.0), "extents":50})
 ```
 
 Decoding
@@ -291,6 +297,11 @@ Decode method takes in a valid google.protobuf.message Tile and returns decoded 
     }
   }
 ```
+
+The decoding operation accepts options which can be defined per layer using the `per_layer_options` argument. If
+there is missing layer or missing options values in the `per_layer_options`, the options of `default_options` are
+taken into account. Finally, global default values are used. See the docstring of the `decode` method for more
+details about the available options and their global default values.
 
 ```python
   >>> import mapbox_vector_tile

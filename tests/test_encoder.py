@@ -7,6 +7,7 @@ from shapely import wkt
 
 import mapbox_vector_tile
 from mapbox_vector_tile import decode, encode
+from mapbox_vector_tile.utils import DEFAULT_ENCODE_OPTIONS, get_encode_options
 
 
 class BaseTestCase(unittest.TestCase):
@@ -1078,3 +1079,78 @@ class TransformerTestCase(unittest.TestCase):
             source_geometry = loads(source_feature["geometry"])
             destination_geometry = shape(destination_feature["geometry"])
             self.assertTrue(source_geometry.equals_exact(destination_geometry, tolerance=1e-6))
+
+
+class OptionsTestCase(unittest.TestCase):
+    def test_options(self):
+        layer_options_1 = {"y_coord_down": True, "transformer": "my_function"}
+        layer_options_2 = {"quantize_bounds": (10.0, 10.0, 20.0, 20.0)}
+        default_options = {"extents": 42}
+        self.assertEqual(
+            get_encode_options(layer_options=layer_options_1, default_options=default_options),
+            {
+                **layer_options_1,
+                "check_winding_order": True,
+                "extents": 42,
+                "max_geometry_validate_tries": 5,
+                "on_invalid_geometry": None,
+                "quantize_bounds": None,
+            },
+        )
+        self.assertEqual(
+            get_encode_options(layer_options=layer_options_2, default_options=default_options),
+            {
+                **layer_options_2,
+                "check_winding_order": True,
+                "extents": 42,
+                "max_geometry_validate_tries": 5,
+                "on_invalid_geometry": None,
+                "transformer": None,
+                "y_coord_down": False,
+            },
+        )
+        self.assertEqual(
+            get_encode_options(layer_options=layer_options_2, default_options=None),
+            {
+                **layer_options_2,
+                "check_winding_order": True,
+                "extents": 4096,
+                "max_geometry_validate_tries": 5,
+                "on_invalid_geometry": None,
+                "transformer": None,
+                "y_coord_down": False,
+            },
+        )
+        self.assertEqual(
+            get_encode_options(layer_options=None, default_options=layer_options_1),
+            {
+                **layer_options_1,
+                "check_winding_order": True,
+                "extents": 4096,
+                "max_geometry_validate_tries": 5,
+                "on_invalid_geometry": None,
+                "quantize_bounds": None,
+            },
+        )
+        self.assertEqual(get_encode_options(layer_options=None, default_options=None), DEFAULT_ENCODE_OPTIONS)
+
+    def test_options_error(self):
+        expected_result = "The following options are not allowed for encoding a tile: 'opt', 'unknown'."
+        with self.assertRaises(ValueError) as ex:
+            get_encode_options(layer_options={"y_coord_down": False, "unknown": 23}, default_options={"opt": 42})
+        self.assertEqual(str(ex.exception), expected_result)
+
+        expected_result = "The max_geometry_validate_tries must be positive. -3 provided."
+        with self.assertRaises(ValueError) as ex:
+            get_encode_options(
+                layer_options={"y_coord_down": False, "max_geometry_validate_tries": -3},
+                default_options={"extents": 42},
+            )
+        self.assertEqual(str(ex.exception), expected_result)
+
+        expected_result = "The extents must be positive. 0 provided."
+        with self.assertRaises(ValueError) as ex:
+            get_encode_options(
+                layer_options={"y_coord_down": False, "max_geometry_validate_tries": 25}, default_options={"extents": 0}
+            )
+        self.assertEqual(str(ex.exception), expected_result)

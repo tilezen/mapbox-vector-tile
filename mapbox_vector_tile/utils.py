@@ -46,11 +46,7 @@ DEFAULT_ENCODE_OPTIONS = {
     "max_geometry_validate_tries": 5,
 }
 
-DEFAULT_DECODE_OPTIONS = {
-    "y_coord_down": False,
-    "transformer": None,
-    "geojson": True,
-}
+DEFAULT_DECODE_OPTIONS = {"y_coord_down": False, "transformer": None, "geojson": True}
 
 
 def _get_options(layer_options, default_options, global_default_options, operation_name):
@@ -74,7 +70,7 @@ def _get_options(layer_options, default_options, global_default_options, operati
         The options to use to operate the layer.
     """
     if default_options is None:
-        default_options = global_default_options.copy()
+        default_options = global_default_options
 
     if layer_options is None:
         layer_options = default_options
@@ -87,7 +83,7 @@ def _get_options(layer_options, default_options, global_default_options, operati
     expected_keys = set(global_default_options.keys())
     extra_keys = result_keys.difference(expected_keys)
     if extra_keys:
-        extra_keys_msg = ", ".join(f"{str(x)!r}" for x in extra_keys)
+        extra_keys_msg = ", ".join(f"{str(x)!r}" for x in sorted(extra_keys))
         raise ValueError(f"The following options are not allowed for {operation_name} a tile: {extra_keys_msg}.")
 
     return result
