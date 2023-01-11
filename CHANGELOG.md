@@ -13,6 +13,11 @@ Version 2.0.0
 * Delete the `round_fn` argument as Python 2 has been dropped
 * Use `pyproject.toml` and Poetry to replace the `setup.py` file
 * Use `geom_type` property instead of deprecated `type`
+* Add the possibility to give a coordinates transformer
+* Add a `geojson` option. See [#107](https://github.com/tilezen/mapbox-vector-tile/issues/107)
+* Refactor the options using the `per_layer_options` and `default_options` dictionaries.
+* Add the option `max_geometry_validate_tries`.
+
 
 Version 1.2.1
 -------------

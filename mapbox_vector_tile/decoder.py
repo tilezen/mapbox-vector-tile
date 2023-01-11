@@ -4,6 +4,7 @@ from mapbox_vector_tile.utils import (
     CMD_LINE_TO,
     CMD_MOVE_TO,
     CMD_SEG_END,
+    get_decode_options,
     LINESTRING,
     POINT,
     POLYGON,
@@ -12,14 +13,19 @@ from mapbox_vector_tile.utils import (
 
 
 class TileData:
-    def __init__(self):
+    def __init__(self, pbf_data, per_layer_options=None, default_options=None):
         self.tile = vector_tile.tile()
-
-    def get_message(self, pbf_data, y_coord_down=False):
         self.tile.ParseFromString(pbf_data)
+        self.default_options = default_options
+        self.per_layer_options = per_layer_options if per_layer_options is not None else dict()
 
+    def get_message(self):
         tile = {}
         for layer in self.tile.layers:
+            layer_name = layer.name
+            layer_options = self.per_layer_options.get(layer_name, None)
+            layer_options = get_decode_options(layer_options=layer_options, default_options=self.default_options)
+
             keys = layer.keys
             vals = layer.values
 
@@ -34,11 +40,24 @@ class TileData:
                     value = self.parse_value(val)
                     props[key] = value
 
-                geometry = self.parse_geometry(feature.geometry, feature.type, layer.extent, y_coord_down)
-                new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": feature.type}
+                geometry = self.parse_geometry(
+                    geom=feature.geometry,
+                    ftype=feature.type,
+                    extent=layer.extent,
+                    y_coord_down=layer_options["y_coord_down"],
+                    transformer=layer_options["transformer"],
+                )
+                if layer_options["geojson"]:
+                    new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": "Feature"}
+                else:
+                    new_feature = {"geometry": geometry, "properties": props, "id": feature.id, "type": feature.type}
                 features.append(new_feature)
 
-            tile[layer.name] = {"extent": layer.extent, "version": layer.version, "features": features}
+            tile_data = {"extent": layer.extent, "version": layer.version, "features": features}
+            if layer_options["geojson"]:
+                tile_data["type"] = "FeatureCollection"
+
+            tile[layer_name] = tile_data
         return tile
 
     @staticmethod
@@ -70,8 +89,7 @@ class TileData:
         if coords and coords[0] != coords[-1]:
             coords.append(coords[0])
 
-    @classmethod
-    def parse_geometry(cls, geom, ftype, extent, y_coord_down):  # noqa:C901
+    def parse_geometry(self, geom, ftype, extent, y_coord_down, transformer):  # noqa:C901
         # [9 0 8192 26 0 10 2 0 0 2 15]
         i = 0
         coords = []
@@ -82,19 +100,18 @@ class TileData:
         while i != len(geom):
             item = bin(geom[i])
             ilen = len(item)
-            cmd = int(cls.zero_pad(item[(ilen - CMD_BITS) : ilen]), 2)
-            cmd_len = int(cls.zero_pad(item[: ilen - CMD_BITS]), 2)
+            cmd = int(self.zero_pad(item[(ilen - CMD_BITS) : ilen]), 2)
+            cmd_len = int(self.zero_pad(item[: ilen - CMD_BITS]), 2)
 
             i = i + 1
 
             if cmd == CMD_SEG_END:
                 if ftype == POLYGON:
-                    cls._ensure_polygon_closed(coords)
+                    self._ensure_polygon_closed(coords)
                 parts.append(coords)
                 coords = []
 
-            elif cmd == CMD_MOVE_TO or cmd == CMD_LINE_TO:
-
+            elif cmd in (CMD_MOVE_TO, CMD_LINE_TO):
                 if coords and cmd == CMD_MOVE_TO:
                     if ftype in (LINESTRING, POLYGON):
                         # multi line string or polygon our encoder includes CMD_SEG_END to denote the end of a
@@ -103,7 +120,7 @@ class TileData:
 
                         # for polygons, we want to ensure that it is closed
                         if ftype == POLYGON:
-                            cls._ensure_polygon_closed(coords)
+                            self._ensure_polygon_closed(coords)
                         parts.append(coords)
                         coords = []
 
@@ -127,7 +144,10 @@ class TileData:
                     if not y_coord_down:
                         y = extent - y
 
-                    coords.append([x, y])
+                    if transformer is None:
+                        coords.append([x, y])
+                    else:
+                        coords.append([*transformer(x, y)])
 
         if ftype == POINT:
             if len(coords) == 1:
@@ -153,7 +173,7 @@ class TileData:
             winding = 0
 
             for ring in parts:
-                a = cls._area_sign(ring)
+                a = self._area_sign(ring)
                 if a == 0:
                     continue
                 if winding == 0:

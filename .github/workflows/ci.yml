@@ -12,7 +12,6 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - '3.7'
           - '3.8'
           - '3.9'
           - '3.10'
@@ -33,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: |
           poetry env use "${{ matrix.python-version }}"
-          poetry install
+          poetry install --all-extras
 
       - name: Run tox targets for ${{ matrix.python-version }}
         run: |
