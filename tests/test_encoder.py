@@ -7,6 +7,7 @@ from shapely import wkt
 
 import mapbox_vector_tile
 from mapbox_vector_tile import decode, encode
+from mapbox_vector_tile.utils import DEFAULT_ENCODE_OPTIONS, get_encode_options
 
 
 class BaseTestCase(unittest.TestCase):
@@ -111,7 +112,9 @@ class TestDifferentGeomFormats(BaseTestCase):
 
     def test_encoder_multipolygon_w_hole(self):
         self.assertRoundTrip(
-            input_geometry="MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))",  # noqa
+            input_geometry="MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), "
+            "((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), "
+            "(30 20, 20 15, 20 25, 30 20)))",
             expected_geometry={
                 "type": "MultiPolygon",
                 "coordinates": [
@@ -401,7 +404,10 @@ class TestDifferentGeomFormats(BaseTestCase):
 
         shape = shapely.wkt.loads("LINESTRING(-71.160281 42.258729,-71.160837 42.259113,-71.161144 42.25932)")
         features = [dict(geometry=shape, properties={})]
-        pbf = encode({"name": "foo", "features": features}, on_invalid_geometry=on_invalid_geometry_make_valid)
+        pbf = encode(
+            {"name": "foo", "features": features},
+            default_options={"on_invalid_geometry": on_invalid_geometry_make_valid},
+        )
         result = decode(pbf)
         features = result["foo"]["features"]
         self.assertEqual(0, len(features))
@@ -497,7 +503,7 @@ class QuantizeTest(unittest.TestCase):
         features = [feature]
         source = dict(name="layername", features=features)
         bounds = 10.0, 10.0, 20.0, 20.0
-        pbf = encode(source, quantize_bounds=bounds)
+        pbf = encode(source, default_options={"quantize_bounds": bounds})
         result = decode(pbf)
         act_feature = result["layername"]["features"][0]
         act_geom = act_feature["geometry"]
@@ -512,8 +518,8 @@ class QuantizeTest(unittest.TestCase):
         feature = dict(geometry=shape, properties=props)
         features = [feature]
         source = dict(name="layername", features=features)
-        pbf = encode(source, y_coord_down=True)
-        result = decode(pbf, y_coord_down=True)
+        pbf = encode(source, default_options={"y_coord_down": True})
+        result = decode(pbf, default_options={"y_coord_down": True})
         act_feature = result["layername"]["features"][0]
         act_geom = act_feature["geometry"]
         exp_geom = {"type": "Point", "coordinates": [10, 10]}
@@ -528,9 +534,9 @@ class QuantizeTest(unittest.TestCase):
         features = [feature]
         source = dict(name="layername", features=features)
         bounds = 0.0, 0.0, 50.0, 50.0
-        pbf = encode(source, quantize_bounds=bounds, y_coord_down=True)
+        pbf = encode(source, default_options={"quantize_bounds": bounds, "y_coord_down": True})
 
-        result_decode_no_flip = decode(pbf, y_coord_down=True)
+        result_decode_no_flip = decode(pbf, default_options={"y_coord_down": True})
         act_feature = result_decode_no_flip["layername"]["features"][0]
         act_geom = act_feature["geometry"]
         exp_geom = {"type": "Point", "coordinates": [2458, 2458]}
@@ -553,7 +559,7 @@ class ExtentTest(unittest.TestCase):
         features = [feature]
         source = dict(name="layername", features=features)
         bounds = 0.0, 0.0, 10.0, 10.0
-        pbf = encode(source, quantize_bounds=bounds, extents=50)
+        pbf = encode(source, default_options={"quantize_bounds": bounds, "extents": 50})
         result = decode(pbf)
         act_feature = result["layername"]["features"][0]
         act_geom = act_feature["geometry"]
@@ -573,7 +579,7 @@ class InvalidGeometryTest(unittest.TestCase):
         self.assertFalse(shape.is_valid)
         feature = dict(geometry=shape, properties={})
         source = dict(name="layername", features=[feature])
-        pbf = encode(source, on_invalid_geometry=on_invalid_geometry_ignore)
+        pbf = encode(source, default_options={"on_invalid_geometry": on_invalid_geometry_ignore})
         result = decode(pbf)
         self.assertEqual(0, len(result["layername"]["features"]))
 
@@ -589,10 +595,9 @@ class InvalidGeometryTest(unittest.TestCase):
         feature = dict(geometry=shape, properties={})
         source = dict(name="layername", features=[feature])
         with self.assertRaises(Exception):
-            encode(source, on_invalid_geometry=on_invalid_geometry_raise)
+            encode(source, default_options={"on_invalid_geometry": on_invalid_geometry_raise})
 
     def test_invalid_geometry_make_valid(self):
-        import shapely.geometry
         import shapely.wkt
 
         from mapbox_vector_tile import encode
@@ -603,7 +608,7 @@ class InvalidGeometryTest(unittest.TestCase):
         self.assertFalse(shape.is_valid)
         feature = dict(geometry=shape, properties={})
         source = dict(name="layername", features=[feature])
-        pbf = encode(source, on_invalid_geometry=on_invalid_geometry_make_valid)
+        pbf = encode(source, default_options={"on_invalid_geometry": on_invalid_geometry_make_valid})
         result = decode(pbf)
         self.assertEqual(1, len(result["layername"]["features"]))
         valid_geometry = result["layername"]["features"][0]["geometry"]
@@ -627,7 +632,7 @@ class InvalidGeometryTest(unittest.TestCase):
         self.assertFalse(shape.is_valid)
         feature = dict(geometry=shape, properties={})
         source = dict(name="layername", features=[feature])
-        pbf = encode(source, on_invalid_geometry=on_invalid_geometry_make_valid)
+        pbf = encode(source, default_options={"on_invalid_geometry": on_invalid_geometry_make_valid})
         result = decode(pbf)
         self.assertEqual(1, len(result["layername"]["features"]))
         valid_geometries = result["layername"]["features"][0]["geometry"]
@@ -651,7 +656,7 @@ class InvalidGeometryTest(unittest.TestCase):
         self.assertFalse(shape.is_valid)
         feature = dict(geometry=shape, properties={})
         source = dict(name="layername", features=[feature])
-        pbf = encode(source, on_invalid_geometry=on_invalid_geometry_make_valid)
+        pbf = encode(source, default_options={"on_invalid_geometry": on_invalid_geometry_make_valid})
         result = decode(pbf)
         self.assertEqual(1, len(result["layername"]["features"]))
         valid_geometries = result["layername"]["features"][0]["geometry"]
@@ -679,12 +684,10 @@ class InvalidGeometryTest(unittest.TestCase):
         self.assertFalse(shape.is_valid)
         feature = dict(geometry=shape, properties={})
         source = dict(name="layername", features=[feature])
-        pbf = encode(source, on_invalid_geometry=on_invalid_geometry_make_valid)
+        pbf = encode(source, default_options={"on_invalid_geometry": on_invalid_geometry_make_valid})
         result = decode(pbf)
         self.assertEqual(1, len(result["layername"]["features"]))
         valid_geometries = result["layername"]["features"][0]["geometry"]
-        geom_type = result["layername"]["features"][0]["type"]
-        self.assertEqual(3, geom_type)  # 3 means POLYGON
         self.assertEqual(valid_geometries["type"], "MultiPolygon")
         multipolygon = shapely.geometry.shape(valid_geometries)
         self.assertTrue(multipolygon.is_valid)
@@ -699,7 +702,6 @@ class InvalidGeometryTest(unittest.TestCase):
         self.assertEqual(50, multipolygon.area)
 
     def test_validate_generates_rounding_error(self):
-        import shapely.geometry
         import shapely.wkt
 
         from mapbox_vector_tile import encode
@@ -710,7 +712,7 @@ class InvalidGeometryTest(unittest.TestCase):
         self.assertFalse(shape.is_valid)
         feature = dict(geometry=shape, properties={})
         source = dict(name="layername", features=[feature])
-        pbf = encode(source, on_invalid_geometry=on_invalid_geometry_make_valid)
+        pbf = encode(source, default_options={"on_invalid_geometry": on_invalid_geometry_make_valid})
         result = decode(pbf)
         features = result["layername"]["features"]
         self.assertEqual(1, len(features))
@@ -748,8 +750,10 @@ POINT (4095 3664), LINESTRING (2889 0, 2912 158, 3757 1700, 3732 1999, 4095 3277
         features = [dict(geometry=shape, properties={})]
         pbf = encode(
             {"name": "foo", "features": features},
-            quantize_bounds=quantize_bounds,
-            on_invalid_geometry=on_invalid_geometry_make_valid,
+            default_options={
+                "quantize_bounds": quantize_bounds,
+                "on_invalid_geometry": on_invalid_geometry_make_valid,
+            },
         )
         result = decode(pbf)
         features = result["foo"]["features"]
@@ -771,7 +775,10 @@ POINT (4095 3664), LINESTRING (2889 0, 2912 158, 3757 1700, 3732 1999, 4095 3277
             """3449 1939))"""
         )
         features = [dict(geometry=shape, properties={})]
-        pbf = encode({"name": "foo", "features": features}, on_invalid_geometry=on_invalid_geometry_make_valid)
+        pbf = encode(
+            {"name": "foo", "features": features},
+            default_options={"on_invalid_geometry": on_invalid_geometry_make_valid},
+        )
         result = decode(pbf)
         features = result["foo"]["features"]
         self.assertEqual(1, len(features))
@@ -799,8 +806,10 @@ POINT (4095 3664), LINESTRING (2889 0, 2912 158, 3757 1700, 3732 1999, 4095 3277
         features = [dict(geometry=shape, properties={})]
         pbf = encode(
             {"name": "foo", "features": features},
-            quantize_bounds=(-10018754.1713946, 11271098.44281893, -8766409.899970269, 12523442.714243261),
-            on_invalid_geometry=on_invalid_geometry_make_valid,
+            default_options={
+                "quantize_bounds": (-10018754.1713946, 11271098.44281893, -8766409.899970269, 12523442.714243261),
+                "on_invalid_geometry": on_invalid_geometry_make_valid,
+            },
         )
         result = decode(pbf)
         features = result["foo"]["features"]
@@ -826,7 +835,10 @@ POINT (4095 3664), LINESTRING (2889 0, 2912 158, 3757 1700, 3732 1999, 4095 3277
             "LINESTRING (3065.656210384849 3629.831662879646, 3066.458953567231 3629.725941289478)"
         )
         features = [dict(geometry=shape, properties={})]
-        pbf = encode({"name": "foo", "features": features}, on_invalid_geometry=on_invalid_geometry_make_valid)
+        pbf = encode(
+            {"name": "foo", "features": features},
+            default_options={"on_invalid_geometry": on_invalid_geometry_make_valid},
+        )
         result = decode(pbf)
         features = result["foo"]["features"]
         self.assertEqual(0, len(features))
@@ -882,8 +894,11 @@ class LowLevelEncodingTestCase(unittest.TestCase):
             15,  # 1 x close path
         ]
 
-        tile = VectorTile(4096)
-        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
+        tile = VectorTile(default_options={"extents": 4096, "quantize_bounds": None, "y_coord_down": True})
+        tile.add_layer(
+            name="example_layer",
+            features=[dict(geometry=input_geometry)],
+        )
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -937,8 +952,8 @@ class LowLevelEncodingTestCase(unittest.TestCase):
             15,  # 1 x close path
         ]
 
-        tile = VectorTile(20)
-        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=False)
+        tile = VectorTile(default_options={"extents": 20, "quantize_bounds": None, "y_coord_down": False})
+        tile.add_layer(name="example_layer", features=[dict(geometry=input_geometry)])
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -961,8 +976,8 @@ class LowLevelEncodingTestCase(unittest.TestCase):
             15,  # 1 x close path
         ]
 
-        tile = VectorTile(4096)
-        tile.add_features([dict(geometry=input_geometry)], "example_layer", quantize_bounds=None, y_coord_down=True)
+        tile = VectorTile(default_options={"extents": 4096, "quantize_bounds": None, "y_coord_down": True})
+        tile.add_layer(name="example_layer", features=[dict(geometry=input_geometry)])
         self.assertEqual(1, len(tile.layer.features))
         f = tile.layer.features[0]
         self.assertEqual(expected_commands, list(f.geometry))
@@ -978,7 +993,7 @@ class InvalidVectorTileTest(unittest.TestCase):
         features = [feature]
         source = [dict(name="layername", features=features), dict(name="layername", features=features)]
         with self.assertRaises(ValueError) as ex:
-            encode(source, extents=4096)
+            encode(source, default_options={"extents": 4096})
         self.assertEqual(str(ex.exception), "The layer name 'layername' already exists in the vector tile.")
 
     def test_empty_layer_name(self):
@@ -990,23 +1005,23 @@ class InvalidVectorTileTest(unittest.TestCase):
         features = [feature]
         source = [dict(name="", features=features)]
         with self.assertRaises(ValueError) as ex:
-            encode(source, extents=4096)
+            encode(source, default_options={"extents": 4096})
         self.assertEqual(str(ex.exception), "A layer name can not be empty. '' was provided.")
 
         source = [dict(name=None, features=features)]
         with self.assertRaises(ValueError) as ex:
-            encode(source, extents=4096)
+            encode(source, default_options={"extents": 4096})
         self.assertEqual(str(ex.exception), "A layer name can not be empty. None was provided.")
 
     def test_empty_layer(self):
         from mapbox_vector_tile import encode
 
         # No content
-        res = encode([], extents=4096)
+        res = encode([], default_options={"extents": 4096})
         self.assertEqual(res, b"")
 
         # Layer without feature
-        res = encode(dict(name="layer", features=[]), extents=4096)
+        res = encode(dict(name="layer", features=[]), default_options={"extents": 4096})
         self.assertEqual(res, b"\x1a\x0c\n\x05layer(\x80 x\x02")
 
     def test_invalid_extent(self):
@@ -1018,9 +1033,124 @@ class InvalidVectorTileTest(unittest.TestCase):
         features = [feature]
         source = [dict(name="layername", features=features)]
         with self.assertRaises(ValueError) as ex:
-            encode(source, extents=0)
+            encode(source, default_options={"extents": 0})
         self.assertEqual(str(ex.exception), "The extents must be positive. 0 provided.")
 
         with self.assertRaises(ValueError) as ex:
-            encode(source, extents=-2.3)
+            encode(source, default_options={"extents": -2.3})
         self.assertEqual(str(ex.exception), "The extents must be positive. -2.3 provided.")
+
+
+class TransformerTestCase(unittest.TestCase):
+    def test_transformer(self):
+        from shapely.geometry import shape
+        from shapely.wkt import loads
+
+        def forward_transformer(x, y):
+            return x + 5, y + 2
+
+        def backward_transformer(x, y):
+            return x - 5, y - 2
+
+        source = {
+            "name": "water",
+            "features": [
+                {
+                    "geometry": """LINESTRING (76097 5861479, 418535 6066942, 526159 5685368, 878380 5910399,"""
+                    """1514336 5900615, 1426281 5558177)""",
+                    "properties": {"uid": 123, "foo": "bar", "cat": "flew"},
+                }
+            ],
+        }
+
+        encoded = encode(source, default_options={"transformer": forward_transformer, "extents": 4096})
+        decoded = decode(encoded, default_options={"transformer": backward_transformer})
+
+        # Source data
+        layer_name = source["name"]
+        nb_features = len(source["features"])
+
+        # Output data
+        layer = decoded[layer_name]
+        features = layer["features"]
+        self.assertEqual(nb_features, len(features))
+        for source_feature, destination_feature in zip(source["features"], features):
+            self.assertEqual(source_feature["properties"], destination_feature["properties"])
+            source_geometry = loads(source_feature["geometry"])
+            destination_geometry = shape(destination_feature["geometry"])
+            self.assertTrue(source_geometry.equals_exact(destination_geometry, tolerance=1e-6))
+
+
+class OptionsTestCase(unittest.TestCase):
+    def test_options(self):
+        layer_options_1 = {"y_coord_down": True, "transformer": "my_function"}
+        layer_options_2 = {"quantize_bounds": (10.0, 10.0, 20.0, 20.0)}
+        default_options = {"extents": 42}
+        self.assertEqual(
+            get_encode_options(layer_options=layer_options_1, default_options=default_options),
+            {
+                **layer_options_1,
+                "check_winding_order": True,
+                "extents": 42,
+                "max_geometry_validate_tries": 5,
+                "on_invalid_geometry": None,
+                "quantize_bounds": None,
+            },
+        )
+        self.assertEqual(
+            get_encode_options(layer_options=layer_options_2, default_options=default_options),
+            {
+                **layer_options_2,
+                "check_winding_order": True,
+                "extents": 42,
+                "max_geometry_validate_tries": 5,
+                "on_invalid_geometry": None,
+                "transformer": None,
+                "y_coord_down": False,
+            },
+        )
+        self.assertEqual(
+            get_encode_options(layer_options=layer_options_2, default_options=None),
+            {
+                **layer_options_2,
+                "check_winding_order": True,
+                "extents": 4096,
+                "max_geometry_validate_tries": 5,
+                "on_invalid_geometry": None,
+                "transformer": None,
+                "y_coord_down": False,
+            },
+        )
+        self.assertEqual(
+            get_encode_options(layer_options=None, default_options=layer_options_1),
+            {
+                **layer_options_1,
+                "check_winding_order": True,
+                "extents": 4096,
+                "max_geometry_validate_tries": 5,
+                "on_invalid_geometry": None,
+                "quantize_bounds": None,
+            },
+        )
+        self.assertEqual(get_encode_options(layer_options=None, default_options=None), DEFAULT_ENCODE_OPTIONS)
+
+    def test_options_error(self):
+        expected_result = "The following options are not allowed for encoding a tile: 'opt', 'unknown'."
+        with self.assertRaises(ValueError) as ex:
+            get_encode_options(layer_options={"y_coord_down": False, "unknown": 23}, default_options={"opt": 42})
+        self.assertEqual(str(ex.exception), expected_result)
+
+        expected_result = "The max_geometry_validate_tries must be positive. -3 provided."
+        with self.assertRaises(ValueError) as ex:
+            get_encode_options(
+                layer_options={"y_coord_down": False, "max_geometry_validate_tries": -3},
+                default_options={"extents": 42},
+            )
+        self.assertEqual(str(ex.exception), expected_result)
+
+        expected_result = "The extents must be positive. 0 provided."
+        with self.assertRaises(ValueError) as ex:
+            get_encode_options(
+                layer_options={"y_coord_down": False, "max_geometry_validate_tries": 25}, default_options={"extents": 0}
+            )
+        self.assertEqual(str(ex.exception), expected_result)
