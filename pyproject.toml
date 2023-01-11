@@ -51,9 +51,7 @@ line-length = 120
 fast = true
 extend-exclude = '''
 (
-  /(
-    mapbox_vector_tile\/Mapbox\/vector_tile_pb2.py
-  )/
+    .*_pb2.py
 )
 '''
 target-version = ["py38", "py39", "py310", "py311"]

@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
-from mapbox_vector_tile.utils import CMD_LINE_TO, CMD_MOVE_TO, zig_zag_decode, zig_zag_encode
+from mapbox_vector_tile.utils import CMD_LINE_TO, CMD_MOVE_TO, LINESTRING, zig_zag_decode, zig_zag_encode
 
 
 class StringTableOptimiser:
@@ -216,7 +216,7 @@ def optimise_tile(tile_bytes):
 
         for feature in layer.features:
             # (multi)linestrings only
-            if feature.type == 2:
+            if feature.type == LINESTRING:
                 optimise_multilinestring(feature.geometry)
 
             sto.add_tags(feature.tags)
