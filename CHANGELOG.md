@@ -1,8 +1,6 @@
 Version 2.0.0
 -------------
 
-*In development*
-
 * Drop Python 2 support
 * Usage of `tox` for tests
 * Add GitHub Actions
