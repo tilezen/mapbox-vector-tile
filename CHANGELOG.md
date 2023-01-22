@@ -1,3 +1,8 @@
+Version 2.0.2
+-------------
+
+*In development*
+
 Version 2.0.1
 -------------
 
