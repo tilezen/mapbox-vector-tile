@@ -1,7 +1,9 @@
+import warnings
+
 from mapbox_vector_tile import decoder, encoder
 
 
-def decode(tile, per_layer_options=None, default_options=None):
+def decode(tile, per_layer_options=None, default_options=None, **kwargs):
     """Decode the provided `tile`
 
     Args:
@@ -30,12 +32,15 @@ def decode(tile, per_layer_options=None, default_options=None):
             * `geojson`: when set to `False`, the behaviour of mapbox-vector-tile version 1.* is used. When set
             to `False`, the retrieved dictionary is a valid geojson file. Default to `True`.
     """
+    if kwargs:
+        warnings.warn("`decode` signature has changed, use `default_options` instead", DeprecationWarning)
+        default_options = {**kwargs, **(default_options or {})}
     vector_tile = decoder.TileData(pbf_data=tile, per_layer_options=per_layer_options, default_options=default_options)
     message = vector_tile.get_message()
     return message
 
 
-def encode(layers, per_layer_options=None, default_options=None):
+def encode(layers, per_layer_options=None, default_options=None, **kwargs):
     """Encode the `layers` into a MVT tile.
 
     Args:
@@ -74,6 +79,9 @@ def encode(layers, per_layer_options=None, default_options=None):
             * `max_geometry_validate_tries`: the number of tries when trying to enforce the good winding order. Default
             to 5.
     """
+    if kwargs:
+        warnings.warn("`encode` signature has changed, use `default_options` instead", DeprecationWarning)
+        default_options = {**kwargs, **(default_options or {})}
     vector_tile = encoder.VectorTile(default_options=default_options)
     if per_layer_options is None:
         per_layer_options = dict()
