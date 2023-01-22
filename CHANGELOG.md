@@ -1,7 +1,8 @@
 Version 2.0.1
 -------------
 
-*In development*
+* Support previous pre 2.0 encode/decode method signatures with deprecation warning.
+  [#129](https://github.com/tilezen/mapbox-vector-tile/pull/129)
 
 Version 2.0.0
 -------------
