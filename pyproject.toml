@@ -45,23 +45,20 @@ proj = ["pyproj"]
 tox = "^4.0.16"
 coverage = { version = "^7.0.0", extras = ["toml"] }
 
-# Black
-[tool.black]
+[tool.ruff]
 line-length = 120
-fast = true
-extend-exclude = '''
-(
-    .*_pb2.py
-)
-'''
-target-version = ["py39", "py310", "py311", "py312"]
+target-version = "py38"
+show-fixes = true
+extend-include = ["*.ipynb"]
+extend-exclude = ["mapbox_vector_tile/Mapbox/vector_tile_pb2.py"]
 
-# Isort
-[tool.isort]
-profile = "black"
-line_length = 120
-force_alphabetical_sort_within_sections = true
-case_sensitive = true
+[tool.ruff.lint]
+select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PIE", "N", "C4", "G", "PTH"]
+unfixable = ["B"]
+extend-ignore = ["B024", "G004", "UP038"]
+flake8-tidy-imports.ban-relative-imports = "all"
+mccabe.max-complexity = 15
+pep8-naming.extend-ignore-names = ["assertRoundTrip"]
 
 # Coverage
 [tool.coverage.run]

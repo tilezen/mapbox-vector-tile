@@ -2,8 +2,8 @@
 Tests for vector_tile/polygon.py
 """
 
-import os
 import unittest
+from pathlib import Path
 
 from shapely import wkt
 
@@ -12,8 +12,8 @@ from mapbox_vector_tile.polygon import make_it_valid
 
 class TestPolygonMakeValid(unittest.TestCase):
     def test_dev_errors(self):
-        test_dir = os.path.dirname(os.path.realpath(__file__))
-        with open(os.path.join(test_dir, "errors.wkt")) as fh:
+        test_dir = Path(__file__).resolve().parent
+        with (test_dir / "errors.wkt").open() as fh:
             for line in fh:
                 geom = wkt.loads(line)
                 fixed = make_it_valid(geom)

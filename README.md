@@ -1,12 +1,10 @@
-Mapbox Vector Tile
-==================
+# Mapbox Vector Tile
 
 [![CI](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/ci.yml/badge.svg)](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/ci.yml)
 [![pre-commit](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/tilezen/mapbox-vector-tile/actions/workflows/pre-commit.yml)
 [![Coverage Status](https://coveralls.io/repos/github/tilezen/mapbox-vector-tile/badge.svg?branch=master)](https://coveralls.io/github/tilezen/mapbox-vector-tile?branch=master)
 
-Installation
-------------
+## Installation
 
 mapbox-vector-tile is compatible with Python 3.9 or newer. It is listed on PyPi as `mapbox-vector-tile`. The
 recommended way to install is via `pip`:
@@ -22,23 +20,21 @@ when changing the Coordinate Reference System when encoding or decoding tiles.
 pip install mapbox-vector-tile[proj]
 ```
 
-Encoding
---------
+## Encoding
 
 Encode method expects an array of layers or at least a single valid layer. A valid layer is a dictionary with the
 following keys
 
-* `name`: layer name
-* `features`: an array of features. A feature is a dictionary with the following keys:
+- `name`: layer name
+- `features`: an array of features. A feature is a dictionary with the following keys:
 
-  * `geometry`: representation of the feature geometry in WKT, WKB, or a shapely geometry. Coordinates are relative to the tile, scaled in the range `[0, 4096)`. See below for example code to perform the necessary transformation. *Note* that `GeometryCollection` types are not supported, and will trigger a `ValueError`.
-  * `properties`: a dictionary with a few keys and their corresponding values.
+  - `geometry`: representation of the feature geometry in WKT, WKB, or a shapely geometry. Coordinates are relative to the tile, scaled in the range `[0, 4096)`. See below for example code to perform the necessary transformation. _Note_ that `GeometryCollection` types are not supported, and will trigger a `ValueError`.
+  - `properties`: a dictionary with a few keys and their corresponding values.
 
 The encoding operation accepts options which can be defined per layer using the `per_layer_options` argument. If
 there is missing layer or missing options values in the `per_layer_options`, the options of `default_options` are
 taken into account. Finally, global default values are used. See the docstring of the `encode` method for more
 details about the available options and their global default values.
-
 
 ```python
 
@@ -275,8 +271,7 @@ mapbox_vector_tile.encode([
     ], default_options={"quantize_bounds": (0.0, 0.0, 10.0, 10.0), "extents":50})
 ```
 
-Decoding
---------
+## Decoding
 
 Decode method takes in a valid google.protobuf.message Tile and returns decoded string in the following format:
 
@@ -368,9 +363,7 @@ Here's how you might decode a tile from a file.
 The `decode` function has a `geojson` option which enforces a GeoJson RFC7946 compatible result. Its default value
 is `True`. To enforce the behaviour of versions <2.0.0, please use `geojson=False`.
 
-
-Use native protobuf library for performance
-------------------------------------------
+## Use native protobuf library for performance
 
 The c++ implementation of the underlying protobuf library is more performant than the pure python one. Depending on your operating system, you might need to [compile the C++ library](https://github.com/google/protobuf/tree/master/python#c-implementation) or install it.
 
@@ -392,7 +385,6 @@ and then:
 
     $ protoc -I=mapbox_vector_tile/Mapbox/ --python_out=mapbox_vector_tile/Mapbox/ mapbox_vector_tile/Mapbox/vector_tile.proto
 
-Changelog
----------
+## Changelog
 
 Click [here](https://github.com/tilezen/mapbox-vector-tile/blob/master/CHANGELOG.md) to see what changed over time in various versions.

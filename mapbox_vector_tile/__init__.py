@@ -33,7 +33,7 @@ def decode(tile, per_layer_options=None, default_options=None, **kwargs):
             to `False`, the retrieved dictionary is a valid geojson file. Default to `True`.
     """
     if kwargs:
-        warnings.warn("`decode` signature has changed, use `default_options` instead", DeprecationWarning)
+        warnings.warn("`decode` signature has changed, use `default_options` instead", DeprecationWarning, stacklevel=2)
         default_options = {**kwargs, **(default_options or {})}
     vector_tile = decoder.TileData(pbf_data=tile, per_layer_options=per_layer_options, default_options=default_options)
     message = vector_tile.get_message()
@@ -80,11 +80,11 @@ def encode(layers, per_layer_options=None, default_options=None, **kwargs):
             to 5.
     """
     if kwargs:
-        warnings.warn("`encode` signature has changed, use `default_options` instead", DeprecationWarning)
+        warnings.warn("`encode` signature has changed, use `default_options` instead", DeprecationWarning, stacklevel=2)
         default_options = {**kwargs, **(default_options or {})}
     vector_tile = encoder.VectorTile(default_options=default_options)
     if per_layer_options is None:
-        per_layer_options = dict()
+        per_layer_options = {}
     if isinstance(layers, list):
         for layer in layers:
             layer_name = layer["name"]

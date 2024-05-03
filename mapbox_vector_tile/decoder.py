@@ -4,10 +4,10 @@ from mapbox_vector_tile.utils import (
     CMD_LINE_TO,
     CMD_MOVE_TO,
     CMD_SEG_END,
-    get_decode_options,
     LINESTRING,
     POINT,
     POLYGON,
+    get_decode_options,
     zig_zag_decode,
 )
 
@@ -17,7 +17,7 @@ class TileData:
         self.tile = vector_tile.tile()
         self.tile.ParseFromString(pbf_data)
         self.default_options = default_options
-        self.per_layer_options = per_layer_options if per_layer_options is not None else dict()
+        self.per_layer_options = per_layer_options if per_layer_options is not None else {}
 
     def get_message(self):
         tile = {}
@@ -81,7 +81,7 @@ class TileData:
 
     @staticmethod
     def _area_sign(ring):
-        a = sum(ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1] for i in range(0, len(ring) - 1))
+        a = sum(ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1] for i in range(len(ring) - 1))
         return -1 if a < 0 else 1 if a > 0 else 0
 
     @staticmethod
@@ -112,19 +112,18 @@ class TileData:
                 coords = []
 
             elif cmd in (CMD_MOVE_TO, CMD_LINE_TO):
-                if coords and cmd == CMD_MOVE_TO:
-                    if ftype in (LINESTRING, POLYGON):
-                        # multi line string or polygon our encoder includes CMD_SEG_END to denote the end of a
-                        # polygon ring, but this path would also handle the case where we receive a move without a
-                        # previous close on polygons
+                if coords and cmd == CMD_MOVE_TO and ftype in (LINESTRING, POLYGON):
+                    # multi line string or polygon our encoder includes CMD_SEG_END to denote the end of a
+                    # polygon ring, but this path would also handle the case where we receive a move without a
+                    # previous close on polygons
 
-                        # for polygons, we want to ensure that it is closed
-                        if ftype == POLYGON:
-                            self._ensure_polygon_closed(coords)
-                        parts.append(coords)
-                        coords = []
+                    # for polygons, we want to ensure that it is closed
+                    if ftype == POLYGON:
+                        self._ensure_polygon_closed(coords)
+                    parts.append(coords)
+                    coords = []
 
-                for point in range(0, cmd_len):
+                for _ in range(cmd_len):
                     x = geom[i]
                     i = i + 1
 

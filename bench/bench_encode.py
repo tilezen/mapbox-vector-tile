@@ -36,16 +36,14 @@ def make_layers(shapes, geom_dicts=False):
 
 def run_test(layers):
     print("Running perf test")
-    i = 0
     profiler = cProfile.Profile()
-    for layer in layers:
+    for i, layer in enumerate(layers):
         layer_description = {"features": layer, "name": "bar"}
         profiler.enable()
         encode(layer_description, default_options={"on_invalid_geometry": on_invalid_geometry_ignore})
         profiler.disable()
         if i % 100 == 0:
             print(f"{i} tiles produced")
-        i += 1
 
     print("Perf result :")
     profiler.print_stats()

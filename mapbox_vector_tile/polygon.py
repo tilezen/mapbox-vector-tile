@@ -93,10 +93,7 @@ def _polytree_node_to_shapely(node):
         # Check expectations: a node should be a hole, _or_ return children. This is because children of holes must
         # be outers, and should be on the polygons list.
         assert len(children) == 0
-        if node.Contour:
-            children = [node.Contour]
-        else:
-            children = []
+        children = [node.Contour] if node.Contour else []
 
     elif node.Contour:
         poly = _contour_to_poly(node.Contour)
@@ -106,10 +103,7 @@ def _polytree_node_to_shapely(node):
         # 1,000s of seconds. Instead, we can group inners together, which reduces the number of times we call the
         # expensive 'difference' method.
         block_size = 200
-        if len(children) > block_size:
-            inners = _union_in_blocks(children, block_size)
-        else:
-            inners = _generate_polys(children)
+        inners = _union_in_blocks(children, block_size) if len(children) > block_size else _generate_polys(children)
 
         for inner in inners:
             # The difference of two valid polygons may fail, and in this  situation we'd like to be able to display
