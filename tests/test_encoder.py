@@ -1,6 +1,7 @@
 """
 Tests for vector_tile/encoder.py
 """
+
 import unittest
 
 from shapely import wkt

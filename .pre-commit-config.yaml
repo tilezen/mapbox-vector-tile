@@ -1,7 +1,7 @@
 exclude: ^mapbox_vector_tile/Mapbox/vector_tile_pb2.py
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.6.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -16,23 +16,23 @@ repos:
     hooks:
       - id: absolufy-imports
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
+    rev: v3.15.2
     hooks:
       - id: pyupgrade
-        args: [ --py38-plus ]
+        args: [ --py39-plus ]
   - repo: https://github.com/PyCQA/isort
-    rev: 5.11.4
+    rev: 5.13.2
     hooks:
       - id: isort
   - repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 24.4.2
     hooks:
       - id: black
   - repo: https://github.com/asottile/yesqa
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: yesqa
   - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+    rev: 7.0.0
     hooks:
       - id: flake8

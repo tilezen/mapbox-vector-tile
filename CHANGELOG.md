@@ -1,7 +1,10 @@
-Version 2.0.2
+Version 2.1.0
 -------------
 
 *In development*
+
+- Drop the support for Python 3.8 and add the support for Python 3.12
+- Update the minimum required version for `protobuf`
 
 Version 2.0.1
 -------------
