@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mapbox-vector-tile"
-version = "2.0.2"
+version = "2.1.0"
 description = "Mapbox Vector Tile encoding and decoding."
 license = "MIT"
 authors = [
@@ -13,10 +13,10 @@ exclude = [
     "**/*.wkt",
 ]
 classifiers = [
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 include = [
     "mapbox_vector_tile/Mapbox/*.proto",
@@ -32,8 +32,8 @@ requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-protobuf = "^4.21"
+python = "^3.9"
+protobuf = "^5.26.1"
 shapely = "^2.0.0"
 pyclipper = "^1.3.0"
 pyproj = { version = "^3.4.1", optional = true }
@@ -54,7 +54,7 @@ extend-exclude = '''
     .*_pb2.py
 )
 '''
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ["py39", "py310", "py311", "py312"]
 
 # Isort
 [tool.isort]

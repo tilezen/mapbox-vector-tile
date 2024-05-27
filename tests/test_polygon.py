@@ -1,6 +1,7 @@
 """
 Tests for vector_tile/polygon.py
 """
+
 import os
 import unittest
 
