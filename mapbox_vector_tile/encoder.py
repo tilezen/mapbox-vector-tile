@@ -3,13 +3,13 @@ from numbers import Number
 from shapely.geometry import shape as shapely_shape
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.multipolygon import MultiPolygon
-from shapely.geometry.polygon import orient, Polygon
+from shapely.geometry.polygon import Polygon, orient
 from shapely.ops import transform
 from shapely.wkb import loads as load_wkb
 from shapely.wkt import loads as load_wkt
 
-from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
 from mapbox_vector_tile.geom_encoder import GeometryEncoder
+from mapbox_vector_tile.Mapbox import vector_tile_pb2 as vector_tile
 from mapbox_vector_tile.polygon import make_it_valid
 from mapbox_vector_tile.utils import get_encode_options
 
@@ -143,11 +143,7 @@ class VectorTile:
         if not parts:
             return None
 
-        if len(parts) == 1:
-            oriented_shape = parts[0]
-        else:
-            oriented_shape = MultiPolygon(parts)
-
+        oriented_shape = parts[0] if len(parts) == 1 else MultiPolygon(parts)
         oriented_shape = self.handle_shape_validity(oriented_shape, n_try)
         return oriented_shape
 
@@ -203,9 +199,8 @@ class VectorTile:
         f = self.layer.features.add()
 
         fid = feature.get("id")
-        if fid is not None:
-            if isinstance(fid, Number) and fid >= 0:
-                f.id = fid
+        if fid is not None and isinstance(fid, Number) and fid >= 0:
+            f.id = fid
 
         # properties
         properties = feature.get("properties")
@@ -253,11 +248,7 @@ class VectorTile:
 
                 feature.tags.append(self.seen_keys_idx[k])
 
-                if isinstance(v, bool):
-                    values_idx = self.seen_values_bool_idx
-                else:
-                    values_idx = self.seen_values_idx
-
+                values_idx = self.seen_values_bool_idx if isinstance(v, bool) else self.seen_values_idx
                 if v not in values_idx:
                     values_idx[v] = self.val_idx
                     self.val_idx += 1

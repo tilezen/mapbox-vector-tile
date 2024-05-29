@@ -28,7 +28,7 @@ class StringTableOptimiser:
         # Sort string table by usage, so most commonly-used values are
         # assigned the smallest indices. Since indices are encoded as
         # varints, this should make best use of the space.
-        sort = list(sorted(((c, k) for k, c in counts.items()), reverse=True))
+        sort = sorted(((c, k) for k, c in counts.items()), reverse=True)
 
         # construct the re-ordered string table
         new_table = []
@@ -42,7 +42,7 @@ class StringTableOptimiser:
 
         # construct a lookup table from the old to the new indices.
         new_indexes = {}
-        for i, (c, k) in enumerate(sort):
+        for i, (_, k) in enumerate(sort):
             new_indexes[k] = i
 
         return new_indexes
@@ -112,7 +112,7 @@ def _decode_lines(geom):
             current_line.extend(geom[i:next_i])
 
             # but we still need to decode it to figure out where each move-to command is in absolute space.
-            for j in range(0, run_length):
+            for j in range(run_length):
                 dx = zig_zag_decode(geom[i + 1 + 2 * j])
                 dy = zig_zag_decode(geom[i + 2 + 2 * j])
                 x += dx

@@ -10,7 +10,11 @@ from mapbox_vector_tile.utils import DEFAULT_DECODE_OPTIONS, get_decode_options
 
 class BaseTestCase(unittest.TestCase):
     def test_decoder(self):
-        vector_tile = b'\x1aI\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03baz\x1a\x03uid"\x05\n\x03bar"\x05\n\x03foo"\x02 {(\x80 x\x02'  # noqa
+        vector_tile = (
+            b'\x1aI\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a'
+            b'\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03baz\x1a\x03uid"\x05\n\x03bar"\x05\n\x03foo"\x02 {(\x80 '
+            b"x\x02"
+        )
         self.assertEqual(
             mapbox_vector_tile.decode(vector_tile),
             {
@@ -31,7 +35,11 @@ class BaseTestCase(unittest.TestCase):
         )
 
     def test_decoder_geojson(self):
-        vector_tile = b'\x1aI\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03baz\x1a\x03uid"\x05\n\x03bar"\x05\n\x03foo"\x02 {(\x80 x\x02'  # noqa
+        vector_tile = (
+            b'\x1aI\n\x05water\x12\x1a\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x03"\x0c\t\x00\x80@\x1a'
+            b'\x00\x01\x02\x00\x00\x02\x0f\x1a\x03foo\x1a\x03baz\x1a\x03uid"\x05\n\x03bar"\x05\n\x03foo"\x02'
+            b" {(\x80 x\x02"
+        )
         self.assertEqual(
             mapbox_vector_tile.decode(vector_tile, default_options={"geojson": False}),
             {
@@ -55,7 +63,10 @@ class BaseTestCase(unittest.TestCase):
         # CMD_SEG_END after the polygon parts
         # this tests that the decoder can detect that a new
         # CMD_MOVE_TO implicitly closes the previous polygon
-        vector_tile = b'\x1a+\n\x05water\x12\x1d\x18\x03"\x19\t\x00\x80@"\x08\x00\x00\x07\x07\x00\x00\x08\t\x02\x01"\x00\x03\x04\x00\x00\x04\x03\x00(\x80 x\x02'  # noqa
+        vector_tile = (
+            b'\x1a+\n\x05water\x12\x1d\x18\x03"\x19\t\x00\x80@"\x08\x00\x00\x07\x07\x00\x00\x08\t\x02\x01"'
+            b"\x00\x03\x04\x00\x00\x04\x03\x00(\x80 x\x02"
+        )
         self.assertEqual(
             mapbox_vector_tile.decode(vector_tile),
             {
@@ -82,7 +93,11 @@ class BaseTestCase(unittest.TestCase):
         )
 
     def test_nondefault_extent(self):
-        vector_tile = b'\x1aK\n\x05water\x12\x1c\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x02"\x0e\t\x80}\xd0\x12\x12\xbf>\xd86\xbf>\xd86\x1a\x03foo\x1a\x03baz\x1a\x03uid"\x05\n\x03bar"\x05\n\x03foo"\x02 {(\x80@x\x02'  # noqa
+        vector_tile = (
+            b'\x1aK\n\x05water\x12\x1c\x08\x01\x12\x06\x00\x00\x01\x01\x02\x02\x18\x02"\x0e\t\x80}\xd0\x12'
+            b'\x12\xbf>\xd86\xbf>\xd86\x1a\x03foo\x1a\x03baz\x1a\x03uid"\x05\n\x03bar"\x05\n\x03foo"\x02 '
+            b"{(\x80@x\x02"
+        )
         self.assertEqual(
             mapbox_vector_tile.decode(vector_tile),
             {

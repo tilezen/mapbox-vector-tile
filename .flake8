@@ -1,8 +1,0 @@
-[flake8]
-max-line-length = 120
-show_source = true
-max_complexity = 15
-exclude = mapbox_vector_tiles/Mapbox
-extend-ignore =
-    # See https://github.com/PyCQA/pycodestyle/issues/373
-    E203,
