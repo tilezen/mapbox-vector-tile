@@ -1,7 +1,5 @@
 ## Version 2.1.0
 
-_In development_
-
 - Drop the support for Python 3.8 and add the support for Python 3.12
 - Update the minimum required version for `protobuf`
 - Replace Isort, Flake8 and Black by Ruff in the `.pre-commit-config.yaml` file
