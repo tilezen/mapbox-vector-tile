@@ -1,3 +1,7 @@
+## Version 2.1.1
+
+_In development_
+
 ## Version 2.1.0
 
 - Drop the support for Python 3.8 and add the support for Python 3.12
