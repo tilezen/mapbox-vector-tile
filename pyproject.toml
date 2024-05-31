@@ -20,8 +20,8 @@ classifiers = [
 ]
 include = [
     "mapbox_vector_tile/Mapbox/*.proto",
-    "README.md",
-    "CHANGELOG.md",
+    { path = "README.md", format = "sdist" },
+    { path = "CHANGELOG.md", format = "sdist" },
 ]
 packages = [
     { include = "mapbox_vector_tile" }
