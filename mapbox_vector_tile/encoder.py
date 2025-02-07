@@ -28,7 +28,7 @@ def on_invalid_geometry_make_valid(shape):
 
 class VectorTile:
     def __init__(self, default_options=None):
-        self.tile = vector_tile.tile()
+        self.tile = vector_tile.Tile()
         self.default_options = default_options
 
         self.layer = None
@@ -212,11 +212,11 @@ class VectorTile:
 
     def _get_feature_type(self, shape):
         if shape.geom_type == "Point" or shape.geom_type == "MultiPoint":
-            return self.tile.Point
+            return self.tile.POINT
         elif shape.geom_type == "LineString" or shape.geom_type == "MultiLineString":
-            return self.tile.LineString
+            return self.tile.LINESTRING
         elif shape.geom_type == "Polygon" or shape.geom_type == "MultiPolygon":
-            return self.tile.Polygon
+            return self.tile.POLYGON
         elif shape.geom_type == "GeometryCollection":
             raise ValueError("Encoding geometry collections not supported")
         else:

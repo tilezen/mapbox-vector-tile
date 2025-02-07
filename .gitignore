@@ -6,3 +6,5 @@ mapbox_vector_tile.egg-info/
 .coverage
 bench/fgeoms.wkt.zip
 node_modules/
+/.venv/
+.idea

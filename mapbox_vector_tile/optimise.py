@@ -208,7 +208,7 @@ def optimise_tile(tile_bytes):
     multilinestrings to save a few bytes.
     """
 
-    t = vector_tile.tile()
+    t = vector_tile.Tile()
     t.ParseFromString(tile_bytes)
 
     for layer in t.layers:

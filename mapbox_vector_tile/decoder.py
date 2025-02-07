@@ -14,7 +14,7 @@ from mapbox_vector_tile.utils import (
 
 class TileData:
     def __init__(self, pbf_data, per_layer_options=None, default_options=None):
-        self.tile = vector_tile.tile()
+        self.tile = vector_tile.Tile()
         self.tile.ParseFromString(pbf_data)
         self.default_options = default_options
         self.per_layer_options = per_layer_options if per_layer_options is not None else {}

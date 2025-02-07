@@ -21,7 +21,7 @@ class BaseTestCase(unittest.TestCase):
             }
         )
         # Check the tags in the encoded tile
-        tile = vector_tile.tile()
+        tile = vector_tile.Tile()
         tile.ParseFromString(tile_data)
         tile_layer = tile.layers[0]
         expected_tile_tags = ([0, 0, 1, 1], [0, 2, 1, 1], [0, 3, 2, 4, 1, 1])
@@ -32,7 +32,7 @@ class BaseTestCase(unittest.TestCase):
         result = optimise_tile(tile_data)
 
         # Check that the tags have been modified
-        result_tile = vector_tile.tile()
+        result_tile = vector_tile.Tile()
         result_tile.ParseFromString(result)
         result_layer = result_tile.layers[0]
         expected_results = ([1, 4, 0, 0], [1, 3, 0, 0], [1, 2, 2, 1, 0, 0])
