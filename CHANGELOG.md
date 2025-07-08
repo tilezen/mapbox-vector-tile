@@ -1,6 +1,8 @@
-## Version 2.1.1
+## Version 2.2.0
 
-_In development_
+- Do not install docs into site-packages in binary distributions
+- Bump protobuf version to address security issue
+- Bump versions of dependencies
 
 ## Version 2.1.0
 
