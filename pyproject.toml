@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mapbox-vector-tile"
-version = "2.2.0"
+version = "2.2.1.dev1"
 description = "Mapbox Vector Tile encoding and decoding."
 license = "MIT"
 authors = [

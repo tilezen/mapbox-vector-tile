@@ -1,3 +1,7 @@
+## Version 2.2.1.dev1
+
+_In development_
+
 ## Version 2.2.0
 
 - Do not install docs into site-packages in binary distributions
